@@ -459,7 +459,7 @@ test('API: 새 사용자의 처음 설정, 규칙, 기억, 계좌', async () => 
     const summary = JSON.stringify((await req(`/api/rooms/${roomId}`, 'me')).json.myAgent);
     assert.ok(!summary.includes('1234') && summary.includes('"hasPayout":true'));
     const full = JSON.stringify((await req('/api/me/agent', 'cs')).json);
-    assert.ok(full.includes('"holder":"철수"') && !full.includes('accountNo') && !full.includes('100000000002'), '설정 응답에도 계좌번호 전체는 없다');
+    assert.ok(full.includes('"holder":"Chulsoo"') && !full.includes('accountNo') && !full.includes('100000000002'), '설정 응답에도 계좌번호 전체는 없다');
     for (const path of ['/rules', '/memory', '/memory/edit', '/memory/delete', '/onboarding']) {
       const res = await fetch(`${url}/api/me/agent${path}`, { method: 'POST', headers: { 'x-demo-user': 'cs', 'content-type': 'application/json' }, body: 'null' });
       assert.ok(res.status < 500, `${path}: 본문이 null이어도 500이 아니다(${res.status})`);
@@ -498,7 +498,7 @@ test('처음 설정: 기본값으로 시작을 다시 고르면 규칙이 기본
 test('설정 응답(규칙·기억 변경 포함)에는 계좌번호 전체가 없다', async () => {
   const { settings } = await setup();
   for (const v of [await settings.get('cs'), await settings.updateRules('cs', { autoAccept: 1 }), await settings.addMemory('cs', '새 기억')]) {
-    assert.deepEqual(v.payout, { bank: '토스뱅크', holder: '철수', last4: '0002' });
+    assert.deepEqual(v.payout, { bank: '토스뱅크', holder: 'Chulsoo', last4: '0002' });
     assert.ok(!JSON.stringify(v).includes('100000000002'));
   }
   assert.equal((await settings.get('nobody')).payout, null);
@@ -534,9 +534,9 @@ test('설정 화면: 기억과 규칙 기록의 글자를 이스케이프하고,
   const evil = '<img src=x onerror=alert(1)>';
   const html = memoryRowsHtml({ memory: [evil, '평범'], memoryHidden: { r1: ['평범'] } }, 'r1');
   assert.ok(!html.includes('<img') && html.includes('&lt;img'));
-  assert.match(html, /aria-pressed="true"[^>]*>공유 중/);
-  assert.match(html, /aria-pressed="false"[^>]*>공유 안 함/);
-  assert.match(memoryRowsHtml({ memory: ['평범'], memoryHidden: { r1: ['평범'] } }, 'r2'), /공유 중/, '다른 방에서는 공유');
+  assert.match(html, /aria-pressed="true"[^>]*>Shared</);
+  assert.match(html, /aria-pressed="false"[^>]*>Not shared</);
+  assert.match(memoryRowsHtml({ memory: ['평범'], memoryHidden: { r1: ['평범'] } }, 'r2'), />Shared</, '다른 방에서는 공유');
   const log = historyHtml({ ruleHistory: [{ at: '2026-11-10T03:00:00Z', text: evil }] });
   assert.ok(!log.includes('<img'));
   assert.ok(!limitInputHtml({ autoAccept: '"><script>' }).includes('<script>'));
@@ -566,10 +566,10 @@ test('방 머리의 칩: 비서 설정을 마친 사람에게 로봇 표시, 설
   assert.ok(ready.includes('Auto-accept up to ₩50,000 · Send on day 10 of each month'), '규칙 요약은 툴팁과 읽어 주기 글로 남는다');
 
   const before = meChipHtml(me, { onboarded: false, autoAccept: 0, sendWhen: 'now', hasPayout: false });
-  assert.ok(before.includes('<span class="person-tag">설정 전</span>') && !before.includes('agent-mark'), '설정 전이면 로봇 대신 꼬리표');
+  assert.ok(before.includes('<span class="person-tag">Not set up</span>') && !before.includes('agent-mark'), '설정 전이면 로봇 대신 꼬리표');
   assert.match(before, /data-action="open-agent-setup"/, '설정 전이면 칩이 처음 설정을 연다(방 안의 큰 안내 카드 대신)');
   const noAccount = meChipHtml(me, { onboarded: true, autoAccept: 0, sendWhen: 'now', hasPayout: false });
-  assert.ok(noAccount.includes('agent-mark') && noAccount.includes('<span class="person-tag">계좌 없음</span>'));
+  assert.ok(noAccount.includes('agent-mark') && noAccount.includes('<span class="person-tag">No account</span>'));
   assert.equal(meChipHtml({ name: '<b>', avatar: '' }, null), '<span class="person">&lt;b&gt;</span>', '서버가 요약을 주지 않으면 그냥 칩이다');
 
   // 다른 사람 칩은 누를 수 없고, 설정을 마쳤는지만 보인다

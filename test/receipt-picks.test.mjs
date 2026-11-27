@@ -10,6 +10,6 @@ test('영수증 사진 카드: 샘플 영수증은 위 한 줄, 찍기·앨범�
   const src = read('room.js');
   const card = src.slice(src.indexOf("const touch = matchMedia('(pointer: coarse)')"), src.indexOf("const touch = matchMedia('(pointer: coarse)')") + 1200);
   assert.match(card, /<div class="receipt-picks">\$\{sample\}<div class="actions">\$\{receiptPickers\(touch\)\}<\/div><\/div>/);
-  assert.match(card, /const sample = authOptions\(\)\.demo \? `<div class="actions"><button type="button" class="btn plain"[^`]*data-action="receipt-sample">샘플 영수증으로 해 보기<\/button><\/div>` : ''/, '샘플은 체험 데모에서만');
+  assert.match(card, /const sample = authOptions\(\)\.demo \? `<div class="actions"><button type="button" class="btn plain"[^`]*data-action="receipt-sample">Try with a sample receipt<\/button><\/div>` : ''/, '샘플은 체험 데모에서만');
   assert.match(read('style.css'), /\.receipt-picks \{ display: grid; gap: 8px; \}/, '두 줄 사이도 버튼 사이와 같은 간격(한 묶음)');
 });

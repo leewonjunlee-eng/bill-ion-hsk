@@ -55,7 +55,6 @@ export function createSeq({ fetch, base = '', storage }) {
 
 // 끝낸 task 바로 뒤 화면 가운데에 띄우는 카드. 누르면 바로 남는다(따로 '보내기'가 없다). 별점이 아니라 양 끝에 뜻을 적은 7칸이다:
 // 별은 만족도로 읽히고, SEQ는 '얼마나 쉬웠나'를 7점으로 묻는다. chosen이 있으면 고른 칸을 눌린 채로 두고 남겼다고 알린다
-const particle = (n) => ([1, 3, 6, 7, 8].includes(n % 10) ? '을' : '를'); // Task 1을 · Task 2를
 export function seqCardHtml(t, chosen = null) {
   const end = (s) => (s === 1 ? ' · very hard' : s === 7 ? ' · very easy' : '');
   const buttons = [1, 2, 3, 4, 5, 6, 7].map((s) => `<button type="button" class="seq-btn" data-seq="rate" data-task="${esc(t.id)}" data-score="${s}" aria-label="${s}${end(s)}"${chosen === s ? ' aria-pressed="true"' : ''}${chosen ? ' disabled' : ''}>${s}</button>`).join('');

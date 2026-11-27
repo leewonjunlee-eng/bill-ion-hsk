@@ -3,7 +3,7 @@
 import { won, money, dayLabel, amountOf, toKrw, shares, settle, active } from './core.js';
 import { unitOf, decimalsOf } from './currencies.js';
 import { leaveBlock } from './leave.js';
-import { esc, chip, avatarHtml, tile, CHEVRON, CHECK, CROSS, ICON_DONE, logItemHtml, minuteLabels, createSheet, mountSegs, resetSegs, mountSliders, segArrowKeys, topic, subj, restNote, allocLabel, allocButton, ARROW, ALERT, qrImageUrl, qrIsFresh, receiptPickers, sendMode, sendFollowUp, flaggedLines, blockedNotice, askedBy, nudge, COMPUTER_QUERY, disputeWaiting, disputeChoices, disputeNote, disputeRejected, disputeLive, disputeStatus, changedLines, proposalLinesHtml, reviseChoicesHtml, invoiceRows } from './ui.js';
+import { esc, chip, avatarHtml, tile, CHEVRON, CHECK, CROSS, ICON_DONE, logItemHtml, minuteLabels, createSheet, mountSegs, resetSegs, mountSliders, segArrowKeys, restNote, allocLabel, allocButton, ARROW, ALERT, qrImageUrl, qrIsFresh, receiptPickers, sendMode, sendFollowUp, flaggedLines, blockedNotice, askedBy, nudge, COMPUTER_QUERY, disputeWaiting, disputeChoices, disputeNote, disputeRejected, disputeLive, disputeStatus, changedLines, proposalLinesHtml, reviseChoicesHtml, invoiceRows } from './ui.js';
 import { reduceMotion } from './motion.js';
 import { startSkeleton, roomSkeleton } from './skeleton.js';
 import { api, subscribeRoom, currentUid, setCurrentUid } from './room-api.js';
@@ -37,8 +37,8 @@ const state = { data: null, events: [], error: null, renderedLog: 0, sheet: null
 let unsubscribe = () => {};
 
 const members = () => state.data?.room.members ?? [];
-const nameOf = (uid) => ({ system: '정산방', mediator: '중재 비서', all: '모두' })[uid] ?? members().find((m) => m.uid === uid)?.name ?? uid;
-const agentName = (uid) => (uid === 'system' || uid === 'mediator' ? nameOf(uid) : `${nameOf(uid)}의 비서`);
+const nameOf = (uid) => ({ system: 'Room', mediator: 'Mediator agent', all: 'everyone' })[uid] ?? members().find((m) => m.uid === uid)?.name ?? uid;
+const agentName = (uid) => (uid === 'system' || uid === 'mediator' ? nameOf(uid) : `${nameOf(uid)}’s agent`);
 const colorOf = (uid) => {
   const profileColor = members().find(m => m.uid === uid)?.color;
   if (/^#[0-9a-f]{6}$/i.test(profileColor)) return profileColor;
@@ -47,7 +47,7 @@ const colorOf = (uid) => {
 };
 const avatar = (uid, cls = '') => avatarHtml(nameOf(uid)[0], colorOf(uid), cls);
 // 기록 시각은 분까지만(로그가 아니라 대화)
-const timeOf = (iso) => new Date(iso).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Seoul' });
+const timeOf = (iso) => new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'Asia/Seoul' });
 
 // 좁은 화면에서 상단바 종으로 여는 비서끼리 기록. 마지막으로 본 기록은 방·사람마다 기억한다
 const seenKey = () => `agent-settlement.seen.${roomId}.${currentUid()}`;
@@ -59,13 +59,13 @@ const logPop = createLogPop({
     time: timeOf(e.at),
     text: e.text,
     meta: e.meta,
-    tagHtml: e.action ? chip(`${nameOf(e.action.for)}의 확인 필요`, 'warn') : '',
+    tagHtml: e.action ? chip(`${nameOf(e.action.for)} to confirm`, 'warn') : '',
     ...opts,
   }),
   timeOf: (e) => timeOf(e.at),
   counts: (e) => notifies(e, currentUid(), state.data?.myAgent?.notify),
-  todosHtml: () => (state.data?.actions ?? []).map((a) => `<div class="pop-todo"><b>${esc(state.data.me.name)}의 할 일</b><p>${esc(a.text)}</p>
-    <div class="actions">${actionButtons(a, 'sm')}<button class="btn sm plain" data-action="close-log">나중에</button></div></div>`).join(''),
+  todosHtml: () => (state.data?.actions ?? []).map((a) => `<div class="pop-todo"><b>${esc(state.data.me.name)}’s to-do</b><p>${esc(a.text)}</p>
+    <div class="actions">${actionButtons(a, 'sm')}<button class="btn sm plain" data-action="close-log">Later</button></div></div>`).join(''),
   seen: {
     get: () => {
       try {
@@ -265,7 +265,7 @@ async function readReceipt(file) {
     const { draft } = await api(`/api/rooms/${encodeURIComponent(roomId)}/receipts/extract`, { method: 'POST', body: { image }, signal: controller.signal });
     applyReceipt(draft);
   } catch (e) {
-    if (e.name !== 'AbortError') state.formError = `영수증을 읽지 못했어요(${e.message}). 직접 입력해 주세요.`;
+    if (e.name !== 'AbortError') state.formError = `Could not read the receipt (${e.message}). Please enter it manually.`;
     if (e.name !== 'AbortError') state.addMode = 'manual';
   }
   state.reading = null;
@@ -284,7 +284,7 @@ function applyReceipt(r) {
   if (!r.ok) {
     state.addMode = 'manual';
     d.amount = '';
-    state.formError = `${r.reason}. 직접 입력해 주세요.`;
+    state.formError = `${r.reason}. Please enter it manually.`;
     state.readNotes = [];
     return;
   }
@@ -344,9 +344,9 @@ async function confirmGuesses(eid) {
 
 function expenseChip(e) {
   if (!e.items?.length) return chip('1/N');
-  if (!e.alloc) return chip('메뉴별로 나누기 전');
+  if (!e.alloc) return chip('Not split by item');
   const n = e.items.filter((it) => isFlagged(e.alloc[it.id])).length;
-  return n ? chip(`확인 필요 ${n}`, 'warn') : chip('메뉴별로 나눔', 'ok');
+  return n ? chip(`To confirm ${n}`, 'warn') : chip('Split by item', 'ok');
 }
 
 function linesHtml(exp) {
@@ -361,13 +361,13 @@ function linesHtml(exp) {
     // 확인이 필요한 줄이 내 비서가 물은 게 아니면 누구의 비서가 물었는지 함께 보인다(청구서 보내기가 막혀 여기로 왔을 때 길을 잃지 않게)
     const owner = flag && exp.createdBy !== state.data.me.uid ? chip(askedBy(exp.createdBy, { me: state.data.me.uid, nameOf }), 'warn') : '';
     const confirmBtn = a && (flag || edited)
-      ? `<div class="line-foot"><button class="btn sm ${flag ? 'secondary' : 'plain'}" data-action="confirm-line" data-exp="${esc(exp.id)}" data-line="${esc(it.id)}">${edited ? '이대로 확인' : '비서가 짐작한 대로 확인'}</button>${owner}</div>`
+      ? `<div class="line-foot"><button class="btn sm ${flag ? 'secondary' : 'plain'}" data-action="confirm-line" data-exp="${esc(exp.id)}" data-line="${esc(it.id)}">${edited ? 'Confirm' : 'Confirm agent guess'}</button>${owner}</div>`
       : '';
     const focus = state.focusLine?.exp === exp.id && state.focusLine.line === it.id;
     return `<div class="line ${flag ? 'flag' : ''}${focus ? ' focus' : ''}" data-line-id="${esc(it.id)}"${focus ? ' aria-current="true"' : ''}>
       <div class="line-top"><span class="line-name">${it.time ? `<small style="margin:0 6px 0 0">${esc(it.time)}</small>` : ''}${esc(it.name)}<small>×${it.qty}</small></span><span class="num">${money(it.qty * it.unit, exp.currency)}</span></div>
       <div class="picks">${picks}</div>
-      <p class="reason">${a ? esc(a.confirmed ? `${a.reason ? `${a.reason} ` : ''}(확인함)` : a.reason) : '아직 나누지 않았어요.'}</p>
+      <p class="reason">${a ? esc(a.confirmed ? `${a.reason ? `${a.reason} ` : ''}(confirmed)` : a.reason) : 'Not split yet.'}</p>
       ${confirmBtn}</div>`;
   }).join('');
 }
@@ -376,8 +376,8 @@ function linesHtml(exp) {
 function bulkConfirmHtml(exp, busy) {
   const n = exp.items.filter((it) => isFlagged(exp.alloc?.[it.id])).length;
   if (n < 2 || busy) return '';
-  return `<div class="line-foot" style="margin-bottom:10px"><span class="grow meta">확인할 줄 ${n}개</span>
-    <button class="btn sm secondary" data-action="confirm-guesses" data-id="${esc(exp.id)}">${n}줄 모두 짐작한 대로 확인</button></div>`;
+  return `<div class="line-foot" style="margin-bottom:10px"><span class="grow meta">Lines to confirm: ${n}</span>
+    <button class="btn sm secondary" data-action="confirm-guesses" data-id="${esc(exp.id)}">Confirm all guesses (${n})</button></div>`;
 }
 
 function expSheetHtml(exp) {
@@ -387,26 +387,26 @@ function expSheetHtml(exp) {
   const busy = state.allocating === exp.id;
   const ab = allocButton({ allocated: Boolean(exp.alloc), fresh: Boolean(exp.allocFresh), flagged: (exp.items ?? []).filter((it) => isFlagged(exp.alloc?.[it.id])).length });
   const lines = exp.items?.length
-    ? `<section class="group"><h3 class="group-label"><span>영수증 ${exp.items.length}줄 · 어떻게 나눌까요</span><span>${esc(state.allocSource[exp.id] ?? (exp.alloc ? '' : '나누기 전'))}</span></h3>
-        ${busy ? '<div class="next" aria-busy="true" style="margin:0 0 12px"><h2 style="font-size:1.0625rem">비서들이 기억으로 나누는 중이에요</h2><div class="progress"><i></i></div></div>' : ''}
+    ? `<section class="group"><h3 class="group-label"><span>Receipt lines: ${exp.items.length}</span><span>${esc(state.allocSource[exp.id] ?? (exp.alloc ? '' : 'Not split yet'))}</span></h3>
+        ${busy ? '<div class="next" aria-busy="true" style="margin:0 0 12px"><h2 style="font-size:1.0625rem">Agents are splitting from their memories</h2><div class="progress"><i></i></div></div>' : ''}
         ${bulkConfirmHtml(exp, busy)}<div class="list">${linesHtml(exp)}</div>
-        <p class="group-note">${exp.alloc ? '이름을 눌러 고친 뒤 확인하면 그 줄은 더 묻지 않아요.' : '각자의 비서가 공유한 기억으로 줄마다 누구 몫인지 정해요. 근거가 없는 줄은 짐작하지 않고 물어봐요.'}</p>
+        <p class="group-note">${exp.alloc ? 'Tap names to edit, then confirm. A confirmed line is not asked about again.' : 'Agents use their shared memories to decide whose each line is. Where there is no evidence, they ask instead of guessing.'}</p>
         <button class="btn ${exp.alloc ? 'secondary' : ''}" style="width:100%;margin-top:10px" data-action="allocate-exp" data-id="${esc(exp.id)}" ${busy || ab.disabled ? 'disabled' : ''}>${ab.label}</button>
         ${ab.hint ? `<p class="group-note" style="margin-top:8px">${esc(ab.hint)}</p>` : ''}</section>`
-    : `<p class="how">영수증 줄이 없어서 함께 있던 ${exp.present.length}명이 똑같이 나눠요.</p>`;
+    : `<p class="how">No receipt lines, so it is split equally among everyone who joined (${exp.present.length}).</p>`;
   return `<div class="big"><div class="amt">${won(krw)}</div>
-      <p class="sub">${money(amountOf(exp), exp.currency)} · ${esc(nameOf(exp.payer))} ${exp.method === 'card' ? '카드' : '현금'} · ${dayLabel(exp.date)} ${esc(exp.time)}</p></div>
+      <p class="sub">${money(amountOf(exp), exp.currency)} · ${esc(nameOf(exp.payer))} ${exp.method === 'card' ? 'card' : 'cash'} · ${dayLabel(exp.date)} ${esc(exp.time)}</p></div>
     <p class="how">${esc(how)}</p>
-    ${exp.hasReceipt ? `<button class="btn secondary" style="width:100%;margin-bottom:20px" data-action="show-receipt" data-id="${esc(exp.id)}">영수증 확인하기</button>` : ''}
+    ${exp.hasReceipt ? `<button class="btn secondary" style="width:100%;margin-bottom:20px" data-action="show-receipt" data-id="${esc(exp.id)}">View receipt</button>` : ''}
     ${state.formError ? `<p class="form-error" role="alert">${esc(state.formError)}</p>` : ''}
     ${lines}
-    <section class="group"><h3 class="group-label"><span>사람별 몫</span><span>${exp.split === 'items' ? '쓴 만큼' : '1/N'}</span></h3>
+    <section class="group"><h3 class="group-label"><span>Each person’s share</span><span>${exp.split === 'items' ? 'By usage' : '1/N'}</span></h3>
       <div class="list">${room.members.filter((m) => s.krwShare[m.uid] !== undefined).map((m) => `<div class="row" style="--inset:52px">${avatar(m.uid)}
-        <span class="grow">${esc(m.name)}${m.uid === exp.payer ? ' <span class="meta">· 낸 사람</span>' : ''}</span>
+        <span class="grow">${esc(m.name)}${m.uid === exp.payer ? ' <span class="meta">· payer</span>' : ''}</span>
         <span class="amount num">${won(s.krwShare[m.uid])}</span></div>`).join('')}</div>${restNote(s.rest)}</section>
-    ${room.status === 'done' ? '<p class="group-note">정산이 끝난 방이라 지출을 고치거나 지울 수 없어요.</p>' : `<div style="display:grid;gap:8px">
-      <button class="btn plain" data-action="edit-exp" data-id="${esc(exp.id)}">지출 고치기</button>
-      <button class="btn danger ${state.armedDelete === exp.id ? 'armed' : ''}" data-action="delete-exp" data-id="${esc(exp.id)}">${state.armedDelete === exp.id ? '한 번 더 누르면 지워요' : '지출 지우기'}</button>
+    ${room.status === 'done' ? '<p class="group-note">This room is settled, so expenses can’t be edited or deleted.</p>' : `<div style="display:grid;gap:8px">
+      <button class="btn plain" data-action="edit-exp" data-id="${esc(exp.id)}">Edit expense</button>
+      <button class="btn danger ${state.armedDelete === exp.id ? 'armed' : ''}" data-action="delete-exp" data-id="${esc(exp.id)}">${state.armedDelete === exp.id ? 'Tap again to delete' : 'Delete expense'}</button>
     </div>`}`;
 }
 
@@ -558,7 +558,7 @@ async function setupAct(name, d) {
   if (name === 'copy-invite') {
     const done = (ok) => {
       setup.copied = ok;
-      setup.copyError = ok ? '' : '복사하지 못했어요. 링크를 눌러 통째로 고른 뒤 복사해 주세요.'; // 누른 링크 줄 바로 아래에 알린다
+      setup.copyError = ok ? '' : 'Could not copy. Tap the link to select all of it, then copy.'; // 누른 링크 줄 바로 아래에 알린다
       render();
       if (ok) setTimeout(() => { setup.copied = false; render(); }, 1500);
     };
@@ -567,7 +567,7 @@ async function setupAct(name, d) {
   }
   if (name === 'share-invite') {
     const { room } = state.data;
-    return navigator.share({ title: room.name, text: `‘${room.name}’ 정산 방에 초대해요`, url: inviteUrl(setup.invite.token) }).catch(() => {});
+    return navigator.share({ title: room.name, text: `Join the settlement room “${room.name}”`, url: inviteUrl(setup.invite.token) }).catch(() => {});
   }
   if (setup.busy) return;
   const need = (ok, msg) => {
@@ -585,8 +585,8 @@ async function setupAct(name, d) {
     }
     if (name === 'create-room') {
       const c = setup.create;
-      need(c.name.trim(), '방 이름을 적어 주세요');
-      need(!c.start || !c.end || c.end >= c.start, '끝나는 날이 시작하는 날보다 빨라요');
+      need(c.name.trim(), 'Enter a room name');
+      need(!c.start || !c.end || c.end >= c.start, 'The end date is before the start date');
       ensureUid();
       // 환율 정책은 외화 방에만 보낸다(#55). 원화 방은 정책을 묻지 않는다
       const { room } = await api('/api/rooms', { method: 'POST', body: { name: c.name, dates: datesLabel(c.start, c.end), ...(c.foreign ? { currency: c.fxCurrency, policy: c.policy } : {}) } });
@@ -594,7 +594,7 @@ async function setupAct(name, d) {
       return;
     }
     if (name === 'join-room') {
-      ensureUid(); // '동의하고 참가하기'를 누른 것이 곧 동의다
+      ensureUid(); // 'Agree and join'을 누른 것이 곧 동의다
       const { roomId: id } = await api(`/api/invites/${encodeURIComponent(inviteToken)}/join`, { method: 'POST', body: { agree: true } });
       location.search = `?room=${encodeURIComponent(id)}`;
       return;
@@ -672,7 +672,7 @@ async function act(name, d) {
     };
     state.addMode = exp.items ? 'photo' : 'manual';
     state.editing = exp.id;
-    state.readNotes = exp.alloc && exp.items ? ['줄이나 함께한 사람을 바꾸면 메뉴 배분을 다시 해야 해요'] : [];
+    state.readNotes = exp.alloc && exp.items ? ['Changing lines or who joined means splitting by item again'] : [];
     state.formError = '';
     state.sheet = 'add';
     renderSheet();
@@ -753,8 +753,8 @@ const isDemoRoom = () => String(roomId).startsWith('demo-');
 function whoPicker() {
   if (!authOptions().dev || !isDemoRoom()) return ''; // 개발용 데모 방에서만 남의 신원으로 바꿔 본다
   const me = currentUid();
-  return `<section class="group"><h2 class="group-label"><span>누구로 볼까요?</span><span>개발용 시드 신원</span></h2>
-    <div class="seg" role="radiogroup" aria-label="보는 사람" data-seg="who"><span class="seg-thumb"></span>
+  return `<section class="group"><h2 class="group-label"><span>View as</span><span>Development seed identities</span></h2>
+    <div class="seg" role="radiogroup" aria-label="Viewer" data-seg="who"><span class="seg-thumb"></span>
       ${members().filter(active).map((m) => `<button type="button" role="radio" aria-checked="${m.uid === me}" data-action="who" data-id="${esc(m.uid)}">${esc(m.name)}</button>`).join('')}
     </div></section>`;
 }
@@ -766,7 +766,7 @@ function hero() {
   const person = (m) => (m.uid === me.uid ? agentPanel.chipHtml(m, avatar(m.uid)) : personChipHtml({ name: m.name, avatar: avatar(m.uid), ready: ready.has(m.uid) }));
   const here = room.members.filter(active); // 탈퇴하거나 나간 사람은 지출·송금 기록에만 남는다(#55)
   return `<section class="hero"><h1>${esc(room.name)}</h1>
-    <p class="sub">${esc(room.dates || '')}${room.dates ? ' · ' : ''}${here.length}명 · ${room.status === 'done' ? '정산이 끝난 방이에요' : '돈 얘기는 각자의 비서끼리 해요'}</p>
+    <p class="sub">${esc(room.dates || '')}${room.dates ? ' · ' : ''}Members: ${here.length} · ${room.status === 'done' ? 'This room is settled' : 'Agents talk about the money'}</p>
     <div class="people">${here.map(person).join('')}${hasStarted(room) ? '' : inviteButtonHtml()}</div></section>`;
 }
 
@@ -775,22 +775,22 @@ function nextCard() {
   if (state.data.room.status === 'done') return doneCardHtml(); // 끝난 방은 지출을 더 받지 않고, 남은 일은 나가기뿐이다(#55)
   if (!mine.length) {
     // 영수증 사진은 지출 남기기 시트 맨 위에서 '직접 입력'과 나란히 고른다. 카드에는 입구 하나만 둔다
-    const add = '<button class="btn" data-action="add-expense">지출 남기기</button>';
+    const add = '<button class="btn" data-action="add-expense">Add expense</button>';
     // 아직 메뉴별로 나누지 않은 영수증이 있으면 그걸 먼저 권한다. 합계만 알아 1/N로 나누기로 한 지출(split: 'equal')은 빼고
     const unsplit = state.data.expenses.find((e) => e.split === 'items' && e.items?.length && !e.alloc);
     if (unsplit) {
-      return `<section class="next"><p class="eyebrow">다음에 할 일</p><h2>${esc(topic(`‘${unsplit.title}’`))} 아직 메뉴별로 나누지 않았어요</h2>
-        <p>각자의 비서가 공유한 기억으로 줄마다 누구 몫인지 정해요. 근거가 없는 줄만 사람에게 물어봐요.</p>
-        <div class="actions"><button class="btn" data-action="open-exp" data-id="${esc(unsplit.id)}">나누러 가기</button>${add.replace('class="btn"', 'class="btn plain"')}</div></section>`;
+      return `<section class="next"><p class="eyebrow">Next up</p><h2>“${esc(unsplit.title)}” isn’t split by item yet</h2>
+        <p>Agents use their shared memories to decide whose each line is. They ask a person only where there is no evidence.</p>
+        <div class="actions"><button class="btn" data-action="open-exp" data-id="${esc(unsplit.id)}">Go split</button>${add.replace('class="btn"', 'class="btn plain"')}</div></section>`;
     }
     const settling = settlingCard(add.replace('class="btn"', 'class="btn plain"'));
     if (settling) return settling;
-    return `<section class="next"><p class="eyebrow">${esc(state.data.me.name)}의 할 일</p><h2>지금은 할 일이 없어요</h2>
-      <p>함께 쓴 돈이 있으면 남겨 주세요. 확인이 필요한 일이 생기면 비서가 여기에 올려요.</p>
+    return `<section class="next"><p class="eyebrow">${esc(state.data.me.name)}’s to-do</p><h2>Nothing to do right now</h2>
+      <p>Add any shared spending. When something needs your confirmation, your agent posts it here.</p>
       <div class="actions">${add}</div></section>`;
   }
   const first = mine[0];
-  return `<section class="next warn"><p class="eyebrow">${esc(state.data.me.name)}의 할 일 ${mine.length}개</p><h2>${esc(first.text)}</h2>
+  return `<section class="next warn"><p class="eyebrow">${esc(state.data.me.name)}’s to-dos: ${mine.length}</p><h2>${esc(first.text)}</h2>
     <p>${esc(actionNote(first))}</p><div class="actions">${actionButtons(first)}</div></section>`;
 }
 
@@ -805,12 +805,12 @@ function disputesSection() {
   const items = rows.map(([d, e]) => `<button class="row" data-action="open-dispute" data-id="${esc(d.id)}">
       ${tile(e.kind)}
       <span class="grow"><span class="title">${esc(e.title)}</span>
-        <span class="meta" style="display:block">${esc(subj(nameOf(d.by)))} 낸 이의</span>
+        <span class="meta" style="display:block">Dispute from ${esc(nameOf(d.by))}</span>
         <span class="meta" style="display:block;color:var(--label)">${esc(disputeStatus(d, e, nameOf))}</span>
-        <span style="display:block;margin-top:4px">${disputeLive(d) ? chip('진행 중', 'warn') : chip('끝남')}</span></span>
+        <span style="display:block;margin-top:4px">${disputeLive(d) ? chip('Open', 'warn') : chip('Closed')}</span></span>
       ${CHEVRON}
     </button>`).join('');
-  return `<section class="group"><h2 class="group-label"><span>이의 ${rows.length}건</span><span>${live ? `${live}건 진행 중` : '모두 끝났어요'}</span></h2>
+  return `<section class="group"><h2 class="group-label"><span>Disputes: ${rows.length}</span><span>${live ? `Open: ${live}` : 'All closed'}</span></h2>
     <div class="list">${items}</div></section>`;
 }
 
@@ -819,13 +819,13 @@ function expensesSection() {
   const rows = expenses.map((e) => `<button class="row" data-action="open-exp" data-id="${esc(e.id)}">
       ${tile(e.kind)}
       <span class="grow"><span class="title">${esc(e.title)}</span>
-        <span class="meta" style="display:block">${esc(nameOf(e.payer))} · ${e.method === 'card' ? '카드' : '현금'} ${money(amountOf(e), e.currency)} · ${dayLabel(e.date)} ${esc(e.time)}</span>
+        <span class="meta" style="display:block">${esc(nameOf(e.payer))} · ${e.method === 'card' ? 'Card' : 'Cash'} ${money(amountOf(e), e.currency)} · ${dayLabel(e.date)} ${esc(e.time)}</span>
         <span style="display:block;margin-top:4px">${expenseChip(e)}</span></span>
       <span class="end"><span class="amount">${won(toKrw(e, room, room.policy).krw)}</span></span>
       ${CHEVRON}
     </button>`).join('');
-  return `<section class="group"><h2 class="group-label"><span>지출 ${expenses.length}건</span>${room.status === 'done' ? '' : '<button class="text-btn" data-action="add-expense">지출 추가</button>'}</h2>
-    <div class="list">${rows || '<p class="empty">아직 지출이 없어요.</p>'}</div></section>`;
+  return `<section class="group"><h2 class="group-label"><span>Expenses: ${expenses.length}</span>${room.status === 'done' ? '' : '<button class="text-btn" data-action="add-expense">Add expense</button>'}</h2>
+    <div class="list">${rows || '<p class="empty">No expenses yet.</p>'}</div></section>`;
 }
 
 function transfersSection() {
@@ -833,7 +833,7 @@ function transfersSection() {
   const live = transfers.filter((t) => t.status !== 'superseded');
   const list = live.length ? live : settle(ledger).map((t) => ({ ...t, status: 'preview' }));
   const me = currentUid();
-  const label = (t) => ({ preview: '청구서 보내기 전', scheduled: isManual(t) ? '편할 때 보내기' : new Date(t.remindAt) > Date.now() ? `${whenText(t.remindAt)} 예약` : '곧 알려 드려요', due: '보낼 때가 됐어요', opened: '송금 앱 열림', sent: !t.notReceivedAt ? '보냈어요' : t.to === me ? '확인을 부탁했어요' : '아직 못 받았대요', confirmed: '받았어요' })[t.status] ?? t.status;
+  const label = (t) => ({ preview: 'Invoices not sent', scheduled: isManual(t) ? 'Send any time' : new Date(t.remindAt) > Date.now() ? `Scheduled ${whenText(t.remindAt)}` : 'Reminder soon', due: 'Time to send', opened: 'Transfer app opened', sent: !t.notReceivedAt ? 'Sent' : t.to === me ? 'Asked to check' : 'Not received yet', confirmed: 'Received' })[t.status] ?? t.status;
   const rows = list.map((t) => {
     const mine = t.id && (t.from === me || t.to === me);
     const tag = mine ? `button type="button" class="row" data-action="open-transfer" data-id="${esc(t.id)}"` : 'div class="row"';
@@ -843,8 +843,8 @@ function transfersSection() {
         <span style="display:block;margin-top:3px">${chip(label(t), t.status === 'confirmed' ? 'ok' : t.status === 'due' ? 'warn' : '')}</span></span>
       <span class="end"><span class="amount num">${won(t.amount)}</span>${mine ? CHEVRON : ''}</span></${mine ? 'button' : 'div'}>`;
   }).join('');
-  return `<section class="group"><h2 class="group-label"><span>누가 누구에게</span><span>송금 ${list.length}번</span></h2>
-    <div class="list">${rows || '<p class="empty">주고받을 돈이 없어요.</p>'}</div></section>`;
+  return `<section class="group"><h2 class="group-label"><span>Who pays whom</span><span>Transfers: ${list.length}</span></h2>
+    <div class="list">${rows || '<p class="empty">No money to move.</p>'}</div></section>`;
 }
 
 const seg = (key, field, options, value) => `<div class="seg" role="radiogroup" data-seg="${key}"><span class="seg-thumb"></span>
@@ -854,57 +854,57 @@ function addSheetHtml() {
   const d = state.draft;
   const room = { ...state.data.room, members: state.data.room.members.filter(active) };
   const currencies = ['KRW', room.fx?.currency].filter(Boolean);
-  const dateField = `<input type="date" data-field="date" value="${esc(d.date)}" aria-label="날짜">`;
+  const dateField = `<input type="date" data-field="date" value="${esc(d.date)}" aria-label="Date">`;
   const picks = room.members.map((m) => `<button type="button" class="pick" aria-pressed="${d.present.includes(m.uid)}" data-action="draft-present" data-id="${esc(m.uid)}">${avatar(m.uid)}${esc(m.name)}</button>`).join('');
-  const tabs = state.editing ? '' : `<div style="margin-bottom:16px">${seg('add-mode', 'mode', [['manual', '직접 입력'], ['photo', '영수증 사진']], state.addMode).replaceAll('data-action="draft-set"', 'data-action="add-mode"')}</div>`;
+  const tabs = state.editing ? '' : `<div style="margin-bottom:16px">${seg('add-mode', 'mode', [['manual', 'Enter manually'], ['photo', 'Receipt photo']], state.addMode).replaceAll('data-action="draft-set"', 'data-action="add-mode"')}</div>`;
   if (state.addMode === 'photo' && !d.items) return tabs + photoPickHtml();
   const amountRow = state.addMode === 'photo' && d.items
     ? linesEditHtml(d)
-    : `<label class="row field"><span class="grow">금액</span><input data-field="amount" value="${esc(d.amount)}" inputmode="${decimalsOf(d.currency) ? 'decimal' : 'numeric'}" placeholder="0" aria-label="금액"></label>`;
+    : `<label class="row field"><span class="grow">Amount</span><input data-field="amount" value="${esc(d.amount)}" inputmode="${decimalsOf(d.currency) ? 'decimal' : 'numeric'}" placeholder="0" aria-label="Amount"></label>`;
   return `${tabs}${state.readNotes.length ? state.readNotes.map((n) => `<p class="preview-note" style="margin-bottom:10px">${esc(n)}</p>`).join('') : ''}
     <section class="group"><div class="list">
-      <label class="row field"><span class="grow">제목</span><input data-field="title" value="${esc(d.title)}" placeholder="예: 편의점 간식" maxlength="40"></label>
+      <label class="row field"><span class="grow">Title</span><input data-field="title" value="${esc(d.title)}" placeholder="e.g. Store snacks" maxlength="40"></label>
     </div></section>
     ${amountRow}
-    ${currencies.length > 1 ? `<section class="group"><h3 class="group-label"><span>통화</span>${d.currency !== 'KRW' ? '<span>저장할 때 그날 환율을 받아 와요</span>' : ''}</h3>${seg('cur', 'currency', currencies.map((c) => [c, unitOf(c)]), d.currency)}</section>` : ''}
-    <section class="group"><h3 class="group-label"><span>낸 사람</span></h3>${seg('payer', 'payer', room.members.map((m) => [m.uid, m.name]), d.payer)}</section>
-    <section class="group"><h3 class="group-label"><span>결제 수단</span></h3>${seg('method', 'method', [['card', '카드'], ['cash', '현금']], d.method)}</section>
-    <section class="group"><h3 class="group-label"><span>함께한 사람</span><span>${d.present.length}명이 나눠요</span></h3><div class="picks">${picks}</div></section>
-    <section class="group"><div class="list"><div class="row field"><span class="grow">날짜</span>${dateField}</div>
-      <label class="row field"><span class="grow">시각</span><input type="time" data-field="time" value="${esc(d.time)}" aria-label="시각"></label></div></section>
+    ${currencies.length > 1 ? `<section class="group"><h3 class="group-label"><span>Currency</span>${d.currency !== 'KRW' ? '<span>That day’s rate is fetched on save</span>' : ''}</h3>${seg('cur', 'currency', currencies.map((c) => [c, unitOf(c)]), d.currency)}</section>` : ''}
+    <section class="group"><h3 class="group-label"><span>Paid by</span></h3>${seg('payer', 'payer', room.members.map((m) => [m.uid, m.name]), d.payer)}</section>
+    <section class="group"><h3 class="group-label"><span>Payment method</span></h3>${seg('method', 'method', [['card', 'Card'], ['cash', 'Cash']], d.method)}</section>
+    <section class="group"><h3 class="group-label"><span>Who joined</span><span>Split among ${d.present.length}</span></h3><div class="picks">${picks}</div></section>
+    <section class="group"><div class="list"><div class="row field"><span class="grow">Date</span>${dateField}</div>
+      <label class="row field"><span class="grow">Time</span><input type="time" data-field="time" value="${esc(d.time)}" aria-label="Time"></label></div></section>
     ${state.formError ? `<p class="form-error" role="alert">${esc(state.formError)}</p>` : ''}
-    <button class="btn" style="width:100%" data-action="save-expense" ${state.saving ? 'disabled' : ''}>${state.saving ? '저장하는 중…' : state.editing ? '고친 내용 저장' : '지출 남기기'}</button>`;
+    <button class="btn" style="width:100%" data-action="save-expense" ${state.saving ? 'disabled' : ''}>${state.saving ? 'Saving…' : state.editing ? 'Save changes' : 'Add expense'}</button>`;
 }
 
 function photoPickHtml() {
   if (state.reading) {
-    return `<section class="next" aria-busy="true" style="margin:0"><p class="eyebrow">AI가 읽는 중</p><h2>영수증을 읽고 있어요</h2>
-      <p>줄마다 메뉴·수량·단가를 읽어요. 보통 몇 초면 끝나요.</p><div class="progress"><i></i></div>
-      <div class="actions"><button class="btn plain sm" data-action="cancel-read">취소</button></div></section>`;
+    return `<section class="next" aria-busy="true" style="margin:0"><p class="eyebrow">AI is reading</p><h2>Reading your receipt</h2>
+      <p>It reads each line’s item, quantity and unit price. This usually takes a few seconds.</p><div class="progress"><i></i></div>
+      <div class="actions"><button class="btn plain sm" data-action="cancel-read">Cancel</button></div></section>`;
   }
   if (!state.aiReady) {
-    return `<p class="preview-note">사진 읽기는 AI 서버가 필요해요. 지금은 '직접 입력'을 써 주세요.</p>`;
+    return `<p class="preview-note">Photo reading needs an AI server. For now, use “Enter manually”.</p>`;
   }
   // 터치가 주 입력인 기기(휴대폰·태블릿)면 찍기와 앨범에서 고르기를 따로 둔다(receiptPickers)
   const touch = matchMedia('(pointer: coarse)').matches;
   // 체험 데모의 샘플 영수증은 위 한 줄을 다 쓰고, 찍기·앨범에서 고르기는 그 아래 한 줄을 나눠 쓴다(셋이 한 줄이면 앞의 둘이 좁아져 글자가 세로로 꺾였다)
-  const sample = authOptions().demo ? `<div class="actions"><button type="button" class="btn plain"${touch ? ' style="flex:1"' : ''} data-action="receipt-sample">샘플 영수증으로 해 보기</button></div>` : '';
-  return `<section class="next" style="margin:0"><h2>${touch ? '영수증을 찍거나 골라 주세요' : '영수증 사진을 골라 주세요'}</h2>
-    <p>AI가 읽은 내용은 저장 전에 직접 확인하고 고칠 수 있어요. 사진 원본은 저장하지 않아요.</p>
+  const sample = authOptions().demo ? `<div class="actions"><button type="button" class="btn plain"${touch ? ' style="flex:1"' : ''} data-action="receipt-sample">Try with a sample receipt</button></div>` : '';
+  return `<section class="next" style="margin:0"><h2>${touch ? 'Take or choose a receipt photo' : 'Choose a receipt photo'}</h2>
+    <p>You can check and fix what the AI read before saving. The original photo is not stored.</p>
     <div class="receipt-picks">${sample}<div class="actions">${receiptPickers(touch)}</div></div></section>`;
 }
 
 // 읽은 줄을 고칠 수 있는 목록. 합계와 줄 합을 나란히 보여 준다.
 function linesEditHtml(d) {
   const rows = d.items.map((it, i) => `<div class="row field" style="gap:8px">
-      <input data-item="${i}" data-key="name" value="${esc(it.name)}" aria-label="메뉴 이름" style="text-align:left;flex:3">
-      <input data-item="${i}" data-key="qty" value="${it.qty}" inputmode="numeric" aria-label="수량" style="flex:1">
-      <input data-item="${i}" data-key="unit" value="${it.unit}" inputmode="${decimalsOf(d.currency) ? 'decimal' : 'numeric'}" aria-label="단가" style="flex:2">
-      <button type="button" class="text-btn" data-action="draft-del-item" data-i="${i}" aria-label="${esc(it.name)} 줄 지우기">×</button></div>`).join('');
-  return `<section class="group"><h3 class="group-label"><span>영수증 ${d.items.length}줄 · 이름 · 수량 · 단가</span>
-      <span id="line-sum">줄 합 ${money(lineSum(d.items), d.currency)}${d.total ? ` · 영수증 합계 ${money(d.total, d.currency)}` : ''}</span></h3>
+      <input data-item="${i}" data-key="name" value="${esc(it.name)}" aria-label="Item name" style="text-align:left;flex:3">
+      <input data-item="${i}" data-key="qty" value="${it.qty}" inputmode="numeric" aria-label="Quantity" style="flex:1">
+      <input data-item="${i}" data-key="unit" value="${it.unit}" inputmode="${decimalsOf(d.currency) ? 'decimal' : 'numeric'}" aria-label="Unit price" style="flex:2">
+      <button type="button" class="text-btn" data-action="draft-del-item" data-i="${i}" aria-label="Delete line ${esc(it.name)}">×</button></div>`).join('');
+  return `<section class="group"><h3 class="group-label"><span>Lines: ${d.items.length} · name · qty · price</span>
+      <span id="line-sum">Line sum ${money(lineSum(d.items), d.currency)}${d.total ? ` · receipt total ${money(d.total, d.currency)}` : ''}</span></h3>
     <div class="list">${rows}</div>
-    <p class="group-note">줄마다 어떻게 나눌지는 저장한 뒤 '비서에게 나누기'로 정해요.</p></section>`;
+    <p class="group-note">After saving, press “Let agents split it” to split each line.</p></section>`;
 }
 
 function renderSheet() {
@@ -921,7 +921,7 @@ function renderSheet() {
     return;
   }
   const exp = state.sheet === 'exp' ? state.data.expenses.find((e) => e.id === state.expId) : null;
-  $('#sheet-title').textContent = exp ? exp.title : state.editing ? '지출 고치기' : '지출 남기기';
+  $('#sheet-title').textContent = exp ? exp.title : state.editing ? 'Edit expense' : 'Add expense';
   body.innerHTML = exp ? expSheetHtml(exp) : addSheetHtml();
   body.scrollTop = top;
   mountSegs(body);
@@ -953,12 +953,12 @@ function renderChannel() {
     time: times[i],
     text: e.text,
     meta: e.meta,
-    tagHtml: e.action ? chip(`${nameOf(e.action.for)}의 확인 필요`, 'warn') : '',
+    tagHtml: e.action ? chip(`${nameOf(e.action.for)} to confirm`, 'warn') : '',
     enter: i >= state.renderedLog,
   })).join('');
   const el = $('#channel');
-  el.innerHTML = `<h2>비서끼리</h2><p class="lead">단톡방 대신 비서들이 주고받은 기록이에요. 사람에게는 확인할 일만 올라와요.</p>
-    ${state.events.length ? `<ol class="log">${items}</ol>` : `<p class="empty">${state.data ? '아직 기록이 없어요.' : '방을 열면 비서들의 기록이 여기에 보여요.'}</p>`}`;
+  el.innerHTML = `<h2>Agents</h2><p class="lead">What agents said to each other instead of a group chat. People only get things to confirm.</p>
+    ${state.events.length ? `<ol class="log">${items}</ol>` : `<p class="empty">${state.data ? 'No activity yet.' : 'Open a room to see the agent log here.'}</p>`}`;
   state.renderedLog = state.events.length;
   el.scrollTop = el.scrollHeight;
   logPop.update(state.events);
@@ -979,22 +979,22 @@ function actionButtons(a, size = '') {
   switch (a.type) {
     case 'confirm_line': {
       const total = flaggedLines(state.data.expenses, isFlagged).reduce((n, g) => n + g.lines.length, 0);
-      return `<button class="${cls}" data-action="open-exp" data-id="${esc(a.expenseId)}" data-line="${esc(a.itemId)}">확인하기</button>${total > 1 ? `<button class="${cls} secondary" data-action="confirm-all-guesses">${total}줄 모두 짐작한 대로 확인</button>` : ''}`;
+      return `<button class="${cls}" data-action="open-exp" data-id="${esc(a.expenseId)}" data-line="${esc(a.itemId)}">Review</button>${total > 1 ? `<button class="${cls} secondary" data-action="confirm-all-guesses">Confirm all guesses (${total})</button>` : ''}`;
     }
     case 'answer_invoice':
-      return `<button class="${cls}" data-action="open-invoice" data-id="${id}">청구서 보기</button>`;
+      return `<button class="${cls}" data-action="open-invoice" data-id="${id}">View invoice</button>`;
     case 'agree_dispute':
-      return `<button class="${cls}" data-action="open-dispute" data-id="${id}">${byId('disputes', a.ref)?.status === 'proposed' ? '중재안 보기' : '이의 보기'}</button>`;
+      return `<button class="${cls}" data-action="open-dispute" data-id="${id}">${byId('disputes', a.ref)?.status === 'proposed' ? 'View proposal' : 'View dispute'}</button>`;
     case 'approve_transfer':
       // opened(송금 앱을 열었다)와, 받는 사람이 안 들어왔다고 한 sent는 둘 다 보냈는지 묻는다
       return ['opened', 'sent'].includes(byId('transfers', a.ref)?.status)
-        ? `<button class="${cls}" data-action="mark-sent" data-id="${id}">보냈어요</button><button class="${cls} secondary" data-action="open-transfer" data-id="${id}">다시 보내기</button>`
-        : `<button class="${cls}" data-action="open-transfer" data-id="${id}">보내러 가기</button>`;
+        ? `<button class="${cls}" data-action="mark-sent" data-id="${id}">Sent</button><button class="${cls} secondary" data-action="open-transfer" data-id="${id}">Send again</button>`
+        : `<button class="${cls}" data-action="open-transfer" data-id="${id}">Go send</button>`;
     case 'set_payout':
-      return `<button class="${cls}" data-action="open-payout">받을 계좌 알려 주기</button>`;
+      return `<button class="${cls}" data-action="open-payout">Add payout account</button>`;
     case 'confirm_receipt':
       // 이미 안 들어왔다고 했으면 보내는 사람의 답을 기다리는 중이라 받았어요만 둔다
-      return `<button class="${cls}" data-action="confirm-receipt" data-id="${id}">받았어요</button>${byId('transfers', a.ref)?.notReceivedAt ? '' : `<button class="${cls} secondary" data-action="not-received" data-id="${id}">아직 안 들어왔어요</button>`}`;
+      return `<button class="${cls}" data-action="confirm-receipt" data-id="${id}">Received</button>${byId('transfers', a.ref)?.notReceivedAt ? '' : `<button class="${cls} secondary" data-action="not-received" data-id="${id}">Not received yet</button>`}`;
     default:
       return '';
   }
@@ -1005,17 +1005,17 @@ function actionNote(a) {
   const t = byId('transfers', a.ref);
   const opened = t?.status === 'opened';
   return {
-    confirm_line: '비서들의 기억에 근거가 없는 줄이에요. 그래서 비서가 짐작으로 청구하지 않고 먼저 물어봐요.',
-    answer_invoice: '자동 수락 한도를 넘어서 비서가 대신 받지 않고 먼저 물어봐요.',
+    confirm_line: 'Agent memories give no evidence for this line, so the agent asks first instead of billing on a guess.',
+    answer_invoice: 'It is over the auto-accept limit, so your agent asks you instead of accepting.',
     agree_dispute: byId('disputes', a.ref)?.status === 'proposed'
-      ? '양쪽이 동의하면 그 지출을 중재안대로 다시 나누고 청구서를 다시 보내요. 거부하면 이의가 끝나고 지금 배분 그대로 정산해요.'
-      : '중재 비서가 양쪽 근거와 영수증의 주문 시각을 보고 나누는 법을 제안해요.',
-    approve_transfer: t?.notReceivedAt ? '토스 송금 내역을 먼저 확인해 주세요. 보냈다면 ‘보냈어요’를, 아니면 ‘다시 보내기’를 눌러요.'
-      : !opened ? '밀어서 보내면 토스 송금 화면이 받는 사람·금액이 채워진 채로 열려요.'
-      : '송금 앱에서 보냈다면 알려 주세요. 받는 사람에게 확인을 부탁할게요.',
-    set_payout: '계좌번호는 나에게 돈을 보낼 사람에게만 보여요.',
-    confirm_receipt: t?.notReceivedAt ? `${nameOf(t.from)}에게 송금 내역을 확인해 달라고 했어요. 그 사이 들어왔다면 알려 주세요.`
-      : `통장에 들어왔는지 보고 알려 주세요. 안 들어왔으면 ${t ? nameOf(t.from) : '보낸 사람'}에게 다시 확인을 부탁할게요.`,
+      ? 'If both accept, the expense is re-split per the proposal and invoices are sent again. If rejected, the dispute ends and settles with the current split.'
+      : 'The mediator agent weighs both sides and the order times on the receipt, then proposes a split.',
+    approve_transfer: t?.notReceivedAt ? 'Check your Toss history first. If you sent it, press “Sent”; otherwise press “Send again”.'
+      : !opened ? 'Slide to send and Toss opens with the payee and amount filled in.'
+      : 'If you sent it in the transfer app, say so. The payee will be asked to confirm.',
+    set_payout: 'Your account number is shown only to people who owe you.',
+    confirm_receipt: t?.notReceivedAt ? `${nameOf(t.from)} was asked to check the transfer history. If the money has arrived since, let them know.`
+      : `Check whether it reached your account. If not, ${t ? nameOf(t.from) : 'the sender'} will be asked to check again.`,
   }[a.type] ?? '';
 }
 
@@ -1023,8 +1023,8 @@ function actionNote(a) {
 function settlingCard(addButtons) {
   const { room, expenses, invoices = [], transfers = [] } = state.data;
   if (state.busy === 'send') {
-    return `<section class="next" aria-busy="true"><p class="eyebrow">비서가 일하는 중</p><h2>비서들이 청구서를 확인하는 중이에요</h2>
-      <p>각자 맡긴 규칙(자동 수락 한도, 보낼 시기, 이의 제기)대로 처리해요. 이의가 있으면 중재까지 이어져요.</p><div class="progress"><i></i></div></section>`;
+    return `<section class="next" aria-busy="true"><p class="eyebrow">Agents at work</p><h2>Agents are checking the invoices</h2>
+      <p>Each follows its owner’s rules (auto-accept limit, send timing, disputes). A dispute goes on to mediation.</p><div class="progress"><i></i></div></section>`;
   }
   const current = invoices.filter((i) => i.version === room.version);
   if (!current.length) {
@@ -1032,29 +1032,29 @@ function settlingCard(addButtons) {
     // 정산 시작은 전원이 환율 정책에 동의해야 열린다(#4). 서버도 같은 조건으로 막는다
     const waiting = notAgreed(room);
     if (waiting.length) {
-      return `<section class="next"><p class="eyebrow">정산 시작 전</p><h2>환율 정책에 ${waiting.length}명이 아직 동의하지 않았어요</h2>
-        <p>${esc(waiting.map((m) => m.name).join(', '))}의 동의를 기다리고 있어요. 모두 동의하면 청구서를 보낼 수 있어요.</p>
-        <div class="actions"><button class="btn" disabled>비서들에게 청구서 보내기</button>${addButtons}</div></section>`;
+      return `<section class="next"><p class="eyebrow">Before settlement</p><h2>Waiting for rate policy agreement (${waiting.length})</h2>
+        <p>Waiting for ${esc(waiting.map((m) => m.name).join(', '))} to agree. Once everyone does, you can send invoices.</p>
+        <div class="actions"><button class="btn" disabled>Send invoices</button>${addButtons}</div></section>`;
     }
     // 확인이 필요한 줄이 있으면 서버가 막는다. 미리 알리지 않고, 버튼을 눌렀을 때 그 자리에서 까닭을 알린다(agentAct의 send-invoices)
     const notice = blockedNotice(flaggedLines(expenses, isFlagged), { me: state.data.me.uid, nameOf });
     if (!notice) state.sendBlocked = false; // 막던 줄을 모두 확인했으면 안내는 저절로 사라진다
     const blocked = state.sendBlocked ? notice : null;
-    return `<section class="next"><p class="eyebrow">다음에 할 일</p><h2>이대로 청구서를 보낼까요?</h2>
-      <p>보내면 각자의 비서가 자기 규칙대로 확인해요. 단톡방에는 아무것도 올라가지 않아요.${invoices.length ? ' 지출이 바뀌어서 다시 보내야 해요.' : ''}</p>
+    return `<section class="next"><p class="eyebrow">Next up</p><h2>Send invoices as they are?</h2>
+      <p>Each agent checks by its own rules. Nothing is posted to a group chat.${invoices.length ? ' Expenses changed, so invoices need to be sent again.' : ''}</p>
       ${state.formError && !state.sheet ? `<p class="form-error" role="alert">${esc(state.formError)}</p>` : ''}
-      <div class="actions"><button class="btn" data-action="send-invoices"${blocked ? ' aria-describedby="send-blocked"' : ''}>비서들에게 청구서 보내기</button>${addButtons}</div>
+      <div class="actions"><button class="btn" data-action="send-invoices"${blocked ? ' aria-describedby="send-blocked"' : ''}>Send invoices</button>${addButtons}</div>
       ${blocked ? blockedHtml(blocked, state.announceBlocked) : ''}</section>`;
   }
   const live = transfers.filter((t) => t.version === room.version);
   // 편할 때 보내기로 정한 송금은 알림 때(다음 날 오전 9시)까지 알리지 않는다. 대신 방을 열었을 때 내 차례임을 보여 준다
   const manual = live.find((t) => t.from === state.data.me.uid && t.status === 'scheduled' && isManual(t));
   if (manual) {
-    return `<section class="next"><p class="eyebrow">편할 때 보내기</p><h2>${esc(nameOf(manual.to))}에게 ${won(manual.amount)}을 보내면 돼요</h2>
-      <p>준비되면 편할 때 보내 주세요.${manual.remindAt ? ` ${esc(whenText(manual.remindAt))}까지 받았다는 확인이 없으면 한 번 알려 드려요.` : ''}</p><div class="actions"><button class="btn" data-action="open-transfer" data-id="${esc(manual.id)}">보내러 가기</button>${addButtons}</div></section>`;
+    return `<section class="next"><p class="eyebrow">Send any time</p><h2>Send ${won(manual.amount)} to ${esc(nameOf(manual.to))}</h2>
+      <p>Send when you’re ready.${manual.remindAt ? ` If receipt isn’t confirmed by ${esc(whenText(manual.remindAt))}, you get one reminder.` : ''}</p><div class="actions"><button class="btn" data-action="open-transfer" data-id="${esc(manual.id)}">Go send</button>${addButtons}</div></section>`;
   }
-  return `<section class="next"><p class="eyebrow">기다리는 중</p><h2>다른 사람의 확인을 기다리고 있어요</h2>
-    <p>누가 무엇을 하고 있는지는 아래 '누가 누구에게'와 비서끼리 기록에서 볼 수 있어요. 내 차례가 되면 여기에 올려요.</p><div class="actions">${addButtons}</div></section>`;
+  return `<section class="next"><p class="eyebrow">Waiting</p><h2>Waiting for others to confirm</h2>
+    <p>See who is doing what in “Who pays whom” below and in the agent log. When it’s your turn, it shows up here.</p><div class="actions">${addButtons}</div></section>`;
 }
 
 // 청구서를 막는 줄 안내. 몇 줄인지, 어느 지출의 줄인지, 누가 확인할지를 글로 쓰고(색에만 기대지 않는다) 줄마다 그리로 가는 버튼을 둔다.
@@ -1065,7 +1065,7 @@ function blockedHtml(n, announce) {
     <p class="blocked-lead">${esc(n.lead)}</p>
     <ul>${n.rows.map((r) => `<li><span class="blocked-what">${esc(r.what)}<small>${esc(r.who)}</small></span>
       <button class="btn sm secondary" data-action="open-exp" data-id="${esc(r.expId)}" data-line="${esc(r.lineId)}" aria-label="${esc(`${r.what} ${r.label}`)}">${esc(r.label)}</button></li>`).join('')}</ul>
-    <div class="actions" style="margin-top:10px"><button class="btn sm" data-action="confirm-all-guesses">남은 ${n.total}줄 모두 짐작한 대로 확인</button></div></div>`;
+    <div class="actions" style="margin-top:10px"><button class="btn sm" data-action="confirm-all-guesses">Confirm remaining guesses (${n.total})</button></div></div>`;
 }
 
 // 눌러서 막힌 버튼 자리에서 알린다. 그리는 사이 잃은 초점을 돌려주고, 안내가 화면 밖이면 보이게 한 뒤, 버튼을 흔든다
@@ -1078,7 +1078,7 @@ function alertBlocked() {
 }
 
 const formError = () => (state.formError ?`<p class="form-error" role="alert">${esc(state.formError)}</p>` : '');
-const notFound = (title) => ({ title, html: '<p class="empty">찾을 수 없어요. 지출이 바뀌어 대체됐을 수 있어요.</p>' });
+const notFound = (title) => ({ title, html: '<p class="empty">Not found. It may have been replaced because an expense changed.</p>' });
 
 // 청구서의 지출별 내 몫. 지난 청구서(지출이 바뀌어 대체됨)에는 지금 지출로 셈한 몫을 붙이지 않는다
 const currentRows = (inv) => (inv.version === state.data.room.version ? invoiceRows(inv, state.data.room, state.data.expenses) : []);
@@ -1123,49 +1123,49 @@ function invoiceLinesHtml(inv, dd, motion = '') {
   const line = ({ exp, mine }) => {
     const on = Boolean(dd) && exp.id in dd.picks;
     const f = found?.[exp.id];
-    const body = `${tile(exp.kind)}<span class="grow"><span class="title">${esc(exp.title)}</span><span class="meta" style="display:block">${esc(nameOf(exp.payer))} 냄 · ${money(amountOf(exp), exp.currency)}${f ? ` · <span class="found">${esc(f.result.leftAt)}에 떠남</span>` : ''}</span></span>
+    const body = `${tile(exp.kind)}<span class="grow"><span class="title">${esc(exp.title)}</span><span class="meta" style="display:block">Paid by ${esc(nameOf(exp.payer))} · ${money(amountOf(exp), exp.currency)}${f ? ` · <span class="found">Left at ${esc(f.result.leftAt)}</span>` : ''}</span></span>
         ${mine == null ? '' : `<span class="end"><span class="amount">${won(mine)}</span></span>`}`;
     if (!dd) return `<div class="row">${body}</div>`;
     // 영수증 줄이 없는 지출(11/5 데모에서 이의가 '중재 전'에 멈췄다): 흐리게 두고 누르면 고르지 않는다. 대신 그 줄을 흔들고
     // 바로 아래 노란 한 줄로 이의 대신 '지출 고치기'를 권한다(지출은 방 사람 누구나 고치고, 고치면 청구서를 다시 보낸다)
     if (!mediatable(exp)) {
-      const hint = state.noLinesHint === exp.id ? `<div class="row lines-hint" role="alert">${ALERT}<span class="grow hint-text">줄이 없어 중재할 수 없어요</span>
-          <button type="button" class="btn sm secondary" data-action="edit-exp" data-id="${esc(exp.id)}">지출 고치기</button></div>` : '';
-      const off = body.replace('</span></span>', ' · 영수증 줄 없음</span></span>');
+      const hint = state.noLinesHint === exp.id ? `<div class="row lines-hint" role="alert">${ALERT}<span class="grow hint-text">No lines to mediate</span>
+          <button type="button" class="btn sm secondary" data-action="edit-exp" data-id="${esc(exp.id)}">Edit expense</button></div>` : '';
+      const off = body.replace('</span></span>', ' · no receipt lines</span></span>');
       return `<button type="button" class="row pickable" aria-disabled="true" data-action="dispute-no-lines" data-id="${esc(exp.id)}"><span class="sel-mark off" aria-hidden="true"><span class="choice-empty"></span></span>${off}</button>${hint}`;
     }
-    const claim = on ? `<div class="row claim-row"><textarea data-claim="${esc(exp.id)}" rows="2" maxlength="200" aria-label="‘${esc(exp.title)}’에서 맞지 않는 점" placeholder="맞지 않는 점(비워도 보낼 수 있어요)">${esc(dd.picks[exp.id])}</textarea></div>` : '';
+    const claim = on ? `<div class="row claim-row"><textarea data-claim="${esc(exp.id)}" rows="2" maxlength="200" aria-label="What is wrong in “${esc(exp.title)}”" placeholder="What is wrong (optional)">${esc(dd.picks[exp.id])}</textarea></div>` : '';
     const mark = `<span class="sel-mark${state.justPicked === exp.id ? ' just' : ''}" aria-hidden="true">${on ? ICON_DONE : '<span class="choice-empty"></span>'}</span>`;
     return `<button type="button" class="row pickable" data-action="dispute-toggle" data-id="${esc(exp.id)}" aria-pressed="${on}">${mark}${body}</button>${claim}`;
   };
   const none = dd && !items.some(({ exp }) => mediatable(exp));
-  const note = dd ? `<p class="group-note">${none ? '이 청구서에는 영수증 줄이 있는 지출이 없어요. 맞지 않는 지출은 이의 대신 눌러서 고쳐 주세요.'
-        : '영수증 줄이 있는 지출을 골라 중재를 맡겨요. 고른 지출은 중재 비서가 양쪽 근거로 다시 나눠요. 떠난 시각이 있으면 그 뒤에 시킨 메뉴는 내 몫에서 빠져요.'}</p>
-      ${located ? `<p class="group-note">고른 지출 중 ${located}건에는 타임라인에서 찾은 떠난 시각 한 줄이 이의 상대와 중재 비서에게 가요. 파일·좌표·장소 이름은 보내지 않고, 7일 뒤 지워요.</p>` : ''}` : '';
-  const end = dd ? (picked.length ? `${picked.length}건 고름` : '눌러서 골라요') : rows.length ? `합계 ${won(inv.owed)}` : '';
-  return `<section class="group" id="invoice-lines"><h3 class="group-label"><span>${rows.length ? '내 몫이 들어간 지출' : '함께한 지출'} ${items.length}건</span><span>${end}</span></h3>
-      <div class="list lines${dd ? ' selecting' : ''}${motion ? ` ${motion}` : ''}"${dd ? ' role="group" aria-label="맞지 않는 지출 고르기"' : ''}>${items.map(line).join('')}</div>${note}</section>`;
+  const note = dd ? `<p class="group-note">${none ? 'No expense on this invoice has receipt lines. Instead of disputing, tap the wrong expense and edit it.'
+        : 'Choose expenses with receipt lines to send to mediation. The mediator agent re-splits them from both sides’ evidence. If there is a departure time, items ordered after it come out of your share.'}</p>
+      ${located ? `<p class="group-note">Selected expenses with a timeline departure time: ${located}. For each, one summary line goes to the other party and the mediator agent. Files, coordinates and place names are not sent, and the line is deleted after 7 days.</p>` : ''}` : '';
+  const end = dd ? (picked.length ? `Selected: ${picked.length}` : 'Tap to select') : rows.length ? `Total ${won(inv.owed)}` : '';
+  return `<section class="group" id="invoice-lines"><h3 class="group-label"><span>${rows.length ? 'Expenses with my share' : 'Expenses I joined'}: ${items.length}</span><span>${end}</span></h3>
+      <div class="list lines${dd ? ' selecting' : ''}${motion ? ` ${motion}` : ''}"${dd ? ' role="group" aria-label="Choose the wrong expenses"' : ''}>${items.map(line).join('')}</div>${note}</section>`;
 }
 
 // 한도를 넘어 비서가 물은 청구서: 이대로 받거나, 맞지 않는 지출을 골라 이의를 낸다
 function invoiceSheet() {
   const inv = byId('invoices', state.ref);
-  if (!inv) return notFound('청구서');
+  if (!inv) return notFound('Invoice');
   const dd = state.disputeDraft;
   const answering = inv.status === 'asked' && inv.to === state.data.me.uid;
   const form = dd ? disputeForm(inv, dd) : '';
   // 받기 전에 무엇이 들었는지 보이게 지출별 내 몫을 붙인다. 이의를 쓰는 동안에는 이 목록에서 바로 고른다
   const lines = invoiceLinesHtml(inv, answering ? dd : null, state.linesMotion);
   return {
-    title: '청구서',
+    title: 'Invoice',
     html: `<div class="big"><div class="amt">${won(Math.max(0, -inv.net))}</div>
-        <p class="sub">낸 돈 ${won(inv.paid)} · 내 몫 ${won(inv.owed)}</p>
-        ${inv.hasLocationSummary ? `<p class="badges">${chip('위치 요약 · 확인 전')}</p>` : ''}</div>
+        <p class="sub">I paid ${won(inv.paid)} · my share ${won(inv.owed)}</p>
+        ${inv.hasLocationSummary ? `<p class="badges">${chip('Location summary · unverified')}</p>` : ''}</div>
       <p class="how">${esc(inv.reasons.join(' · '))}</p>
       ${lines}
-      ${answering && !dd ? `${formError()}<div style="display:grid;gap:8px"><button class="btn" data-action="answer-invoice" data-decision="accept">이대로 받기</button>
-        <button class="btn secondary" data-action="start-dispute">맞지 않는 지출이 있어요</button></div>` : ''}
-      ${answering ? form : `<p class="group-note">${inv.status === 'accepted' ? '받기로 했어요.' : inv.status === 'disputed' ? '이의를 제기했어요.' : '지출이 바뀌어 대체된 청구서예요.'}</p>`}`,
+      ${answering && !dd ? `${formError()}<div style="display:grid;gap:8px"><button class="btn" data-action="answer-invoice" data-decision="accept">Accept as is</button>
+        <button class="btn secondary" data-action="start-dispute">An expense is wrong</button></div>` : ''}
+      ${answering ? form : `<p class="group-note">${inv.status === 'accepted' ? 'Accepted.' : inv.status === 'disputed' ? 'Disputed.' : 'This invoice was replaced because an expense changed.'}</p>`}`,
   };
 }
 
@@ -1178,23 +1178,23 @@ function proposalChoices(d, exp, uid, edited) {
   const choose = disputeChoices(d, exp, uid);
   if (choose.revise && edited) {
     const other = [exp.payer, d.by].find((u) => u !== uid);
-    return reviseChoicesHtml({ disputeId: d.id, other: other ? nameOf(other) : '상대', busy: state.busy === 'revise' });
+    return reviseChoicesHtml({ disputeId: d.id, other: other ? nameOf(other) : 'the other person', busy: state.busy === 'revise' });
   }
   const rd = state.rejectDraft;
   const busy = state.busy === 'reject';
   const waiting = disputeWaiting(d, exp);
   const buttons = [
-    choose.agree && !rd && `<button class="btn lead" data-action="agree" data-id="${esc(d.id)}">${CHECK}중재안에 동의</button>`,
-    choose.reject && !rd && `<button class="btn secondary lead" data-action="reject-ask">${CROSS}중재안 거부하기</button>`,
+    choose.agree && !rd && `<button class="btn lead" data-action="agree" data-id="${esc(d.id)}">${CHECK}Accept proposal</button>`,
+    choose.reject && !rd && `<button class="btn secondary lead" data-action="reject-ask">${CROSS}Reject proposal</button>`,
   ].filter(Boolean).join('');
-  return `${!choose.agree && waiting.length ? `<p class="group-note" style="margin-bottom:12px">${waiting.map(nameOf).map(esc).join('·')}의 동의를 기다려요.</p>` : ''}
+  return `${!choose.agree && waiting.length ? `<p class="group-note" style="margin-bottom:12px">Waiting for ${waiting.map(nameOf).map(esc).join(', ')} to accept.</p>` : ''}
     ${buttons ? `<div class="stack">${buttons}</div>` : ''}
-    ${choose.reject && !rd ? '<p class="group-note">거부하면 이 이의가 끝나고, 지출은 지금 배분 그대로 정산해요.</p>' : ''}
-    ${choose.reject && rd ? `<section class="group"><div class="list"><label class="row field"><span class="grow">거부하는 까닭(선택)</span>
-        <input data-rd="reason" value="${esc(rd.reason)}" maxlength="100" placeholder="예: 술은 같이 마셨어요"></label></div>
-        <p class="group-note">까닭은 비서끼리 기록에 남아 상대도 볼 수 있어요. 거부하면 되돌릴 수 없어요.</p></section>
-      <div class="stack"><button class="btn danger lead" data-action="reject" data-id="${esc(d.id)}" ${busy ? 'disabled' : ''}>${CROSS}${busy ? '거부하는 중…' : '거부하고 지금 배분대로 정산'}</button>
-        <button class="btn plain" data-action="reject-cancel" ${busy ? 'disabled' : ''}>취소</button></div>` : ''}`;
+    ${choose.reject && !rd ? '<p class="group-note">Rejecting ends this dispute, and the expense settles with the current split.</p>' : ''}
+    ${choose.reject && rd ? `<section class="group"><div class="list"><label class="row field"><span class="grow">Reason (optional)</span>
+        <input data-rd="reason" value="${esc(rd.reason)}" maxlength="100" placeholder="e.g. We drank together"></label></div>
+        <p class="group-note">The reason is kept in the agent log, where the other person can see it. Rejecting can’t be undone.</p></section>
+      <div class="stack"><button class="btn danger lead" data-action="reject" data-id="${esc(d.id)}" ${busy ? 'disabled' : ''}>${CROSS}${busy ? 'Rejecting…' : 'Reject and settle as is'}</button>
+        <button class="btn plain" data-action="reject-cancel" ${busy ? 'disabled' : ''}>Cancel</button></div>` : ''}`;
 }
 
 const rowText = (title, meta = '', end = '') => `<span class="grow"><span class="title">${esc(title)}</span>${meta ? `<span class="meta" style="display:block">${esc(meta)}</span>` : ''}</span>${end}`;
@@ -1205,14 +1205,14 @@ function locationSection() {
   if (!expenses.some((e) => e.present.includes(me.uid))) return '';
   const visits = savedVisits();
   const body = state.timelineReading
-    ? `<div class="list" aria-busy="true"><div class="row">${tile('pin')}${rowText('파일에서 이 정산 기간만 찾는 중…')}</div></div>`
+    ? `<div class="list" aria-busy="true"><div class="row">${tile('pin')}${rowText('Finding this settlement period in the file…')}</div></div>`
     : visits
-    ? `<div class="list"><div class="row">${tile('pin')}${rowText('Google 지도 타임라인을 올렸어요', visits.length ? `이 정산 기간 방문 ${visits.length}곳 · 이의를 낼 때 자동으로 찾아요` : '이 정산 기간의 기록이 없어요')}
-        <button type="button" class="text-btn" data-action="timeline-forget">지우기</button></div></div>`
-    : `<div class="list"><button type="button" class="row" data-action="timeline-guide" aria-haspopup="dialog">${tile('pin')}${rowText('Google 지도 타임라인 올리기', '여행이 끝난 뒤 한 번만 올리면 돼요', CHEVRON)}</button></div>`;
-  return `<section class="group"><h2 class="group-label"><span>내 위치 기록</span><span>선택</span></h2>${body}
+    ? `<div class="list"><div class="row">${tile('pin')}${rowText('Google Maps Timeline uploaded', visits.length ? `Visits in this period: ${visits.length} · searched when you dispute` : 'No history for this period')}
+        <button type="button" class="text-btn" data-action="timeline-forget">Delete</button></div></div>`
+    : `<div class="list"><button type="button" class="row" data-action="timeline-guide" aria-haspopup="dialog">${tile('pin')}${rowText('Upload Google Maps Timeline', 'Upload it once after the trip', CHEVRON)}</button></div>`;
+  return `<section class="group"><h2 class="group-label"><span>My location history</span><span>Optional</span></h2>${body}
     ${state.timelineError ? `<p class="form-error" role="alert">${esc(state.timelineError)}</p>` : ''}
-    <p class="group-note">파일은 이 기기에서만 읽어요. 이 정산 기간의 방문 시각만 이 브라우저에 ${TIMELINE_DAYS}일 두고, 이의를 낼 때 내가 켠 한 줄만 상대에게 가요.</p></section>`;
+    <p class="group-note">The file is read only on this device. Only visit times for this period stay in this browser, for ${TIMELINE_DAYS} days. In a dispute, only the line you turn on reaches the other person.</p></section>`;
 }
 
 // 이의 쓰기(#7). 타임라인을 올리면 결제 전에 자리를 떠난 지출을 골라 두고 '맞지 않는 점'을 채운다(public/timeline.js의 findMismatches).
@@ -1223,17 +1223,17 @@ function disputeForm(inv, dd) {
   const picked = disputable(inv).filter((e) => e.id in dd.picks);
   const foundCount = dd.found ? Object.keys(dd.found).length : 0;
   const scan = dd.scan === 'reading'
-    ? `<div class="list" aria-busy="true"><div class="row">${tile('pin')}${rowText('타임라인에서 찾는 중…')}</div></div>`
+    ? `<div class="list" aria-busy="true"><div class="row">${tile('pin')}${rowText('Searching the timeline…')}</div></div>`
     : dd.found
-    ? `<div class="list"><div class="row">${tile('pin')}${rowText(foundCount ? `자리를 떠난 지출 ${foundCount}건을 골라 뒀어요` : '타임라인과 맞지 않는 지출이 없어요', foundCount ? '아니면 위에서 눌러 빼요' : '맞지 않는 지출을 위에서 직접 골라요')}
-        <button type="button" class="text-btn" data-action="timeline-pick">다른 파일 고르기</button></div></div>`
-    : `<div class="list"><button type="button" class="row" data-action="timeline-guide" aria-haspopup="dialog">${tile('pin')}${rowText('Google 지도 타임라인 올리기', '자리를 떠난 지출을 찾아 위에서 골라 둬요', CHEVRON)}</button></div>`;
-  const sample = authOptions().dev && dd.scan !== 'reading' ? '<div class="group-actions"><button type="button" class="text-btn" data-action="timeline-sample">개발용 가짜 기록</button></div>' : '';
-  return `<section class="group"><h3 class="group-label"><span>위치 기록으로 찾기</span><span>선택</span></h3>${scan}
+    ? `<div class="list"><div class="row">${tile('pin')}${rowText(foundCount ? `Selected expenses you left early: ${foundCount}` : 'No expense conflicts with your timeline', foundCount ? 'If one is wrong, tap it above to remove' : 'Choose the wrong expenses above yourself')}
+        <button type="button" class="text-btn" data-action="timeline-pick">Choose another file</button></div></div>`
+    : `<div class="list"><button type="button" class="row" data-action="timeline-guide" aria-haspopup="dialog">${tile('pin')}${rowText('Upload Google Maps Timeline', 'Finds expenses you left early and selects them', CHEVRON)}</button></div>`;
+  const sample = authOptions().dev && dd.scan !== 'reading' ? '<div class="group-actions"><button type="button" class="text-btn" data-action="timeline-sample">Fake history (dev)</button></div>' : '';
+  return `<section class="group"><h3 class="group-label"><span>Find with location history</span><span>Optional</span></h3>${scan}
       ${dd.scan?.error ? `<p class="form-error" role="alert">${esc(dd.scan.error)}</p>` : ''}${sample}</section>
     ${formError()}
-    <div class="stack"><button class="btn" id="dispute-send" data-action="answer-invoice" data-decision="dispute" ${picked.length ? '' : 'disabled'}>${picked.length > 1 ? `이의 ${picked.length}건 보내기` : '이의 보내기'}</button>
-      <button type="button" class="btn plain" data-action="cancel-dispute">취소</button></div>`;
+    <div class="stack"><button class="btn" id="dispute-send" data-action="answer-invoice" data-decision="dispute" ${picked.length ? '' : 'disabled'}>${picked.length > 1 ? `Send disputes (${picked.length})` : 'Send dispute'}</button>
+      <button type="button" class="btn plain" data-action="cancel-dispute">Cancel</button></div>`;
 }
 
 // 타임라인 방문에서 이 청구서의 맞지 않는 지출을 찾아 골라 둔다. 사람이 이미 고르거나 고쳐 쓴 지출은 그대로 둔다
@@ -1284,7 +1284,7 @@ async function readTimeline(file) {
       dd.scan = null;
     }
   } catch (e) {
-    const message = e instanceof SyntaxError ? 'JSON 파일이 아니에요. 휴대폰 Google 지도에서 내보낸 타임라인 파일을 골라 주세요.' : e.message;
+    const message = e instanceof SyntaxError ? 'That isn’t a JSON file. Choose the timeline file exported from Google Maps on your phone.' : e.message;
     if (dd) dd.scan = { error: message };
     else state.timelineError = message;
   }
@@ -1306,27 +1306,27 @@ function sampleTimeline(exp) {
 function disputeSheet() {
   const d = byId('disputes', state.ref);
   const exp = d && byId('expenses', d.expenseId);
-  if (!exp) return notFound('이의');
+  if (!exp) return notFound('Dispute');
   const { room, me } = state.data;
   const party = [exp.payer, d.by].includes(me.uid);
   // 이의를 낸 사람이 붙인 타임라인 요약은 본인이 언제든 지울 수 있다(동의 철회). 지우면 미확정 중재안은 다시 열린 이의가 된다
   const mine = d.by === me.uid && d.evidence.some((e) => e.locationId);
   const evidence = d.evidence.length
     ? `<div class="list">${d.evidence.map((e) => `<div class="row"><span class="grow">${esc(e.summary)}</span>${e.time ? chip(e.time) : ''}</div>`).join('')}</div>
-      ${mine ? '<div class="actions" style="margin-top:8px"><button type="button" class="text-btn" data-action="revoke-location">내 위치 요약 지우기</button></div>' : ''}` : '';
+      ${mine ? '<div class="actions" style="margin-top:8px"><button type="button" class="text-btn" data-action="revoke-location">Delete my location summary</button></div>' : ''}` : '';
   let body = '';
   if (d.status === 'superseded') {
     body = `<p class="group-note">${esc(disputeNote(d, exp, nameOf))}</p>`;
   } else if (d.status === 'open' && !exp.items?.length) {
     // 영수증 줄이 없으면 중재 비서가 줄마다 나눌 수 없다. 막다른 '중재 맡기기' 대신 낸 사람이 지출을 고치는 길을 보인다(고치면 이의가 닫힌다)
     body = exp.payer === me.uid
-      ? `<p class="group-note">영수증 줄이 없는 지출이라 중재 비서가 나눌 수 없어요. 함께한 사람이나 금액을 직접 고치면 이 이의는 닫히고 청구서를 다시 보내요.</p>
-        <button class="btn" style="width:100%" data-action="open-exp" data-id="${esc(exp.id)}">지출 고치기</button>`
-      : `<p class="group-note">영수증 줄이 없는 지출이라 중재 비서가 나눌 수 없어요. ${esc(subj(nameOf(exp.payer)))} 함께한 사람이나 금액을 고치면 다시 나눠요.</p>`;
+      ? `<p class="group-note">With no receipt lines, the mediator agent can’t split this expense. Edit who joined or the amount yourself; the dispute closes and invoices are sent again.</p>
+        <button class="btn" style="width:100%" data-action="open-exp" data-id="${esc(exp.id)}">Edit expense</button>`
+      : `<p class="group-note">With no receipt lines, the mediator agent can’t split this expense. It is re-split when ${esc(nameOf(exp.payer))} edits who joined or the amount.</p>`;
   } else if (d.status === 'open') {
     body = party
-      ? `${formError()}<button class="btn" style="width:100%" data-action="mediate" data-id="${esc(d.id)}" ${state.busy === 'mediate' ? 'disabled' : ''}>${state.busy === 'mediate' ? '중재 비서가 보는 중…' : '중재 비서에게 맡기기'}</button>`
-      : '<p class="group-note">당사자가 중재를 맡기면 중재안이 여기에 올라와요.</p>';
+      ? `${formError()}<button class="btn" style="width:100%" data-action="mediate" data-id="${esc(d.id)}" ${state.busy === 'mediate' ? 'disabled' : ''}>${state.busy === 'mediate' ? 'Mediator agent is reviewing…' : 'Ask the mediator agent'}</button>`
+      : '<p class="group-note">When a party asks for mediation, the proposal appears here.</p>';
   } else if (d.proposal) {
     // 당사자는 줄마다 사람 칩을 눌러 중재안을 고친다(#62). 고친 줄은 이 화면에만 두다가 '고친 배분으로 제안하기'로 보낸다.
     // 그사이 상대가 먼저 고쳐 중재안의 판(rev)이 바뀌면 내가 고른 것은 거두고, 바뀐 배분을 보게 알린다
@@ -1341,27 +1341,27 @@ function disputeSheet() {
     const after = shares({ ...exp, split: 'items' }, room, room.policy, alloc).krwShare;
     // 지금 배분과 견줘 바뀐 줄을 먼저, 누가 빠지고 더해졌는지 글로 보인다. 사람별 몫은 지금·중재안·차이 세 칸(사용자 테스트 11/5)
     const lines = proposalLinesHtml(exp, d.proposal.alloc, { draft, editable: choose.revise && !state.rejectDraft && state.busy !== 'revise', nameOf, avatar, before: currentConsumers(exp) });
-    const role = (u) => (u === d.by ? '이의 낸 사람' : u === exp.payer ? '낸 사람' : '');
-    const people = sharesDiffHtml(exp.present.map((u) => ({ uid: u, now: now[u] ?? 0, after: after[u] ?? 0, role: role(u) })), { nameOf, avatar, label: edited ? '고친 배분' : '중재안' });
-    body = `<section class="group"><h3 class="group-label"><span>중재안</span><span>${esc(allocLabel({ source: d.proposal.source }))}</span></h3>
+    const role = (u) => (u === d.by ? 'disputer' : u === exp.payer ? 'payer' : '');
+    const people = sharesDiffHtml(exp.present.map((u) => ({ uid: u, now: now[u] ?? 0, after: after[u] ?? 0, role: role(u) })), { nameOf, avatar, label: edited ? 'Edited split' : 'Proposal' });
+    body = `<section class="group"><h3 class="group-label"><span>Mediation proposal</span><span>${esc(allocLabel({ source: d.proposal.source }))}</span></h3>
         <p class="how">${esc(d.proposal.summary)}</p>
-        ${stale ? `<p class="group-note" role="status">그사이 ${esc(subj(nameOf(d.proposal.revisedBy)))} 중재안을 고쳐서 내가 고른 것은 거뒀어요. 바뀐 배분을 보고 다시 골라 주세요.</p>` : ''}
+        ${stale ? `<p class="group-note" role="status">${esc(nameOf(d.proposal.revisedBy))} edited the proposal in the meantime, so your picks were cleared. Review the new split and pick again.</p>` : ''}
         <div class="list">${lines}</div>
-        ${choose.revise && !edited && !state.rejectDraft ? '<p class="group-note">맞지 않는 줄은 이름을 눌러 고쳐요. 중재 비서에게 맡겨 둔 이의도 고친 배분으로 다시 제안할 수 있어요.</p>' : ''}</section>
-      <section class="group"><h3 class="group-label"><span>사람별 몫</span><span>${edited ? '고친 배분' : '중재안'}이면</span></h3><div class="list shares">${people}</div></section>
+        ${choose.revise && !edited && !state.rejectDraft ? '<p class="group-note">Tap names to fix a wrong line. Even a dispute left to the mediator agent can be re-proposed with your edited split.</p>' : ''}</section>
+      <section class="group"><h3 class="group-label"><span>Each person’s share</span><span>${edited ? 'With edited split' : 'With proposal'}</span></h3><div class="list shares">${people}</div></section>
       ${formError()}
-      ${d.status === 'resolved' ? '<p class="group-note">양쪽이 동의해서 이 지출을 다시 나눴어요.</p>'
-        : disputeRejected(d) ? `<p class="group-note">${esc(disputeNote(d, exp, nameOf))}</p>${d.rejectReason ? `<p class="group-note">까닭: ${esc(d.rejectReason)}</p>` : ''}`
+      ${d.status === 'resolved' ? '<p class="group-note">Both accepted, so this expense was split again.</p>'
+        : disputeRejected(d) ? `<p class="group-note">${esc(disputeNote(d, exp, nameOf))}</p>${d.rejectReason ? `<p class="group-note">Reason: ${esc(d.rejectReason)}</p>` : ''}`
         : proposalChoices(d, exp, me.uid, edited)}`;
   }
   // 맨 위에는 무엇이 맞지 않는지: 누가 어느 지출의 무엇을 문제 삼았는지와 그 지출(사용자 테스트 11/5: 이의 내용을 알기 어려웠다)
-  const issue = `<section class="group"><h3 class="group-label"><span>무엇이 맞지 않나요</span><span>${esc(nameOf(d.by))}의 이의</span></h3>
+  const issue = `<section class="group"><h3 class="group-label"><span>What is wrong</span><span>Dispute from ${esc(nameOf(d.by))}</span></h3>
       <div class="list"><div class="row">${avatar(d.by)}<span class="grow"><span class="title">${esc(d.claim)}</span>
-        <span class="meta" style="display:block">${esc(exp.title)} · ${esc(nameOf(exp.payer))} 냄 · ${money(amountOf(exp), exp.currency)}</span></span></div></div></section>`;
+        <span class="meta" style="display:block">${esc(exp.title)} · Paid by ${esc(nameOf(exp.payer))} · ${money(amountOf(exp), exp.currency)}</span></span></div></div></section>`;
   return {
-    title: `‘${exp.title}’ 이의`,
+    title: `Dispute: ${exp.title}`,
     html: `${issue}
-      ${evidence ? `<section class="group"><h3 class="group-label"><span>근거</span></h3>${evidence}</section>` : ''}${body}`,
+      ${evidence ? `<section class="group"><h3 class="group-label"><span>Evidence</span></h3>${evidence}</section>` : ''}${body}`,
   };
 }
 
@@ -1377,7 +1377,7 @@ function disputeLine() {
 
 const copyRow = (label, value, key) => `<div class="row"><span class="grow"><span class="meta" style="display:block">${label}</span>
     <span class="title num" style="user-select:all">${esc(value)}</span></span>
-    <button type="button" class="btn sm secondary" data-action="copy" data-text="${esc(value)}" data-key="${key}">${state.copied === key ? '복사했어요' : '복사'}</button></div>`;
+    <button type="button" class="btn sm secondary" data-action="copy" data-text="${esc(value)}" data-key="${key}">${state.copied === key ? 'Copied' : 'Copy'}</button></div>`;
 
 // 데스크톱 QR(#8). 토큰은 수명이 15분이라, 송금 화면을 열 때마다 서버에서 새로 받는다.
 // QR에는 계좌·금액이 든 t.link를 바로 담지 않는다. 우리 서버의 짧은 수명 토큰(/api/qr/:token)을 담아,
@@ -1414,26 +1414,26 @@ function qrBlock(t, { sentButton = true } = {}) {
   const qr = state.qr?.id === t.id ? state.qr : null;
   // 휴대폰 카메라가 찍을 절대 주소가 필요해서, API_BASE가 비어 있으면(로컬 개발) 지금 페이지 origin을 쓴다
   const img = qr?.token
-    ? `<img src="${qrImageUrl(`${API_BASE || location.origin}/api/qr/${enc(qr.token)}`)}" width="220" height="220" alt="휴대폰으로 토스 송금 화면을 여는 QR 코드" referrerpolicy="no-referrer">`
-    : `<div class="qr-wait">${qr?.failed ? 'QR을 만들지 못했어요.<br>위 계좌번호를 복사해 보내 주세요.' : 'QR을 만드는 중이에요'}</div>`;
+    ? `<img src="${qrImageUrl(`${API_BASE || location.origin}/api/qr/${enc(qr.token)}`)}" width="220" height="220" alt="QR code that opens the Toss transfer screen on your phone" referrerpolicy="no-referrer">`
+    : `<div class="qr-wait">${qr?.failed ? 'Could not make a QR code.<br>Copy the account number above to send.' : 'Making the QR code'}</div>`;
   // 컴퓨터에는 슬라이더가 없으니, 휴대폰으로 보내고 돌아온 사람이 여기서 바로 끝낸다.
   // 보냈어요 버튼이 이미 있는 시트(보냈나요?)에서는 sentButton: false로 QR만 붙인다
-  return `<div class="qr-desktop"><p class="group-note">휴대폰 카메라로 QR을 찍으면 토스 송금 화면이 열려요.</p>${img}
-    ${sentButton ? `<button class="btn secondary" style="width:100%;margin-top:12px" data-action="mark-sent" data-id="${esc(t.id)}">보냈어요</button>` : ''}</div>`;
+  return `<div class="qr-desktop"><p class="group-note">Scan the QR with your phone camera to open the Toss transfer screen.</p>${img}
+    ${sentButton ? `<button class="btn secondary" style="width:100%;margin-top:12px" data-action="mark-sent" data-id="${esc(t.id)}">Sent</button>` : ''}</div>`;
 }
 
 // 송금: 밀어서 보내면 그 제스처 안에서 토스를 연다. 앱이 안 열리면 계좌·금액을 복사해 둔다.
 // 컴퓨터에서는 토스가 열리지 않으니 슬라이더 대신 휴대폰으로 넘기는 QR만 보여 준다(sendMode)
 function transferSheet() {
   const t = byId('transfers', state.ref);
-  if (!t) return notFound('송금');
+  if (!t) return notFound('Transfer');
   const me = state.data.me.uid;
   const toName = nameOf(t.to);
-  const account = t.fallback ? `<section class="group"><h3 class="group-label"><span>${esc(toName)}의 계좌</span><span>${esc(t.fallback.bank)}</span></h3>
-      <div class="list">${copyRow('계좌번호', t.fallback.accountNo, 'acct')}${copyRow('금액', String(t.amount), 'amt')}</div></section>` : '';
+  const account = t.fallback ? `<section class="group"><h3 class="group-label"><span>${esc(toName)}’s account</span><span>${esc(t.fallback.bank)}</span></h3>
+      <div class="list">${copyRow('Account number', t.fallback.accountNo, 'acct')}${copyRow('Amount', String(t.amount), 'amt')}</div></section>` : '';
   const note = {
-    fallback: '토스가 열리지 않으면, 계좌번호를 복사해 두었으니 쓰시는 은행 앱에 붙여 넣어 보내 주세요.',
-    back: '송금 앱에서 돌아왔어요. 보냈나요?',
+    fallback: 'If Toss doesn’t open, the account number is copied. Paste it into your banking app to send.',
+    back: 'You’re back from the transfer app. Did you send it?',
   }[state.transferNote];
   let actions = '';
   if (t.from === me && ['scheduled', 'due'].includes(t.status)) {
@@ -1442,37 +1442,37 @@ function transferSheet() {
       ? qrBlock(t)
       : mode === 'slider'
         ? `<div class="slider" data-commit="send" data-id="${esc(t.id)}"><span class="slider-fill"></span>
-          <span class="slider-label">${t.link ? '밀어서 토스로 보내기' : '밀어서 계좌 복사하기'}</span>
-          <button type="button" class="slider-thumb" aria-label="${t.link ? '밀어서 토스로 보내기' : '밀어서 계좌 복사하기'}. Enter 키로도 할 수 있어요">${ARROW}</button></div>
-        <p class="slider-hint">${t.link ? '토스가 열리지 않으면 계좌번호를 복사해 드려요' : '받는 사람의 계좌를 복사해 드려요'}</p>`
-        : `<p class="group-note">${esc(subj(toName))} 받을 계좌를 아직 알려 주지 않았어요. 알려 주면 바로 보낼 수 있어요.</p>`;
+          <span class="slider-label">${t.link ? 'Slide to send with Toss' : 'Slide to copy account'}</span>
+          <button type="button" class="slider-thumb" aria-label="${t.link ? 'Slide to send with Toss' : 'Slide to copy account'}. You can also press Enter">${ARROW}</button></div>
+        <p class="slider-hint">${t.link ? 'If Toss doesn’t open, we copy the account number' : 'Copies the payee’s account number'}</p>`
+        : `<p class="group-note">${esc(toName)}: no payout account added yet. Once it is added you can send right away.</p>`;
   } else if (t.from === me && (t.status === 'opened' || (t.status === 'sent' && t.notReceivedAt))) {
     // 받는 사람이 "아직 안 들어왔어요"라고 했으면(상태는 sent 그대로) 제목만 바꾸고 송금 내역부터 보게 한다(버튼은 같다)
     const head = t.notReceivedAt
-      ? `<h3 style="margin:0 0 8px">${esc(subj(toName))} 아직 못 받았대요</h3><p class="group-note" style="padding:0;margin:0 0 10px">토스 송금 내역을 먼저 확인해 주세요. 두 번 보내지 않게요.</p>`
-      : '<h3 style="margin:0 0 10px">보냈나요?</h3>';
+      ? `<h3 style="margin:0 0 8px">${esc(toName)} hasn’t received it yet</h3><p class="group-note" style="padding:0;margin:0 0 10px">Check your Toss history first so you don’t send twice.</p>`
+      : '<h3 style="margin:0 0 10px">Did you send it?</h3>';
     // 컴퓨터(마우스 기기)에서는 토스 링크가 열리지 않으므로 토스 다시 열기 대신 휴대폰으로 넘길 QR을 보여 준다(보냈어요 버튼은 위에 있다).
     // 너비로 판단하면 가로로 돌린 휴대폰에서 토스 다시 열기가 사라지고 자기 화면의 QR이 뜬다
     actions = `${head}<div style="display:grid;gap:8px">
-      <button class="btn" data-action="mark-sent" data-id="${esc(t.id)}">보냈어요</button>
-      ${t.link && !isComputer() ? `<button class="btn secondary" data-action="reopen-link" data-id="${esc(t.id)}">토스 다시 열기</button>` : ''}
-      <button class="btn plain" data-action="close-sheet">아직이에요</button></div>${t.link && isComputer() ? qrBlock(t, { sentButton: false }) : ''}`;
+      <button class="btn" data-action="mark-sent" data-id="${esc(t.id)}">Sent</button>
+      ${t.link && !isComputer() ? `<button class="btn secondary" data-action="reopen-link" data-id="${esc(t.id)}">Reopen Toss</button>` : ''}
+      <button class="btn plain" data-action="close-sheet">Not yet</button></div>${t.link && isComputer() ? qrBlock(t, { sentButton: false }) : ''}`;
   } else if (t.to === me && isManual(t) && ['scheduled', 'due', 'opened'].includes(t.status)) {
-    actions = `<p class="group-note">${esc(subj(nameOf(t.from)))} 편할 때 보내기로 했어요. 돈이 들어왔으면 알려 주세요. 그러면 비서가 ${esc(nameOf(t.from))}에게 따로 알리지 않아요.</p>
-      <button class="btn" style="width:100%;margin-top:10px" data-action="confirm-receipt" data-id="${esc(t.id)}">받았어요</button>`;
+    actions = `<p class="group-note">${esc(nameOf(t.from))} will send when convenient. If the money has arrived, say so, and the agent won’t remind ${esc(nameOf(t.from))}.</p>
+      <button class="btn" style="width:100%;margin-top:10px" data-action="confirm-receipt" data-id="${esc(t.id)}">Received</button>`;
   } else if (t.to === me && t.status === 'sent' && !t.notReceivedAt) {
-    actions = `<div style="display:grid;gap:8px"><button class="btn" data-action="confirm-receipt" data-id="${esc(t.id)}">받았어요</button>
-      <button class="btn secondary" data-action="not-received" data-id="${esc(t.id)}">아직 안 들어왔어요</button></div>`;
+    actions = `<div style="display:grid;gap:8px"><button class="btn" data-action="confirm-receipt" data-id="${esc(t.id)}">Received</button>
+      <button class="btn secondary" data-action="not-received" data-id="${esc(t.id)}">Not received yet</button></div>`;
   } else if (t.to === me && t.status === 'sent') {
     // 다시 확인해 달라고 한 사이 돈이 늦게 들어왔으면 바로 끝낼 수 있게
-    actions = `<p class="group-note">${esc(nameOf(t.from))}에게 다시 확인해 달라고 했어요. 그 사이 들어왔다면 알려 주세요.</p>
-      <button class="btn" style="width:100%;margin-top:10px" data-action="confirm-receipt" data-id="${esc(t.id)}">받았어요</button>`;
+    actions = `<p class="group-note">${esc(nameOf(t.from))} was asked to check again. If the money has arrived since, let them know.</p>
+      <button class="btn" style="width:100%;margin-top:10px" data-action="confirm-receipt" data-id="${esc(t.id)}">Received</button>`;
   } else {
-    actions = `<p class="group-note">${{ scheduled: !isManual(t) ? `${whenText(t.remindAt)}에 ${esc(nameOf(t.from))}에게 알려요.` : `${esc(subj(nameOf(t.from)))} 편할 때 보내기로 했어요.`, due: `${esc(subj(nameOf(t.from)))} 보낼 차례예요.`, opened: `${esc(subj(nameOf(t.from)))} 송금 앱을 열었어요.`, sent: t.notReceivedAt ? `${esc(subj(toName))} 아직 못 받았대요. ${esc(subj(nameOf(t.from)))} 확인하고 있어요.` : `${esc(subj(nameOf(t.from)))} 보냈어요. 받는 사람의 확인을 기다려요.`, confirmed: '받았다고 확인했어요. 이 송금은 끝났어요.', superseded: '지출이 바뀌어 대체된 송금이에요.' }[t.status] ?? ''}</p>`;
+    actions = `<p class="group-note">${{ scheduled: !isManual(t) ? `${esc(nameOf(t.from))} will be reminded on ${whenText(t.remindAt)}.` : `${esc(nameOf(t.from))} will send when convenient.`, due: `It’s ${esc(nameOf(t.from))}’s turn to send.`, opened: `${esc(nameOf(t.from))} opened the transfer app.`, sent: t.notReceivedAt ? `${esc(toName)} hasn’t received it yet. ${esc(nameOf(t.from))} is checking.` : `${esc(nameOf(t.from))} sent it. Waiting for the payee to confirm.`, confirmed: 'Receipt confirmed. This transfer is done.', superseded: 'This transfer was replaced because an expense changed.' }[t.status] ?? ''}</p>`;
   }
   return {
-    title: '송금',
-    html: `<div class="big"><div class="amt">${won(t.amount)}</div><p class="sub">${esc(nameOf(t.from))} → ${esc(toName)}${t.status === 'scheduled' && !isManual(t) && new Date(t.remindAt) > Date.now() ? ` · ${whenText(t.remindAt)} 예약` : ''}</p></div>
+    title: 'Transfer',
+    html: `<div class="big"><div class="amt">${won(t.amount)}</div><p class="sub">${esc(nameOf(t.from))} → ${esc(toName)}${t.status === 'scheduled' && !isManual(t) && new Date(t.remindAt) > Date.now() ? ` · scheduled ${whenText(t.remindAt)}` : ''}</p></div>
       ${note ? `<p class="preview-note" style="margin-bottom:14px">${esc(note)}</p>` : ''}
       ${account}${formError()}${actions}`,
   };
@@ -1480,10 +1480,10 @@ function transferSheet() {
 
 function payoutSheet() {
   return {
-    title: '받을 계좌',
-    html: `<p class="how">계좌번호는 나에게 돈을 보낼 사람에게만 보여요. 받을 송금이 있으면 바로 토스 링크가 채워져요. 계좌는 모든 방에 같아요.</p>
+    title: 'Payout account',
+    html: `<p class="how">Your account number is shown only to people who owe you. Pending transfers to you get a Toss link right away. The account is the same in every room.</p>
       <section class="group">${payoutFieldsHtml(state.payoutDraft)}</section>${formError()}
-      <button class="btn" style="width:100%" data-action="save-payout">저장</button>`,
+      <button class="btn" style="width:100%" data-action="save-payout">Save</button>`,
   };
 }
 
@@ -1502,12 +1502,12 @@ const agentPanel = createAgentPanel({
 
 // 친구 초대(#4): 참여자 줄 끝 + 버튼으로 연다. 누가 참가하면 방이 다시 그려지면서 이 시트의 참여자 목록도 바로 바뀐다
 const inviteSheet = () => ({
-  title: '친구 초대',
+  title: 'Invite friends',
   html: inviteSheetHtml({ room: state.data.room, me: state.data.me, avatar, invite: setup.invite, copied: setup.copied, copyError: setup.copyError, canShare: !!navigator.share, expenses: state.data.expenses, armed: setup.armed, removeError: setup.removeError, demo: authOptions().demo }),
 });
 // 이 방에서 나가기(#55). 남은 돈이 있는지는 방 화면이 가진 지출·청구서·이의·송금으로 서버와 같은 규칙(public/leave.js)으로 본다
 const leaveSheet = () => ({
-  title: '이 방에서 나가기',
+  title: 'Leave this room',
   html: leaveSheetHtml({ room: state.data.room, why: leaveBlock(state.data, state.data.me.uid), busy: setup.leaving, error: setup.leaveError }),
 });
 const AGENT_SHEETS = { invoice: invoiceSheet, dispute: disputeSheet, transfer: transferSheet, payout: payoutSheet, invite: inviteSheet, leave: leaveSheet, ...agentPanel.sheets };
@@ -1530,7 +1530,7 @@ function openAgentSheet(kind, ref = null) {
 function copyText(text, key) {
   const done = (ok) => {
     state.copied = ok ? key : null;
-    if (!ok) state.formError = '복사하지 못했어요. 숫자를 길게 눌러 복사해 주세요.';
+    if (!ok) state.formError = 'Could not copy. Long-press the number to copy it.';
     renderSheet();
     if (ok) setTimeout(() => { if (state.copied === key) { state.copied = null; renderSheet(); } }, 1500);
   };
@@ -1810,27 +1810,27 @@ function render() {
     return;
   }
   if (state.error?.status === 404) {
-    if (!authOptions().dev) { main.innerHTML = '<section class="hero"><h1>방을 찾을 수 없어요</h1><a href="account.html">내 방 목록</a></section>'; return; }
-    main.innerHTML = `<section class="hero"><h1>방을 찾을 수 없어요</h1>
-      <p class="sub">서버를 다시 켜면 메모리에 있던 방이 사라져요. 개발용 데모 방을 다시 만들어 주세요.</p></section>
-      <section class="next"><div class="actions"><button class="btn" data-action="seed">데모 방 만들기</button></div></section>`;
+    if (!authOptions().dev) { main.innerHTML = '<section class="hero"><h1>Room not found</h1><a href="account.html">My rooms</a></section>'; return; }
+    main.innerHTML = `<section class="hero"><h1>Room not found</h1>
+      <p class="sub">Restarting the server clears rooms held in memory. Create the development demo room again.</p></section>
+      <section class="next"><div class="actions"><button class="btn" data-action="seed">Create demo room</button></div></section>`;
     return;
   }
   // 실제 방(배포, 또는 개발용 서버에서 만든 방)을 열지 못했을 때. 어디로 나갈지 함께 보여 준다
   if (!state.data && (!authOptions().dev || !isDemoRoom())) {
     const notMember = state.error?.status === 403;
-    const title = !state.error ? '방을 여는 중…' : notMember ? '이 방의 멤버가 아니에요' : '방을 열 수 없어요';
-    const sub = !state.error ? '' : notMember ? '방에 있는 친구에게 초대 링크를 받아 들어와 주세요.' : state.error.message || '연결을 확인해 주세요';
+    const title = !state.error ? 'Opening the room…' : notMember ? 'You’re not a member of this room' : 'Can’t open this room';
+    const sub = !state.error ? '' : notMember ? 'Get an invite link from a friend in the room to join.' : state.error.message || 'Check your connection';
     main.innerHTML = `<section class="hero"><h1>${title}</h1>${sub ? `<p class="sub">${esc(sub)}</p>` : ''}</section>
-      ${state.error ? '<section class="next"><div class="actions"><a class="btn" href="account.html">내 방 목록</a><a class="btn plain" href="room.html">새 방 만들기</a></div></section>' : ''}`;
+      ${state.error ? '<section class="next"><div class="actions"><a class="btn" href="account.html">My rooms</a><a class="btn plain" href="room.html">New room</a></div></section>' : ''}`;
     return;
   }
   if (!state.data) {
     // 아직 누구인지 모르거나(401) 이 방 멤버가 아니면(403) 방 정보 없이 멤버 목록도 모른다.
     // 개발용 시드 방의 uid로 고르게 한다.
-    const seedMembers = [['me', '나'], ['cs', '철수'], ['yh', '영희'], ['ms', '민수']];
-    main.innerHTML = `<section class="hero"><h1>누구로 볼까요?</h1>
-      <p class="sub">개발용 데모 방의 멤버 중 한 명을 골라 주세요. 실제 계정으로 로그인한 경우에는 본인으로만 참여해요.</p></section>
+    const seedMembers = [['me', 'Me'], ['cs', 'Chulsoo'], ['yh', 'Younghee'], ['ms', 'Minsu']];
+    main.innerHTML = `<section class="hero"><h1>View as</h1>
+      <p class="sub">Pick a member of the development demo room. With a real account you join only as yourself.</p></section>
       <section class="group"><div class="list">${seedMembers.map(([uid, name]) => `<button class="row" data-action="who" data-id="${uid}">
         ${avatarHtml(name[0], '#8e8e93')}<span class="grow">${name}</span></button>`).join('')}</div></section>`;
     return;
@@ -1888,7 +1888,7 @@ document.addEventListener('input', (e) => {
     const key = e.target.dataset.key;
     state.draft.items[i][key] = key === 'name' ? e.target.value : Number(String(e.target.value).replace(key === 'unit' && decimalsOf(state.draft.currency) ? /[^\d.-]/g : /[^\d-]/g, ''));
     const sum = $('#line-sum');
-    if (sum) sum.textContent = `줄 합 ${money(lineSum(state.draft.items), state.draft.currency)}${state.draft.total ? ` · 영수증 합계 ${money(state.draft.total, state.draft.currency)}` : ''}`;
+    if (sum) sum.textContent = `Line sum ${money(lineSum(state.draft.items), state.draft.currency)}${state.draft.total ? ` · receipt total ${money(state.draft.total, state.draft.currency)}` : ''}`;
   }
 });
 document.addEventListener('change', (e) => {
@@ -1942,10 +1942,10 @@ async function loadConfig() {
     const config = await (await fetch(`${API_BASE}/api/config`, { signal: AbortSignal.timeout(8000) })).json();
     state.aiReady = config.mode === 'gemini';
     // 체험 데모는 브라우저 안에서 돌고, 사진은 샘플 영수증으로 읽는다(public/demo/server.js)
-    mode.textContent = config.demo ? '체험 데모' : config.mode === 'gemini' ? 'Gemini 연결됨' : '규칙 모드';
+    mode.textContent = config.demo ? 'Demo' : config.mode === 'gemini' ? 'Gemini connected' : 'Rules mode';
     mode.classList.toggle('live', config.mode === 'gemini' && !config.demo);
   } catch {
-    mode.textContent = '서버 연결 안 됨';
+    mode.textContent = 'Server offline';
   }
 }
 

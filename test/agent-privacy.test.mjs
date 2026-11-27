@@ -129,8 +129,8 @@ test('규칙으로 나눠도(키 없음) 배분 이유에 기억 내용이 없�
 
 test('설정 화면: 기억은 기본으로 공유 중이고, 이 방에서 끈 기억만 공유 안 함으로 보인다', () => {
   const html = memoryRowsHtml({ memory: ['공유한 기억', '끈 기억'], memoryHidden: { r1: ['끈 기억'] } }, 'r1');
-  assert.match(html, /aria-pressed="true"[^>]*aria-label="이 방에 ‘공유한 기억’ 공유"[^>]*>공유 중/);
-  assert.match(html, /aria-pressed="false"[^>]*aria-label="이 방에 ‘끈 기억’ 공유"[^>]*>공유 안 함/);
+  assert.match(html, /aria-pressed="true"[^>]*aria-label="Share “공유한 기억” with this room"[^>]*>Shared</);
+  assert.match(html, /aria-pressed="false"[^>]*aria-label="Share “끈 기억” with this room"[^>]*>Not shared</);
   assert.match(memoryRowsHtml({ memory: ['끈 기억'], memoryHidden: { r1: ['끈 기억'] } }, 'r2'), /aria-pressed="true"/, '다른 방에서는 공유');
 });
 

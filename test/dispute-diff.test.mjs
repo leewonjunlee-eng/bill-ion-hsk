@@ -26,24 +26,24 @@ test('지금 배분: 줄로 나눈 지출은 그 배분, 아니면 함께한 사
 test('중재안은 바뀐 줄을 먼저 보이고, 누가 빠지고 더해졌는지 글로 적는다(색에만 기대지 않는다)', () => {
   const html = proposalLinesHtml(bar, proposal, { ...opts, before: currentConsumers(bar) });
   assert.ok(html.indexOf('위스키') < html.indexOf('믹스넛'), '바뀐 위스키 줄이 먼저');
-  assert.match(html, /class="line moved"[\s\S]*민수 빠짐/);
+  assert.match(html, /class="line moved"[\s\S]*민수 removed/);
   assert.match(html, /data-p="ms" data-diff="out"/, '빠진 사람 칩에 표시');
-  assert.match(html, /그대로인 줄 1개/);
+  assert.match(html, /Unchanged lines: 1/);
   assert.equal((html.match(/class="pick"/g) ?? []).length, 6, '칩은 그대로 지출 시트와 같은 캡슐');
 });
 
 test('고친 줄도 지금 배분과 견줘 더해진 사람을 적는다', () => {
   const html = proposalLinesHtml(bar, proposal, { ...opts, editable: true, before: { n: ['me', 'cs'], w: ['me', 'cs', 'ms'] }, draft: { w: ['me', 'cs', 'ms'] } });
-  assert.match(html, /민수 더함/, '믹스넛에 민수가 더해졌다');
-  assert.match(html, /내가 고친 줄/);
+  assert.match(html, /민수 added/, '믹스넛에 민수가 더해졌다');
+  assert.match(html, /Line you edited/);
 });
 
 test('사람별 몫은 이름 아래에 지금 몫, 오른쪽에 바뀐 몫과 차이를 적고, 차이는 부호와 글로 말한다', () => {
   const html = sharesDiffHtml([{ uid: 'me', now: 50_605, after: 40_000, role: '이의 낸 사람' }, { uid: 'cs', now: 40_000, after: 50_605 }, { uid: 'ms', now: 1_000, after: 1_000 }], opts);
-  assert.match(html, /나[\s\S]*이의 낸 사람[\s\S]*지금 ₩50,605[\s\S]*₩40,000[\s\S]*−₩10,605 덜 내요/);
-  assert.match(html, /\+₩10,605 더 내요/);
-  assert.match(html, /aria-label="나: 지금 ₩50,605, 중재안 ₩40,000, −₩10,605 덜 내요"/, '읽어 주는 글도 같은 말');
-  assert.match(html, /그대로/);
+  assert.match(html, /나[\s\S]*이의 낸 사람[\s\S]*Now ₩50,605[\s\S]*₩40,000[\s\S]*−₩10,605 less/);
+  assert.match(html, /\+₩10,605 more/);
+  assert.match(html, /aria-label="나: now ₩50,605, Proposal ₩40,000, −₩10,605 less"/, '읽어 주는 글도 같은 말');
+  assert.match(html, /No change/);
   assert.doesNotMatch(html, /→/, '뜻을 몰랐던 화살표는 쓰지 않는다');
 });
 
@@ -66,9 +66,9 @@ test('이의 시트: 무엇이 맞지 않는지 먼저, 줄 없는 이의는 지
   const sheet = src.match(/function disputeSheet\(\) \{[\s\S]*?\n\}/)?.[0] ?? '';
   assert.match(sheet, /before: currentConsumers\(exp\)/);
   assert.match(sheet, /sharesDiffHtml\(/);
-  assert.match(sheet, /무엇이 맞지 않나요/);
+  assert.match(sheet, /What is wrong/);
   assert.match(sheet, /data-action="open-exp"/, '줄 없는 이의는 낸 사람이 지출을 고친다');
-  assert.match(sheet, /이름을 눌러 고쳐요/, '중재 비서에게 맡겨 둬도 당사자가 고칠 수 있다');
+  assert.match(sheet, /Tap names to fix/, '중재 비서에게 맡겨 둬도 당사자가 고칠 수 있다');
   const panel = readFileSync(new URL('../public/agent-panel.js', import.meta.url), 'utf8');
-  assert.match(panel, /mediator: '[^']*중재안은 내가 고치거나 거부할 수 있어요/);
+  assert.match(panel, /mediator: '[^']*You can edit or reject its proposal/);
 });

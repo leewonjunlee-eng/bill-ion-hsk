@@ -26,7 +26,7 @@ test("방의 '내 비서' 시트의 '기본 설정 바꾸기'는 돌아올 방�
     rerender() {}, openSheet() {}, closeSheet() {}, reload: async () => {}, openPayout() {} });
   await panel.open();
   const { html } = panel.sheets.agent();
-  assert.match(html, /<a href="account\.html\?from=r-1a2b&amp;sheet=agent#agent">기본 설정 바꾸기<\/a>/);
+  assert.match(html, /<a href="account\.html\?from=r-1a2b&amp;sheet=agent#agent">Change defaults<\/a>/);
 });
 
 test('방의 내 계정 메뉴도 돌아올 방을 싣고, 방은 sheet=agent로 돌아오면 내 비서를 다시 연다', () => {

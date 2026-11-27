@@ -17,7 +17,7 @@ const allocated = DEMO_EXPENSES.map((e) => {
 test('toKrw: KRW 지출은 환율 없이 그대로', () => {
   const r = toKrw({ currency: 'KRW', amount: 12000, method: 'card', date: '2026-11-07' }, DEMO_ROOM, 'actual');
   assert.equal(r.krw, 12000);
-  assert.equal(r.how, '원화 결제');
+  assert.equal(r.how, 'Paid in KRW');
 });
 
 test('toKrw: JPY 카드는 기준율×(1+수수료)', () => {
@@ -78,6 +78,30 @@ test('shares: 나누고 남은 원은 rest로 알려 주고 낸 사람 몫에 �
   assert.equal(shares({ ...exp, amount: 9000 }, room, 'actual').rest, 0);
 });
 
+// 비서 기억은 영어로 적어도 한국어와 같게 알아본다(태그는 내부 식별자라 한국어 그대로)
+test('ruleAllocate: 영어 기억(술·날생선을 안 먹음)과 대소문자가 다른 메뉴 이름도 알아본다', () => {
+  const members = ['a', 'b', 'c'].map((uid) => ({ uid, name: uid }));
+  const exp = { present: ['a', 'b', 'c'], items: [
+    { id: 'beer', name: 'Beer', qty: 5, unit: 1, tags: ['술'] },
+    { id: 'fish', name: 'Sashimi', qty: 5, unit: 1, tags: ['날생선'] },
+    { id: 'high', name: 'Highball', qty: 1, unit: 1, tags: ['술'] },
+  ] };
+  for (const [noAlcohol, noRaw] of [
+    ['I don\'t drink alcohol', 'I don\'t eat raw fish'],
+    ['I don’t drink alcohol', 'I don’t eat raw fish'],
+    ['I do not drink any alcohol', 'I can\'t eat raw seafood'],
+    ['Never drinks alcohol', 'Does not eat sashimi'],
+    ['술을 마시지 않아요', '날생선을 먹지 않아요'],
+  ]) {
+    const out = ruleAllocate(exp, { a: [noAlcohol], b: [noRaw], c: ['I often order highballs'] }, members);
+    assert.deepEqual(out.beer.consumers, ['b', 'c'], noAlcohol);
+    assert.deepEqual(out.fish.consumers, ['a', 'c'], noRaw);
+    assert.deepEqual(out.high.consumers, ['c'], 'highballs → Highball');
+  }
+  const likes = ruleAllocate(exp, { a: ['I drink alcohol', 'I don\'t drink coffee'], b: ['I eat raw fish'] }, members);
+  assert.deepEqual([likes.beer.consumers, likes.fish.consumers], [['a', 'b', 'c'], ['a', 'b', 'c']]);
+});
+
 // #55: 환율 정책은 외화 방에만 있다. 원화 방의 금액은 정책이 없어도(null), 예전 값이 남아 있어도 똑같이 나온다
 test('원화 방: toKrw·shares·ledger는 환율 정책과 상관없이 같은 결과', () => {
   const krwRoom = { id: 'r-krw', members: [{ uid: 'a', name: '가' }, { uid: 'b', name: '나' }, { uid: 'c', name: '다' }], currency: 'KRW', fx: null };
@@ -100,7 +124,7 @@ test('외화 방: 정산일 환율이 정해지기 전에는 결제일 기준율
   const exp = { payer: 'a', method: 'card', currency: 'JPY', date: '2026-11-02', amount: 1000 };
   const before = toKrw(exp, fxRoom, 'settle');
   assert.equal(before.krw, 9055);
-  assert.match(before.how, /정산일 환율은 청구서를 보낼 때/);
+  assert.match(before.how, /settlement-day rate is set when invoices are sent/);
   assert.equal(toKrw(exp, { ...fxRoom, fx: { ...fxRoom.fx, settle: { date: '2026-11-03', rate: 900 } } }, 'settle').krw, 9000);
 });
 

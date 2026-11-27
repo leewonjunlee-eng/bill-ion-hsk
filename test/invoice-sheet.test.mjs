@@ -7,8 +7,8 @@ const src = readFileSync(new URL('../public/room.js', import.meta.url), 'utf8');
 
 test('청구서 시트에 방 version을 보이지 않는다', () => {
   const sheet = src.slice(src.indexOf('function invoiceSheet()'), src.indexOf('function invoiceSheet()') + 2000);
-  assert.match(sheet, /낸 돈 \$\{won\(inv\.paid\)\} · 내 몫 \$\{won\(inv\.owed\)\}/);
-  assert.doesNotMatch(sheet, /방 version|\$\{inv\.version\}/, 'version은 화면 글자로 내보내지 않는다(비교에만 쓴다)');
+  assert.match(sheet, /I paid \$\{won\(inv\.paid\)\} · my share \$\{won\(inv\.owed\)\}/);
+  assert.doesNotMatch(sheet, /방 version|room version|\$\{inv\.version\}/i, 'version은 화면 글자로 내보내지 않는다(비교에만 쓴다)');
 });
 
 import { invoiceRows } from '../public/ui.js';
@@ -40,9 +40,9 @@ test('이의는 따로 된 목록 없이 청구서의 내 몫 목록 그 자리�
   assert.ok(lines.length > 0, '내 몫 목록을 그리는 함수가 있다');
   assert.match(lines, /data-action="dispute-toggle"/, '이의를 쓰는 동안 내 몫 목록의 줄을 눌러 고른다');
   assert.match(lines, /on \? ICON_DONE : '<span class="choice-empty"><\/span>'/, '고르지 않은 줄도 빈 동그라미로 고를 수 있어 보인다');
-  assert.match(lines, /고른 지출은 중재 비서가 양쪽 근거로 다시 나눠요\. 떠난 시각이 있으면 그 뒤에 시킨 메뉴는 내 몫에서 빠져요\./, '고르면 어떻게 되는지 목록 바로 아래에 알린다');
-  assert.doesNotMatch(form, /dispute-toggle|<span>맞지 않는 지출<\/span>/, '이의 폼에 같은 지출 목록을 또 두지 않는다');
-  assert.match(form, /위에서 눌러 빼요/, '타임라인이 골라 둔 지출은 위 목록에 있다');
+  assert.match(lines, /The mediator agent re-splits them from both sides’ evidence\. If there is a departure time, items ordered after it come out of your share\./, '고르면 어떻게 되는지 목록 바로 아래에 알린다');
+  assert.doesNotMatch(form, /dispute-toggle|<span>맞지 않는 지출<\/span>|<span>Wrong expenses<\/span>/, '이의 폼에 같은 지출 목록을 또 두지 않는다');
+  assert.match(form, /tap it above to remove/, '타임라인이 골라 둔 지출은 위 목록에 있다');
   assert.match(form, /data-action="cancel-dispute"/, '고르다가 그만둘 수 있다');
   assert.match(src, /'cancel-dispute'/, '그만두기 처리가 있다');
 });

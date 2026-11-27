@@ -14,7 +14,7 @@ const roomHref = (room) => (room ? `room.html?room=${encodeURIComponent(room.id)
 // s: { room, invite, expenses, invoices, disputes, transfers, location, agent } — '나'가 마지막으로 만든 방 기준
 export function tasks(s) {
   const { room } = s;
-  const inRoom = room && { href: roomHref(room), label: '방으로 가기' };
+  const inRoom = room && { href: roomHref(room), label: 'Go to room' };
   const mine = s.expenses.filter((e) => e.createdBy === ME);
   const withLines = mine.filter((e) => e.items?.length && e.split === 'items');
   const friendsIn = room ? FRIENDS.filter((f) => room.members.some((m) => m.uid === f.uid && active(m))).length : 0;
@@ -29,13 +29,13 @@ export function tasks(s) {
       id: 'room', // SEQ 이름표(src/demo-seq.mjs SEQ_TASKS)
       title: 'Create a trip room and invite friends',
       steps: [
-        { text: '내 방에서 ‘새 방 만들기’로 방을 만들어요', note: '방 이름과 기간(오늘부터 2박 3일)은 미리 채워 뒀어요. 그대로 만들어도 되고, 바꿔도 돼요.', done: Boolean(room), show: 'a.btn[href="room.html"], [data-action="create-room"]', go: { href: 'account.html', label: '내 방으로 가기' } },
+        { text: 'In My rooms, create a room with “New room”', note: 'The room name and dates (2 nights from today) are prefilled. Keep them or change them.', done: Boolean(room), show: 'a.btn[href="room.html"], [data-action="create-room"]', go: { href: 'account.html', label: 'Go to My rooms' } },
         room && !room.fx
-          ? { text: '원화만 쓰는 방이라 환율 정책은 건너뛰었어요', note: '엔화처럼 외화를 쓰는 방에만 환율 정책이 나와요.', skipped: true }
-          : { text: '‘외화도 있어요’를 골라 엔화와 환율 정책을 정해요', note: '외화를 쓰는 방에만 환율 정책이 나와요. 정산은 늘 원화로 해요.', done: Boolean(room?.fx), show: '[data-action="cf-foreign"][data-id="yes"]' },
+          ? { text: 'This is a KRW-only room, so the rate policy was skipped', note: 'A rate policy appears only in rooms that spend foreign currency such as yen.', skipped: true }
+          : { text: 'Choose “Foreign too”, then pick yen and a rate policy', note: 'A rate policy appears only in rooms that spend foreign currency. Settlement is always in KRW.', done: Boolean(room?.fx), show: '[data-action="cf-foreign"][data-id="yes"]' },
         // ＋를 누르고 '이걸 어떻게 보내지' 하고 나가지 않게, 누르기만 하면 된다는 것을 이 단계에서 바로 알린다(팀 점검 11/5)
-        { text: '참여자 줄 끝 ＋를 누르면 친구를 초대할 수 있어요. 데모에서는 임의로 들어와요', note: '데모라서 초대 링크를 보내지 않아도 돼요. 철수·영희·민수가 몇 초 간격으로 들어오고, 각자의 비서가 쓴 돈을 남겨요.', done: Boolean(s.invite) || friendsIn > 0, show: '[data-action="open-invite"]', go: inRoom },
-        { text: '친구 셋이 들어와요', note: '초대 시트를 닫거나 다른 화면에 가도 이어서 들어와요.', done: friendsIn === FRIENDS.length },
+        { text: 'Tap ＋ after the member list to invite friends. In the demo they join on their own', note: 'This is a demo, so you don’t need to send the invite link. Chulsoo, Younghee and Minsu join a few seconds apart, and their agents add what they spent.', done: Boolean(s.invite) || friendsIn > 0, show: '[data-action="open-invite"]', go: inRoom },
+        { text: 'Three friends join', note: 'They keep joining even if you close the invite sheet or move to another screen.', done: friendsIn === FRIENDS.length },
       ],
     },
     // 받을 계좌를 먼저 정하고 지출을 남기는 편이 자연스럽다(팀 점검 11/5). 그래서 비서 설정이 지출 남기기보다 앞이다
@@ -43,40 +43,40 @@ export function tasks(s) {
       id: 'agent',
       title: 'Set your account and what your agent may do',
       steps: [
-        { text: '내 계정의 ‘내 비서 기본 설정’에서 ‘샘플 계좌·한도로 채우기’를 누르고 ‘저장’해요', note: '숫자를 직접 넣지 않아도 가짜 계좌와 5만 원 한도가 채워져요. 한도가 청구서보다 작아서 task 4에서 비서가 먼저 물어봐요. 보낼 시기(편할 때·지정일)와 이의 처리도 골라 볼 수 있어요.', done: Boolean(s.agent?.onboardedAt), show: '[data-action="agent-sample"]', go: { href: room ? accountHref(room.id, 'agent', 'agent') : 'account.html#agent', label: '내 계정으로 가기' } }, // 저장하고 뒤로를 누르면 방의 내 비서로 돌아와 다음 단계로 간다
-        { text: '방의 ‘내 계정’ 메뉴 › ‘이 방의 내 비서’에서 ‘이 방에서만’ 값을 정해 봐요', note: '이 방에만 다른 한도나 보낼 시기를 쓸 수 있어요. 고르지 않으면 기본 설정을 따라요.', optional: true, done: Object.keys(s.agent?.roomRules?.[room?.id] ?? {}).length > 0, show: '#nav-me', go: inRoom },
+        { text: 'In My account under “My agent defaults”, press “Fill sample account and limit”, then “Save”', note: 'This fills a fake account and a ₩50,000 limit so you don’t have to type. The limit is below your invoice, so your agent asks first in task 4. You can also try the send timing (any time or a set day) and dispute options.', done: Boolean(s.agent?.onboardedAt), show: '[data-action="agent-sample"]', go: { href: room ? accountHref(room.id, 'agent', 'agent') : 'account.html#agent', label: 'Go to My account' } }, // 저장하고 뒤로를 누르면 방의 내 비서로 돌아와 다음 단계로 간다
+        { text: 'In the room, open the “My account” menu › “My agent in this room” and try a “This room only” value', note: 'This room can use its own limit or send timing. Otherwise it follows your defaults.', optional: true, done: Object.keys(s.agent?.roomRules?.[room?.id] ?? {}).length > 0, show: '#nav-me', go: inRoom },
       ],
     },
     {
       id: 'expense',
       title: 'Add an expense',
       steps: [
-        { text: '‘지출 남기기’에서 ‘영수증 사진’이나 ‘직접 입력’으로 남겨요', note: '사진은 ‘샘플 영수증으로 해 보기’로 읽어 볼 수 있어요. 통화가 엔이면 결제한 날의 환율로 원화를 셈해요. 함께한 사람도 골라요.', done: mine.length > 0, show: '#nav-add:not([hidden]), [data-action="add-expense"]', go: inRoom },
+        { text: 'Press “Add expense” and use “Receipt photo” or “Enter manually”', note: 'Use “Try with a sample receipt” to test photo reading. For yen, KRW is worked out with the payment-day rate. Pick who joined, too.', done: mine.length > 0, show: '#nav-add:not([hidden]), [data-action="add-expense"]', go: inRoom },
         mine.length && !withLines.length
-          ? { text: '메뉴 줄이 없는 지출이라 1/N로 나눠요', skipped: true }
-          : { text: '영수증 줄은 ‘나누러 가기’ › ‘비서에게 나누기 맡기기’로 메뉴별로 나눠요', note: '각자의 비서가 공유한 기억으로 나눠요. 근거가 약한 줄은 짐작한 것을 확인해 달라고 물어요.', done: withLines.length > 0 && withLines.every((e) => e.alloc && !e.items.some((it) => isFlagged(e.alloc[it.id]))), show: '.next [data-action="open-exp"], [data-action="allocate-exp"], [data-action="confirm-all-guesses"]' },
+          ? { text: 'This expense has no item lines, so it is split equally', skipped: true }
+          : { text: 'Split receipt lines by item with “Go split” › “Let agents split it”', note: 'Agents split using the memories each one shares. For lines with weak evidence they ask you to confirm their guess.', done: withLines.length > 0 && withLines.every((e) => e.alloc && !e.items.some((it) => isFlagged(e.alloc[it.id]))), show: '.next [data-action="open-exp"], [data-action="allocate-exp"], [data-action="confirm-all-guesses"]' },
       ],
     },
     {
       id: 'dispute',
       title: 'Fix a wrong share',
       steps: [
-        { text: '‘비서들에게 청구서 보내기’를 눌러요', note: '각자의 비서가 맡긴 규칙대로 받거나, 한도를 넘으면 주인에게 물어요.', done: s.invoices.length > 0, show: '[data-action="send-invoices"]', go: inRoom },
+        { text: 'Press “Send invoices”', note: 'Each agent accepts by its rules, or asks its owner when the amount is over the limit.', done: s.invoices.length > 0, show: '[data-action="send-invoices"]', go: inRoom },
         autoAccepted
-          ? { text: '자동 수락 한도 안이라 비서가 청구서를 바로 받았어요', note: '‘처음부터 다시’ 한 뒤 task 2에서 한도를 낮추면 비서가 먼저 물어봐요.', skipped: true }
-          : { text: '내 청구서를 열고 ‘맞지 않는 지출이 있어요’를 눌러요', note: '영수증 줄이 있는 지출만 골라 중재를 맡길 수 있어요. 줄이 없는 1/N 지출은 이의 대신 ‘지출 고치기’로 바꿔요.', done: myDisputes.length > 0 || s.location.length > 0, show: '[data-action="open-invoice"]' },
-        { text: '‘Google 지도 타임라인 올리기’ › ‘샘플 타임라인으로 해 보기’를 누르고, 골라 둔 ‘2차 바’를 그대로 ‘이의 보내기’', note: '타임라인에서 22:55쯤 자리를 떠난 걸 찾아 지출을 골라 두고, 맞지 않는 점도 채워 둬요.', done: myDisputes.length > 0, show: '[data-action="start-dispute"], [data-action="timeline-guide"]' },
-        { text: '중재안을 보고 ‘중재안에 동의’를 눌러요', note: '철수의 비서는 이의를 중재 비서에게 맡기도록 정해 두었어요. 철수도 곧 동의해요.', done: myDisputes.some((d) => d.agreedBy.includes(ME) || !OPEN.includes(d.status)), show: '[data-action="open-dispute"]' },
+          ? { text: 'It was within the auto-accept limit, so your agent accepted the invoice', note: 'Press “Start over”, then lower the limit in task 2 to have your agent ask first.', skipped: true }
+          : { text: 'Open your invoice and press “An expense is wrong”', note: 'Only expenses with receipt lines can go to mediation. For an equal split with no lines, use “Edit expense” instead of a dispute.', done: myDisputes.length > 0 || s.location.length > 0, show: '[data-action="open-invoice"]' },
+        { text: 'Press “Upload Google Maps Timeline” › “Try with a sample timeline”, keep “Second-round bar” selected and press “Send dispute”', note: 'It finds in the timeline that you left around 22:55, selects the expense and fills in what is wrong.', done: myDisputes.length > 0, show: '[data-action="start-dispute"], [data-action="timeline-guide"]' },
+        { text: 'Review the mediation proposal and press “Accept proposal”', note: 'Chulsoo’s agent is set to send disputes to the mediator agent. Chulsoo accepts shortly too.', done: myDisputes.some((d) => d.agreedBy.includes(ME) || !OPEN.includes(d.status)), show: '[data-action="open-dispute"]' },
       ],
     },
     {
       id: 'send',
       title: 'Send and wrap up',
       steps: [
-        { text: '다시 온 청구서를 ‘이대로 받기’로 받아요', note: '중재안대로 다시 나눈 금액이에요.', done: myPay.length > 0 || left, show: '[data-action="open-invoice"]', go: inRoom },
-        { text: '‘보내러 가기’에서 밀어서 보내요', note: '실제로는 금액과 계좌가 채워진 토스 송금 화면이 열려요. 데모에서는 그 직전에 멈춰요.', done: myPay.some((t) => !['scheduled', 'due'].includes(t.status)) || left, show: '[data-action="open-transfer"]' },
-        { text: '돌아와서 ‘보냈어요’를 누르면 철수가 ‘받았어요’로 확인해요', done: myPay.some((t) => ['sent', 'confirmed'].includes(t.status)) || left, show: '[data-action="mark-sent"]' },
-        { text: '방이 ‘정산 완료’가 되면 정산 완료 카드의 ‘이 방에서 나가기’로 마무리해요', note: '나가지 않으면 끝난 방은 내 방의 ‘끝남’에 기록으로 남아요.', done: left, show: '.next.done [data-action="open-leave"]', go: !left && inRoom },
+        { text: 'Accept the new invoice with “Accept as is”', note: 'The amount is re-split according to the mediation proposal.', done: myPay.length > 0 || left, show: '[data-action="open-invoice"]', go: inRoom },
+        { text: 'Open “Go send” and slide to send', note: 'In real use, Toss opens with the amount and account filled in. The demo stops just before that.', done: myPay.some((t) => !['scheduled', 'due'].includes(t.status)) || left, show: '[data-action="open-transfer"]' },
+        { text: 'Come back and press “Sent”; Chulsoo confirms with “Received”', done: myPay.some((t) => ['sent', 'confirmed'].includes(t.status)) || left, show: '[data-action="mark-sent"]' },
+        { text: 'When the room shows “Settled”, finish with “Leave this room” on that card', note: 'If you stay, the finished room is kept under “Done” in My rooms.', done: left, show: '.next.done [data-action="open-leave"]', go: !left && inRoom },
       ],
     },
   ];
@@ -97,16 +97,16 @@ const here = (href) => new URL(href, location.href).href === location.href;
 
 // 이 화면에 그 버튼이 있으면 '보여 주기', 다른 화면에 있으면 그리로 가는 링크
 function actionHtml(st) {
-  if (st.show && document.querySelector(st.show)) return `<button type="button" class="dg-show" data-dg="show" data-sel="${esc(st.show)}">보여 주기</button>`;
+  if (st.show && document.querySelector(st.show)) return `<button type="button" class="dg-show" data-dg="show" data-sel="${esc(st.show)}">Show me</button>`;
   return st.go && !here(st.go.href) ? `<a class="dg-show" href="${esc(st.go.href)}">${esc(st.go.label)}</a>` : '';
 }
 
 function stepHtml(st, current) {
   const action = current && !st.done && !st.skipped ? actionHtml(st) : '';
-  const state = st.done ? '끝남' : st.skipped ? '건너뜀' : st.optional ? '선택' : '할 일';
+  const state = st.done ? 'Done' : st.skipped ? 'Skipped' : st.optional ? 'Optional' : 'To do';
   return `<li class="dg-step${st.done ? ' done' : ''}${st.skipped ? ' skipped' : ''}">
       <span class="dg-check" aria-hidden="true">${st.done ? ICON_DONE : st.skipped ? '–' : ''}</span>
-      <span class="dg-step-body"><span class="dg-step-text"><span class="sr-only">${state}: </span>${esc(st.text)}${st.optional ? ' <span class="dg-optional">선택</span>' : ''}</span>
+      <span class="dg-step-body"><span class="dg-step-text"><span class="sr-only">${state}: </span>${esc(st.text)}${st.optional ? ' <span class="dg-optional">Optional</span>' : ''}</span>
         ${st.note && !st.done ? `<span class="dg-step-note">${esc(st.note)}</span>` : ''}${action}</span></li>`;
 }
 
@@ -117,7 +117,7 @@ function stepHtml(st, current) {
 export function mountGuide({ snapshot, reset, seq = null }) {
   const root = document.createElement('aside');
   root.className = 'demo-guide';
-  root.setAttribute('aria-label', '체험 데모 task');
+  root.setAttribute('aria-label', 'Demo tasks');
   document.body.append(root);
   let open = recall(OPEN_KEY, true);
   let peek = null; // 눌러서 펼쳐 본 task. 없으면 지금 task
@@ -153,7 +153,7 @@ export function mountGuide({ snapshot, reset, seq = null }) {
     const done = document.createElement('p');
     done.className = 'seq-card-done';
     done.setAttribute('role', 'status');
-    done.textContent = `${score}점을 남겼어요`;
+    done.textContent = `You rated it ${score}`;
     card.querySelector('.seq-skip')?.replaceWith(done);
   }
   // 닫히는 애니메이션(작아지며 흐려진다)이 끝나면 비운다. 움직임 줄이기면 바로 닫는다
@@ -207,14 +207,14 @@ export function mountGuide({ snapshot, reset, seq = null }) {
       const head = `<span class="dg-num${t.done ? ' done' : ''}" aria-hidden="true">${t.done ? ICON_DONE : locked ? LOCK : t.n}</span>
         <span class="dg-task-title"><span class="dg-task-n">Task ${t.n}</span>${esc(t.title)}</span>`;
       return `<li class="dg-task${t.done ? ' done' : ''}${locked ? ' locked' : ''}${t === current ? ' current' : ''}">
-        ${locked ? `<div class="dg-task-head">${head}<span class="sr-only"> · 앞 task를 끝내면 열려요</span></div>`
+        ${locked ? `<div class="dg-task-head">${head}<span class="sr-only"> · Opens after the previous task</span></div>`
           : `<button type="button" class="dg-task-head" data-dg="peek" data-n="${t.n}" aria-expanded="${expanded}">${head}</button>`}
         ${expanded ? `<ol class="dg-steps">${t.steps.map((st) => stepHtml(st, t === current)).join('')}</ol>` : ''}</li>`;
     }).join('');
     const step = nextStep(current);
-    const [eyebrow, title] = !current ? [`체험 데모 · ${finished}/${list.length}`, '다섯 task를 모두 해 봤어요']
-      : open ? [`체험 데모 · ${finished}/${list.length} 끝냄`, `Task ${current.n} · ${current.title}`]
-      : [`체험 데모 · Task ${current.n}/${list.length} ${current.title}`, step?.text ?? current.title];
+    const [eyebrow, title] = !current ? [`Demo · ${finished}/${list.length}`, 'You tried all five tasks']
+      : open ? [`Demo · ${finished}/${list.length} done`, `Task ${current.n} · ${current.title}`]
+      : [`Demo · Task ${current.n}/${list.length} ${current.title}`, step?.text ?? current.title];
     const next = `<div class="dg-head">
         <button type="button" class="dg-toggle" data-dg="toggle" aria-expanded="${open}" aria-controls="dg-body">
           <span class="dg-eyebrow">${esc(eyebrow)}</span>
@@ -222,14 +222,14 @@ export function mountGuide({ snapshot, reset, seq = null }) {
           <span class="dg-chev">${CHEVRON}</span>
         </button>
         ${!open && step ? `<div class="dg-head-action">${actionHtml(step)}</div>` : ''}
-        <div class="dg-bar" role="progressbar" aria-label="끝낸 task" aria-valuemin="0" aria-valuemax="${list.length}" aria-valuenow="${finished}"><i style="width:${(finished / list.length) * 100}%"></i></div>
+        <div class="dg-bar" role="progressbar" aria-label="Tasks done" aria-valuemin="0" aria-valuemax="${list.length}" aria-valuenow="${finished}"><i style="width:${(finished / list.length) * 100}%"></i></div>
       </div>
       <div class="dg-body" id="dg-body"${open ? '' : ' hidden'}><div class="dg-inner">
-        <p class="dg-fake">금액·환율·계좌·위치는 모두 가짜예요. 돈은 움직이지 않아요.</p>
-        ${current ? '' : '<p class="dg-done-note">방 만들기부터 나가기까지 비서끼리 정산을 끝까지 따라왔어요.</p>'}
-        ${!current && seq?.complete(list.map((t) => t.id)) ? '<p class="dg-done-note"><a href="../">첫 화면에서 모두의 SEQ 평균 보기</a></p>' : ''}
+        <p class="dg-fake">All amounts, rates, accounts and locations are fake. No money moves.</p>
+        ${current ? '' : '<p class="dg-done-note">You followed the agents’ settlement from creating a room to leaving it.</p>'}
+        ${!current && seq?.complete(list.map((t) => t.id)) ? '<p class="dg-done-note"><a href="../">See everyone’s SEQ average on the start screen</a></p>' : ''}
         <ol class="dg-tasks">${items}</ol>
-        <div class="dg-foot"><button type="button" class="dg-reset${armed ? ' armed' : ''}" data-dg="reset">${armed ? '한 번 더 누르면 처음부터 다시 해요' : '처음부터 다시'}</button></div>
+        <div class="dg-foot"><button type="button" class="dg-reset${armed ? ' armed' : ''}" data-dg="reset">${armed ? 'Tap again to start over' : 'Start over'}</button></div>
       </div></div>`;
     if (next === html) return;
     // 다시 그려도 초점은 누르던 자리에 둔다

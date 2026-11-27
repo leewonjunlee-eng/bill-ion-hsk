@@ -6,19 +6,19 @@ import { won } from './core.js';
 import { AUTO_ACCEPT_PRESETS, AUTO_ACCEPT_MAX, MEMORY_MAX_CHARS, NOTIFY, DEFAULT_RULES, sendWhenLabel, autoAcceptLabel, sendWhenOf, manualRemindText } from './agent-rules.js';
 
 const DISPUTE_NOTES = {
-  ask: '내가 낸 지출에 이의가 오면 나에게 물어봐요.',
-  evidence: '내 몫을 줄일 근거가 있으면 비서가 대신 이의를 내요.',
-  mediator: '내가 낸 지출에 이의가 오면 중재 비서에게 맡겨요. 중재안은 내가 고치거나 거부할 수 있어요. 내가 동의해야 정해져요.',
+  ask: 'When someone disputes an expense you paid, your agent asks you.',
+  evidence: 'When there is evidence your share should be lower, your agent disputes for you.',
+  mediator: 'Disputes on expenses you paid go to the mediator agent. You can edit or reject its proposal. Nothing is final until you accept.',
 };
 // 보낼 시기: 정산이 끝나면 방에서 언제든 보내러 갈 수 있고, 둘은 비서가 언제 알리느냐만 다르다(사용자 테스트 11/5에 '바로'를 뺐다)
-const SEND_MODES = [['manual', '편할 때'], ['payday', '지정일']];
+const SEND_MODES = [['manual', 'Any time'], ['payday', 'Set day']];
 const SEND_NOTES = {
-  manual: `정산이 끝나면 내가 편할 때 보내요. ${manualRemindText}까지 받는 사람이 받았다고 하지 않으면 한 번 알려 드려요.`,
-  payday: '매달 그날 오전 9시에 보낼 때라고 알려 드려요. 그달에 그날이 없으면 마지막 날에 알려요.',
+  manual: `After settlement, send whenever convenient. You get one reminder if the payee has not marked it received by ${manualRemindText}.`,
+  payday: 'You are reminded to send at 9 AM on that day each month. In months without that day, on the last day.',
 };
 
 const onlyDigits = (v) => String(v ?? '').replace(/\D/g, '');
-const clockText = (iso) => new Date(iso).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Seoul' });
+const clockText = (iso) => new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'Asia/Seoul' });
 
 export const draftFromRules = (r) => ({
   autoAccept: String(r.autoAccept),
@@ -40,43 +40,43 @@ const note = (text, id = '') => (text ? `<p class="group-note"${id ? ` id="${id}
 
 export function limitNote(d) {
   const n = Number(onlyDigits(d.autoAccept));
-  if (n > AUTO_ACCEPT_MAX) return `한도는 ${won(AUTO_ACCEPT_MAX)}까지 정할 수 있어요.`;
-  return n > 0 ? `${won(n)} 이하는 비서가 받고, 넘으면 나에게 물어봐요.` : '모든 청구서를 나에게 물어봐요.';
+  if (n > AUTO_ACCEPT_MAX) return `The limit can be up to ${won(AUTO_ACCEPT_MAX)}.`;
+  return n > 0 ? `Your agent accepts up to ${won(n)} and asks you above that.` : 'Your agent asks you about every invoice.';
 }
 // 처음 설정은 금액 버튼으로 빠르게, 설정 화면은 정확한 금액을 입력한다
 export function limitPresetsHtml(d) {
-  const presets = AUTO_ACCEPT_PRESETS.map((n) => `<button type="button" class="pick" aria-pressed="${Number(onlyDigits(d.autoAccept)) === n}" data-action="agent-preset" data-id="${n}">${n ? won(n) : '항상 묻기'}</button>`).join('');
+  const presets = AUTO_ACCEPT_PRESETS.map((n) => `<button type="button" class="pick" aria-pressed="${Number(onlyDigits(d.autoAccept)) === n}" data-action="agent-preset" data-id="${n}">${n ? won(n) : 'Always ask'}</button>`).join('');
   return `<div class="picks agent-presets">${presets}</div>${note(limitNote(d))}`;
 }
 export function limitInputHtml(d) {
-  return `<div class="list"><label class="row field"><span class="grow">금액</span><input data-ag="autoAccept" value="${esc(d.autoAccept)}" inputmode="numeric" maxlength="9" aria-label="자동 수락 한도(원)" placeholder="0"><span class="meta">원</span></label></div>
+  return `<div class="list"><label class="row field"><span class="grow">Amount</span><input data-ag="autoAccept" value="${esc(d.autoAccept)}" inputmode="numeric" maxlength="9" aria-label="Auto-accept limit (KRW)" placeholder="0"><span class="meta">KRW</span></label></div>
     ${note(limitNote(d), 'agent-limit-note')}`;
 }
 export function sendHtml(d) {
-  const days = Array.from({ length: 31 }, (_, i) => i + 1).map((n) => `<option value="${n}"${Number(d.payday) === n ? ' selected' : ''}>${n}일</option>`).join('');
-  return `${seg('보낼 시기', 'mode', SEND_MODES, d.mode)}
-    ${d.mode === 'payday' ? `<div class="list" style="margin-top:8px"><label class="row field"><span class="grow">매달</span><select data-ag="payday" aria-label="보낼 날짜">${days}</select></label></div>` : ''}
+  const days = Array.from({ length: 31 }, (_, i) => i + 1).map((n) => `<option value="${n}"${Number(d.payday) === n ? ' selected' : ''}>Day ${n}</option>`).join('');
+  return `${seg('Send timing', 'mode', SEND_MODES, d.mode)}
+    ${d.mode === 'payday' ? `<div class="list" style="margin-top:8px"><label class="row field"><span class="grow">Every month</span><select data-ag="payday" aria-label="Day to send">${days}</select></label></div>` : ''}
     ${note(SEND_NOTES[d.mode])}`;
 }
 export function disputeHtml(d) {
-  return `${seg('이의 처리', 'onDispute', [['ask', '묻기'], ['evidence', '근거 있으면 이의'], ['mediator', '중재 비서']], d.onDispute)}
+  return `${seg('Disputes', 'onDispute', [['ask', 'Ask me'], ['evidence', 'Evidence'], ['mediator', 'Mediator']], d.onDispute)}
     ${note(DISPUTE_NOTES[d.onDispute])}`;
 }
-export const notifyHtml = (d) => seg('알림 수준', 'notify', Object.entries(NOTIFY), d.notify);
+export const notifyHtml = (d) => seg('Notification level', 'notify', Object.entries(NOTIFY), d.notify);
 
 // 기억 한 줄에는 글과 공유 여부만 둔다. 글을 누르면 그 줄에서 고치거나 지운다.
 // 공유해도 방 사람에게 기억 내용이 보이지는 않는다(배분 이유에 싣지 않고, 이의 중재에서만 근거로 쓰인다)
 export function memoryRowsHtml(view, roomId, ui = {}) {
   const hidden = new Set(view.memoryHidden?.[roomId] ?? []);
-  if (!view.memory.length) return '<p class="empty">아직 기억이 없어요.</p>';
+  if (!view.memory.length) return '<p class="empty">No memories yet.</p>';
   return view.memory.map((m, i) => {
     if (ui.editing === m) {
-      return `<div class="row agent-mem editing"><input data-mem-edit value="${esc(ui.editText ?? m)}" maxlength="${MEMORY_MAX_CHARS}" aria-label="기억 고치기">
-        <button type="button" class="btn sm" data-action="mem-edit-save">저장</button><button type="button" class="btn sm plain danger-text" data-action="mem-del" data-i="${i}">지우기</button></div>`;
+      return `<div class="row agent-mem editing"><input data-mem-edit value="${esc(ui.editText ?? m)}" maxlength="${MEMORY_MAX_CHARS}" aria-label="Edit memory">
+        <button type="button" class="btn sm" data-action="mem-edit-save">Save</button><button type="button" class="btn sm plain danger-text" data-action="mem-del" data-i="${i}">Delete</button></div>`;
     }
     const shared = !hidden.has(m);
-    return `<div class="row agent-mem"><button type="button" class="agent-mem-text" data-action="mem-edit" data-i="${i}" aria-label="‘${esc(m)}’ 고치거나 지우기">${esc(m)}</button>
-      <button type="button" class="pick" aria-pressed="${shared}" data-action="mem-share" data-i="${i}" aria-label="이 방에 ‘${esc(m)}’ 공유">${shared ? '공유 중' : '공유 안 함'}</button></div>`;
+    return `<div class="row agent-mem"><button type="button" class="agent-mem-text" data-action="mem-edit" data-i="${i}" aria-label="Edit or delete “${esc(m)}”">${esc(m)}</button>
+      <button type="button" class="pick" aria-pressed="${shared}" data-action="mem-share" data-i="${i}" aria-label="Share “${esc(m)}” with this room">${shared ? 'Shared' : 'Not shared'}</button></div>`;
   }).join('');
 }
 
@@ -84,9 +84,9 @@ export function memoryRowsHtml(view, roomId, ui = {}) {
 // 기본 설정을 따르는 동안은 그 값을 글로만 보여 주고, '이 방에서만'일 때 값을 고치는 칸(body)이 나온다
 const ROOM_FIELDS = ['autoAccept', 'sendWhen', 'onDispute'];
 export function roomRuleHtml(field, { custom, defaultText, body }) {
-  const choice = `<div class="seg" role="radiogroup" aria-label="적용할 값" data-seg="room-${esc(field)}"><span class="seg-thumb"></span>
-    ${[['default', '기본 설정'], ['room', '이 방에서만']].map(([id, label]) => `<button type="button" role="radio" aria-checked="${(id === 'room') === custom}" data-action="room-rule-scope" data-field="${esc(field)}" data-id="${id}">${label}</button>`).join('')}</div>`;
-  return `${choice}<div class="room-rule-body">${custom ? body : note(`기본 설정: ${defaultText}`)}</div>`;
+  const choice = `<div class="seg" role="radiogroup" aria-label="Which value applies" data-seg="room-${esc(field)}"><span class="seg-thumb"></span>
+    ${[['default', 'Default'], ['room', 'This room only']].map(([id, label]) => `<button type="button" role="radio" aria-checked="${(id === 'room') === custom}" data-action="room-rule-scope" data-field="${esc(field)}" data-id="${id}">${label}</button>`).join('')}</div>`;
+  return `${choice}<div class="room-rule-body">${custom ? body : note(`Default: ${defaultText}`)}</div>`;
 }
 const DEFAULT_TEXT = {
   autoAccept: (r) => limitNote({ autoAccept: String(r.autoAccept) }),
@@ -96,13 +96,13 @@ const DEFAULT_TEXT = {
 
 export function historyHtml(view) {
   if (!view.ruleHistory.length) return '';
-  return `<section class="group"><details class="agent-history"><summary>규칙 변경 기록 ${view.ruleHistory.length}개</summary>
+  return `<section class="group"><details class="agent-history"><summary>Rule change history (${view.ruleHistory.length})</summary>
     <ol>${[...view.ruleHistory].reverse().map((h) => `<li><span>${esc(h.text)}</span><time>${esc(clockText(h.at))}</time></li>`).join('')}</ol></details></section>`;
 }
 
 // 비서 설정을 마친 사람의 이름 옆 로봇 표시. 방 사람 누구나 보지만 '설정을 마쳤다'는 사실만 담는다.
 // 아이콘: Lucide 'bot'(lucide-static 0.460.0). ISC License, Copyright (c) Lucide Contributors 2022, portions Copyright (c) Cole Bemis 2013-2022 (Feather, MIT). https://lucide.dev/license
-export const AGENT_MARK = '<span class="agent-mark" role="img" aria-label="비서 설정함" title="비서 설정을 마쳤어요">'
+export const AGENT_MARK = '<span class="agent-mark" role="img" aria-label="Agent set up" title="Finished setting up their agent">'
   + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
   + '<path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg></span>';
 
@@ -113,10 +113,10 @@ export const personChipHtml = ({ name, avatar, ready }) => `<span class="person"
 // 처음 설정 전이거나 받을 계좌가 없으면 작은 꼬리표를 글자로 붙인다. 규칙 요약은 툴팁과 읽어 주기 글로 둔다
 export function meChipHtml({ name, avatar }, s) {
   if (!s) return `<span class="person">${avatar}${esc(name)}</span>`;
-  const tag = !s.onboarded ? '설정 전' : !s.hasPayout ? '계좌 없음' : '';
+  const tag = !s.onboarded ? 'Not set up' : !s.hasPayout ? 'No account' : '';
   const rules = `${autoAcceptLabel(s.autoAccept)} · ${sendWhenLabel(s.sendWhen)}`;
   // 처음 설정 전이면 칩이 바로 처음 설정을 연다(방 안에 큰 안내 카드를 띄우지 않는다)
-  return `<button type="button" class="person me" data-action="${s.onboarded ? 'open-agent' : 'open-agent-setup'}" title="내 비서: ${esc(rules)}" aria-label="내 비서 열기. ${esc(rules)}${tag ? `. ${tag}` : ''}">${avatar}${esc(name)}`
+  return `<button type="button" class="person me" data-action="${s.onboarded ? 'open-agent' : 'open-agent-setup'}" title="My agent: ${esc(rules)}" aria-label="Open my agent. ${esc(rules)}${tag ? `. ${tag}` : ''}">${avatar}${esc(name)}`
     + `${s.onboarded ? AGENT_MARK : ''}${tag ? `<span class="person-tag">${tag}</span>` : ''}${CHEVRON}</button>`;
 }
 
@@ -186,51 +186,51 @@ export function createAgentPanel({ api, roomId, summary, meName, rerender, openS
   // 기본 설정 자체와 알림·규칙 변경 기록은 내 계정의 '내 비서 기본 설정'에서 바꾼다
   function agentSheet() {
     const v = ui.view;
-    if (!v) return { title: '내 비서', html: errorHtml('top') };
+    if (!v) return { title: 'My agent', html: errorHtml('top') };
     const d = ui.draft;
     const full = v.memory.length >= v.memoryLimit;
     const payout = v.payout
-      ? `<div class="row"><span class="grow"><span class="title">${esc(v.payout.bank)} •••• ${esc(v.payout.last4)}</span></span><button type="button" class="btn sm secondary" data-action="agent-payout">바꾸기</button></div>`
-      : '<div class="row"><span class="grow">아직 받을 계좌가 없어요</span><button type="button" class="btn sm" data-action="agent-payout">등록</button></div>';
+      ? `<div class="row"><span class="grow"><span class="title">${esc(v.payout.bank)} •••• ${esc(v.payout.last4)}</span></span><button type="button" class="btn sm secondary" data-action="agent-payout">Change</button></div>`
+      : '<div class="row"><span class="grow">No payout account yet</span><button type="button" class="btn sm" data-action="agent-payout">Add</button></div>';
     const rule = (field, label, body) => `<section class="group"><h3 class="group-label"><span>${label}</span></h3>
       ${roomRuleHtml(field, { custom: ui.custom.has(field), defaultText: DEFAULT_TEXT[field](v.rules), body })}</section>`;
     return {
-      title: `${meName()}의 비서`,
-      html: `<p class="group-note" style="margin:0 0 16px">모든 방에는 내 계정의 기본 설정이 쓰여요. 이 방에만 다르게 하고 싶은 규칙은 ‘이 방에서만’을 골라요. <a href="${esc(accountHref(roomId, 'agent', 'agent'))}">기본 설정 바꾸기</a></p>
-        ${rule('autoAccept', '자동 수락 한도', limitInputHtml(d))}
-        ${rule('sendWhen', '보낼 시기', sendHtml(d))}
-        ${rule('onDispute', '이의 처리', disputeHtml(d))}
+      title: `${meName()}’s agent`,
+      html: `<p class="group-note" style="margin:0 0 16px">Every room uses the defaults in My account. For a rule that should differ here, choose “This room only”. <a href="${esc(accountHref(roomId, 'agent', 'agent'))}">Change defaults</a></p>
+        ${rule('autoAccept', 'Auto-accept limit', limitInputHtml(d))}
+        ${rule('sendWhen', 'Send timing', sendHtml(d))}
+        ${rule('onDispute', 'Disputes', disputeHtml(d))}
         <div id="agent-save-wrap" class="agent-save" ${dirty() ? '' : 'hidden'}>
-          <button class="btn" id="agent-save" style="width:100%" data-action="agent-save-rules" ${ui.busy ? 'disabled' : ''}>이 방 규칙 저장</button>
-          <p class="group-note">이 방의 다음 청구서부터 적용돼요. 다른 방은 그대로예요.</p></div>
+          <button class="btn" id="agent-save" style="width:100%" data-action="agent-save-rules" ${ui.busy ? 'disabled' : ''}>Save rules for this room</button>
+          <p class="group-note">Applies from this room’s next invoice. Other rooms stay the same.</p></div>
         ${errorHtml('rules')}${noticeHtml('rules')}
-        <section class="group"><h3 class="group-label"><span>기억 ${v.memory.length}/${v.memoryLimit}</span></h3>
+        <section class="group"><h3 class="group-label"><span>Memories ${v.memory.length}/${v.memoryLimit}</span></h3>
           <div class="list">${memoryRowsHtml(v, roomId, ui)}</div>
-          ${full ? `<p class="group-note">무료 요금제는 ${v.memoryLimit}개까지예요. 기억을 눌러 지우면 더할 수 있어요.</p>`
-            : `<div class="mem-add"><input data-mem value="${esc(ui.memDraft)}" maxlength="${MEMORY_MAX_CHARS}" placeholder="예: 술을 마시지 않아요" aria-label="새 기억"><button type="button" class="btn sm" data-action="mem-add">더하기</button></div>`}
+          ${full ? `<p class="group-note">The free plan holds up to ${v.memoryLimit}. Tap a memory and delete it to add another.</p>`
+            : `<div class="mem-add"><input data-mem value="${esc(ui.memDraft)}" maxlength="${MEMORY_MAX_CHARS}" placeholder="e.g. I don’t drink alcohol" aria-label="New memory"><button type="button" class="btn sm" data-action="mem-add">Add</button></div>`}
           ${errorHtml('memory')}${noticeHtml('memory')}
-          <p class="group-note">기억을 누르면 고치거나 지울 수 있어요. 공유한 기억만 이 방의 배분과 중재에 쓰여요. 방 사람들에게 기억 내용은 보이지 않고, 이의를 중재할 때만 근거로 인용될 수 있어요.</p></section>
-        <section class="group"><h3 class="group-label"><span>받을 계좌</span></h3><div class="list">${payout}</div>
-          <p class="group-note">계좌는 모든 방에 같아요. 바꾸면 내가 받을 모든 방의 대기 중 송금에 적용돼요.</p></section>`,
+          <p class="group-note">Tap a memory to edit or delete it. Only shared memories are used to split and mediate in this room. Room members never see them; they may be quoted only as evidence when a dispute is mediated.</p></section>
+        <section class="group"><h3 class="group-label"><span>Payout account</span></h3><div class="list">${payout}</div>
+          <p class="group-note">The account is the same in every room. Changing it applies to all pending transfers to you.</p></section>`,
     };
   }
 
   function setupSheet() {
     const d = ui.draft;
-    if (!d) return { title: '비서 설정', html: errorHtml('top') };
+    if (!d) return { title: 'Agent setup', html: errorHtml('top') };
     const step = [
-      ['얼마까지 비서가 받을까요?', limitPresetsHtml(d)],
-      ['돈은 언제 보낼까요?', sendHtml(d)],
-      ['이의는 어떻게 할까요?', disputeHtml(d)],
+      ['Up to how much may your agent accept?', limitPresetsHtml(d)],
+      ['When do you send money?', sendHtml(d)],
+      ['How should disputes be handled?', disputeHtml(d)],
     ];
     const last = ui.step === step.length - 1;
     return {
-      title: '내 비서 설정',
-      html: `<div class="agent-setup"><p class="group-note" style="margin-top:0">한 번 정하면 모든 방에 기본으로 쓰여요. 방마다 다르게 하고 싶은 것은 그 방에서 ‘이 방에서만’으로 바꾸고, 기본 설정은 내 계정에서 언제든 바꿔요.</p><p class="eyebrow agent-step">${ui.step + 1}/${step.length}단계</p><h3 class="agent-q">${esc(step[ui.step][0])}</h3>
+      title: 'Set up my agent',
+      html: `<div class="agent-setup"><p class="group-note" style="margin-top:0">Set this once and every room uses it. To differ in one room, choose “This room only” there. Change the defaults any time in My account.</p><p class="eyebrow agent-step">Step ${ui.step + 1}/${step.length}</p><h3 class="agent-q">${esc(step[ui.step][0])}</h3>
         ${step[ui.step][1]}${errorHtml('setup')}
-        <div class="agent-nav">${ui.step ? '<button type="button" class="btn plain" data-action="setup-back">이전</button>' : ''}
-          <button type="button" class="btn" style="flex:1" data-action="${last ? 'setup-done' : 'setup-next'}" ${ui.busy ? 'disabled' : ''}>${last ? '시작하기' : '다음'}</button></div>
-        ${ui.step ? '' : '<p class="group-note" style="text-align:center"><button type="button" class="text-btn" data-action="setup-skip">기본값으로 시작</button></p>'}</div>`,
+        <div class="agent-nav">${ui.step ? '<button type="button" class="btn plain" data-action="setup-back">Back</button>' : ''}
+          <button type="button" class="btn" style="flex:1" data-action="${last ? 'setup-done' : 'setup-next'}" ${ui.busy ? 'disabled' : ''}>${last ? 'Get started' : 'Next'}</button></div>
+        ${ui.step ? '' : '<p class="group-note" style="text-align:center"><button type="button" class="text-btn" data-action="setup-skip">Start with defaults</button></p>'}</div>`,
     };
   }
 
@@ -254,7 +254,7 @@ export function createAgentPanel({ api, roomId, summary, meName, rerender, openS
       return rerender();
     }
     if (name === 'agent-save-rules') {
-      if (await send(`/api/rooms/${encodeURIComponent(roomId)}/agent/rules`, roomInput(), { notice: '이 방 규칙을 저장했어요.', at: 'rules' })) resetDraft();
+      if (await send(`/api/rooms/${encodeURIComponent(roomId)}/agent/rules`, roomInput(), { notice: 'Saved the rules for this room.', at: 'rules' })) resetDraft();
       return rerender();
     }
     // 이 방에서만으로 바꾸면 지금 값(기본 설정)에서 고치기 시작하고, 기본 설정으로 돌리면 그 칸을 기본 설정 값으로 되돌린다
@@ -288,7 +288,7 @@ export function createAgentPanel({ api, roomId, summary, meName, rerender, openS
       const text = mem(d.i);
       const hidden = (ui.view.memoryHidden?.[roomId] ?? []).includes(text);
       // 끌 때만 안내한다. 이미 나눈 지출은 다시 나누기 전까지 그대로다
-      return send(`/api/rooms/${encodeURIComponent(roomId)}/agent/shared`, { text, shared: hidden }, { notice: hidden ? '' : '이미 나눈 지출은 다시 나눌 때부터 반영돼요.' });
+      return send(`/api/rooms/${encodeURIComponent(roomId)}/agent/shared`, { text, shared: hidden }, { notice: hidden ? '' : 'Already-split expenses change only when they are split again.' });
     }
     if (name === 'agent-payout') return openPayout(ui.view.payout);
     if (name === 'setup-next' || name === 'setup-back') {

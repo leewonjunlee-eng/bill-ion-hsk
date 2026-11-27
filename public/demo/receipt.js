@@ -3,7 +3,7 @@
 // 가상의 가게·금액이다. 방 화면(room.js)이 체험 데모일 때만 불러온다
 import { sampleReceipt } from './scenario.js';
 
-// 엔화 영수증에 찍힌 일본어 메뉴 이름(화면에는 서버가 읽은 한국어 이름이 들어간다)
+// 엔화 영수증에 찍힌 일본어 메뉴 이름(화면에는 서버가 읽은 영어 이름이 들어간다)
 const PRINTED = { beer: '生ビール', highball: 'ハイボール', oolong: '烏龍茶', yakitori: '焼鳥盛合せ', karaage: '唐揚げ', sashimi: '刺身盛合せ', ochazuke: 'お茶漬け' };
 const FONT = '"Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Apple SD Gothic Neo", sans-serif';
 const kstToday = () => new Date(Date.now() + 9 * 3600_000).toISOString().slice(0, 10);
@@ -11,7 +11,7 @@ const kstToday = () => new Date(Date.now() + 9 * 3600_000).toISOString().slice(0
 export function sampleReceiptFile(room) {
   const r = sampleReceipt(room, kstToday());
   const jp = r.currency === 'JPY';
-  const price = (n) => (jp ? `¥${n.toLocaleString('ja-JP')}` : `${n.toLocaleString('ko-KR')}원`);
+  const price = (n) => (jp ? `¥${n.toLocaleString('ja-JP')}` : `KRW ${n.toLocaleString('en-US')}`);
   const { items } = r;
   const W = 560;
   const H = 300 + items.length * 34 + 150;
@@ -26,8 +26,8 @@ export function sampleReceiptFile(room) {
     g.fillText(s, x, y);
   };
   const rule = (y) => { g.fillRect(36, y, W - 72, 2); };
-  text(jp ? '居酒屋 なにわ' : '이자카야 나니와', W / 2, 72, { size: 34, weight: 700, align: 'center' });
-  text(jp ? '大阪市中央区 (SAMPLE)' : '서울 마포구 (SAMPLE)', W / 2, 108, { size: 18, align: 'center' });
+  text(jp ? '居酒屋 なにわ' : 'Izakaya Naniwa', W / 2, 72, { size: 34, weight: 700, align: 'center' });
+  text(jp ? '大阪市中央区 (SAMPLE)' : 'Mapo-gu, Seoul (SAMPLE)', W / 2, 108, { size: 18, align: 'center' });
   text(`${r.date.replaceAll('-', jp ? '/' : '.')} ${r.time}`, W / 2, 138, { size: 18, align: 'center' });
   rule(162);
   let y = 204;
@@ -38,15 +38,15 @@ export function sampleReceiptFile(room) {
     y += 34;
   }
   rule(y - 8);
-  text(jp ? '合計' : '합계', 40, y + 36, { size: 26, weight: 700 });
+  text(jp ? '合計' : 'Total', 40, y + 36, { size: 26, weight: 700 });
   text(price(r.total), W - 40, y + 36, { size: 26, weight: 700, align: 'right' });
-  text(jp ? '現金' : '현금', 40, y + 72, { size: 18 });
+  text(jp ? '現金' : 'Cash', 40, y + 72, { size: 18 });
   // 데모용임을 사진 안에서도 알린다
   g.save();
   g.translate(W / 2, H / 2);
   g.rotate(-0.35);
   g.fillStyle = 'rgba(215, 0, 21, 0.14)';
-  text('SAMPLE · 체험 데모', 0, 0, { size: 46, weight: 800, align: 'center' });
+  text('SAMPLE · DEMO', 0, 0, { size: 46, weight: 800, align: 'center' });
   g.restore();
   return new Promise((resolve) => canvas.toBlob((blob) => resolve(new File([blob], 'sample-receipt.jpg', { type: 'image/jpeg' })), 'image/jpeg', 0.85));
 }

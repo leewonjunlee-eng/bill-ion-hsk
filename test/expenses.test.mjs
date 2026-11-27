@@ -29,7 +29,7 @@ test('validateExpense: 외화 현금은 환전 환율이 없어도 받고, 그�
   assert.equal(r.ok, true);
   const { krw, how } = toKrw(r.expense, room, 'actual');
   assert.equal(krw, Math.round((1000 * room.fx.base['2026-11-07']) / 100));
-  assert.match(how, /결제일.*환전 환율이 없어서/);
+  assert.match(how, /payment-day.*no exchange rate recorded for/);
   const cs = validateExpense({ ...base, currency: 'JPY', amount: 1000, method: 'cash', payer: 'cs', date: '2026-11-07' }, room);
   assert.equal(toKrw(cs.expense, room, 'actual').krw, Math.round((1000 * 927.6) / 100), '환전 환율이 있으면 그 환율');
 });
@@ -110,6 +110,6 @@ test('정상 → 201이고 room.version 1 증가, 이벤트 1개', async () => {
   const events = await store.listEvents(roomId, eventsBefore);
   assert.equal(events.length, 1);
   assert.equal(events[0].kind, 'expense_added');
-  assert.equal(events[0].text, '철수가 편의점 ₩12,000을 남겼어요');
+  assert.equal(events[0].text, 'Chulsoo가 편의점 ₩12,000을 남겼어요');
   assert.equal((await store.list('expenses', { roomId })).length, 8);
 });

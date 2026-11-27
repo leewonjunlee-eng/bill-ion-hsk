@@ -74,14 +74,14 @@ export function createDemoServer({ storage = globalThis.sessionStorage, clock = 
   async function local(method, url, body, as) {
     if (url.pathname === '/api/config') return reply(200, DEMO_CONFIG);
     if (url.pathname === '/api/dev/seed') return reply(404, { error: 'not found' });
-    if (method === 'POST' && url.pathname === '/api/me/delete') return reply(400, { error: '체험용 데모라 계정을 지울 수 없어요. 처음부터 다시 하려면 안내 칸의 ‘처음부터 다시’를 눌러 주세요.' });
+    if (method === 'POST' && url.pathname === '/api/me/delete') return reply(400, { error: 'You can’t delete the account in the demo. To begin again, press “Start over” in the guide panel.' });
     // 사진 읽기: 실제 검증·정리(extractReceipt)는 그대로 쓰고, AI 대신 샘플 영수증을 읽은 값을 넣는다
     const extract = method === 'POST' && /^\/api\/rooms\/([^/]+)\/receipts\/extract$/.exec(url.pathname);
     if (extract) {
       const room = await store.get('rooms', decodeURIComponent(extract[1]));
-      if (!room?.members.some((m) => m.uid === as && !m.left)) return reply(403, { error: '이 방의 멤버가 아니에요' });
-      if (!body?.image?.data) return reply(400, { error: '사진 파일이 아니에요' });
-      const sample = { model: '샘플 영수증', generate: async () => sampleReceipt(room, kstDay(clock())) };
+      if (!room?.members.some((m) => m.uid === as && !m.left)) return reply(403, { error: 'You are not a member of this room' });
+      if (!body?.image?.data) return reply(400, { error: 'That is not a photo file' });
+      const sample = { model: 'Sample receipt', generate: async () => sampleReceipt(room, kstDay(clock())) };
       return reply(200, { draft: await extractReceipt(sample, { image: body.image, room }) });
     }
     return null;

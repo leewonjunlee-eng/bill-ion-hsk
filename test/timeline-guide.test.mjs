@@ -61,8 +61,8 @@ test('안내 시트는 이의 시트 위에 한 겹 더 올라오고, 닫기는 
 
 test('타임라인 올리기 줄은 바로 파일을 고르지 않고 안내 시트를 연다(다시 고르기는 바로)', () => {
   const src = readFileSync(new URL('../public/room.js', import.meta.url), 'utf8');
-  const rows = src.match(/data-action="timeline-[a-z]+"[^`]*?Google 지도 타임라인 올리기/g) ?? [];
+  const rows = src.match(/data-action="timeline-[a-z]+"[^`]*?Upload Google Maps Timeline/g) ?? [];
   assert.equal(rows.length, 2, '방 화면 줄과 이의 시트 줄');
   assert.ok(rows.every((r) => r.startsWith('data-action="timeline-guide"')));
-  assert.match(src, /data-action="timeline-pick">다른 파일 고르기/);
+  assert.match(src, /data-action="timeline-pick">Choose another file/);
 });

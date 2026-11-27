@@ -42,5 +42,5 @@ test('지출을 지우면 영수증도 지워지고 version이 오르며 기록�
   assert.equal((await store.get('rooms', roomId)).version, v + 1);
   const last = (await store.listEvents(roomId)).at(-1);
   assert.equal(last.kind, 'expense_deleted');
-  assert.equal(last.text, '철수가 ‘라멘’을 지웠어요');
+  assert.equal(last.text, 'Chulsoo가 ‘라멘’을 지웠어요');
 });

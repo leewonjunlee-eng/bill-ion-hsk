@@ -20,16 +20,16 @@ export const whose = (w) => (w === '나' ? '내' : w);
 
 // 메뉴 배분을 어떻게 했는지(서버 응답의 how) 영수증 줄 위에 짧게 보인다.
 export function allocLabel({ source, how, latencyMs }) {
-  if (how === 'obvious') return 'AI 없이 나눔';
-  if (source === 'human') return '당사자가 고친 배분'; // 이의 당사자가 중재안을 고쳐 다시 낸 안(#62)
-  const sec = latencyMs ? ` · ${(latencyMs / 1000).toFixed(1)}초` : '';
-  if (!source || source === 'rules') return `규칙${sec}`;
+  if (how === 'obvious') return 'Split without AI';
+  if (source === 'human') return 'Split edited by a party'; // 이의 당사자가 중재안을 고쳐 다시 낸 안(#62)
+  const sec = latencyMs ? ` · ${(latencyMs / 1000).toFixed(1)}s` : '';
+  if (!source || source === 'rules') return `Rules${sec}`;
   const model = source.replace(/^gemini-/, 'Gemini ').replace(/-flash/, ' Flash').replace(/-preview/, ' Preview');
-  return `${model}${how === 'cache' ? ' · 이전 답 재사용' : sec}`;
+  return `${model}${how === 'cache' ? ' · reused earlier answer' : sec}`;
 }
 
 // 사람별 몫 아래 한 줄. 원 단위로 나누고 남은 돈이 있을 때만 보인다(core.js의 shares().rest).
-export const restNote = (rest) => (rest ? `<p class="group-note">나누고 남은 ${won(rest)}은 낸 사람 몫에 더했어요.</p>` : '');
+export const restNote = (rest) => (rest ? `<p class="group-note">The ${won(rest)} left over after splitting was added to the payer’s share.</p>` : '');
 
 // 이의 당사자(지출을 낸 사람·이의를 낸 사람) 중 아직 중재안에 동의하지 않은 사람. 같은 사람이면 한 번만
 export const disputeWaiting = (d, exp) => [...new Set([exp.payer, d.by])].filter((u) => !d.agreedBy.includes(u));
@@ -49,28 +49,28 @@ export function disputeChoices(d, exp, uid) {
 
 // 방 화면 '이의' 목록의 한 줄(글자만, 그리는 쪽에서 esc). 열린 이의는 누구를 기다리는지, 끝난 이의는 어떻게 끝났는지
 export function disputeStatus(d, exp, nameOf) {
-  if (d.status === 'open') return '아직 중재 전이에요';
+  if (d.status === 'open') return 'Not mediated yet';
   if (d.status === 'proposed') {
     const waiting = disputeWaiting(d, exp);
-    const head = d.proposal?.revisedBy ? `${subj(nameOf(d.proposal.revisedBy))} 중재안을 고쳤어요` : '중재안이 나왔어요';
-    return `${head}${waiting.length ? `. ${waiting.map(nameOf).join('·')}의 동의를 기다려요` : ''}`;
+    const head = d.proposal?.revisedBy ? `${nameOf(d.proposal.revisedBy)} edited the mediation proposal` : 'A mediation proposal is ready';
+    return `${head}${waiting.length ? `. Waiting for ${waiting.map(nameOf).join(', ')} to accept` : ''}`;
   }
-  if (d.status === 'resolved') return '양쪽이 동의해서 다시 나눴어요';
-  if (d.status === 'withdrawn') return `${subj(nameOf(d.rejectedBy))} 중재안을 거부하고 이의를 거뒀어요`;
-  if (d.status === 'dismissed') return `${subj(nameOf(d.rejectedBy))} 중재안을 거부해서 끝났어요`;
-  return '지출이 바뀌어 닫혔어요';
+  if (d.status === 'resolved') return 'Both accepted, so it was split again';
+  if (d.status === 'withdrawn') return `${nameOf(d.rejectedBy)} rejected the proposal and withdrew the dispute`;
+  if (d.status === 'dismissed') return `${nameOf(d.rejectedBy)} rejected the proposal, so the dispute ended`;
+  return 'Closed because the expense changed';
 }
 
 // 동의·거부해서 시트를 닫은 뒤 방 화면에 남기는 한 줄(글자만, 그리는 쪽에서 esc).
 // 상대가 나중에 동의하거나 거부해도 맞도록 그 순간이 아니라 지금 이의 상태로 만든다
 export function disputeNote(d, exp, nameOf) {
-  if (d.status === 'resolved') return `양쪽이 동의해서 ${obj(`‘${exp.title}’`)} ${d.proposal?.revisedBy ? '고친 배분대로' : '중재안대로'} 다시 나눴어요. 청구서도 다시 보냈어요.`;
-  if (d.status === 'superseded') return `지출이 바뀌어 ‘${exp.title}’ 이의가 닫혔어요.`;
-  if (d.status === 'withdrawn') return `${subj(nameOf(d.rejectedBy))} 중재안을 거부하고 ‘${exp.title}’ 이의를 거뒀어요. 지금 배분 그대로 정산해요.`;
-  if (d.status === 'dismissed') return `${subj(nameOf(d.rejectedBy))} 중재안을 거부해서 ‘${exp.title}’ 이의가 끝났어요. 지금 배분 그대로 정산해요.`;
+  if (d.status === 'resolved') return `Both accepted, so “${exp.title}” was split again using the ${d.proposal?.revisedBy ? 'edited split' : 'mediation proposal'}. Invoices were sent again.`;
+  if (d.status === 'superseded') return `The dispute on “${exp.title}” closed because the expense changed.`;
+  if (d.status === 'withdrawn') return `${nameOf(d.rejectedBy)} rejected the proposal and withdrew the dispute on “${exp.title}”. It settles with the current split.`;
+  if (d.status === 'dismissed') return `${nameOf(d.rejectedBy)} rejected the proposal, so the dispute on “${exp.title}” ended. It settles with the current split.`;
   const waiting = disputeWaiting(d, exp);
-  const head = d.proposal?.revisedBy ? `${subj(nameOf(d.proposal.revisedBy))} 중재안을 고쳐 다시 제안했어요.` : '중재안에 동의했어요.';
-  return `${head}${waiting.length ? ` ${waiting.map(nameOf).join('·')}의 동의를 기다려요.` : ''}`;
+  const head = d.proposal?.revisedBy ? `${nameOf(d.proposal.revisedBy)} edited the proposal and sent it again.` : 'The mediation proposal was accepted.';
+  return `${head}${waiting.length ? ` Waiting for ${waiting.map(nameOf).join(', ')} to accept.` : ''}`;
 }
 
 // 중재안 고치기(#62). draft는 이 화면에서 칩을 눌러 고른 줄별 사람 { [itemId]: [uid, ...] }이고, 중재안과 같아진 줄은 고친 줄이 아니다
@@ -95,26 +95,26 @@ export function proposalLinesHtml(exp, alloc, { draft = {}, editable = false, na
     const diffOf = (u) => (added.includes(u) ? ' data-diff="in"' : removed.includes(u) ? ' data-diff="out"' : '');
     const picks = exp.present.map((u) => `<button type="button" class="pick" aria-pressed="${chosen.includes(u)}"${editable ? '' : ' disabled'}
         data-action="revise-pick" data-line="${esc(it.id)}" data-p="${esc(u)}"${diffOf(u)}>${avatar(u)}${esc(nameOf(u))}</button>`).join('');
-    const diff = moved ? `<p class="diff">${[...removed.map((u) => `${esc(nameOf(u))} 빠짐`), ...added.map((u) => `${esc(nameOf(u))} 더함`)].join(' · ')}</p>` : '';
-    const reason = changed.has(it.id) ? '내가 고친 줄' : alloc[it.id]?.reason ?? '';
+    const diff = moved ? `<p class="diff">${[...removed.map((u) => `${esc(nameOf(u))} removed`), ...added.map((u) => `${esc(nameOf(u))} added`)].join(' · ')}</p>` : '';
+    const reason = changed.has(it.id) ? 'Line you edited' : alloc[it.id]?.reason ?? '';
     return { moved, html: `<div class="line${moved ? ' moved' : ''}" data-line-id="${esc(it.id)}">
       <div class="line-top"><span class="line-name">${it.time ? `<small style="margin:0 6px 0 0">${esc(it.time)}</small>` : ''}${esc(it.name)}<small>×${it.qty}</small></span><span class="num">${money(it.qty * it.unit, exp.currency)}</span></div>
       ${diff}<div class="picks">${picks}</div>${reason ? `<p class="reason">${esc(reason)}</p>` : ''}</div>` };
   });
   if (!before) return lines.map((l) => l.html).join('');
   const same = lines.filter((l) => !l.moved);
-  return [...lines.filter((l) => l.moved).map((l) => l.html), same.length ? `<p class="line-group">그대로인 줄 ${same.length}개</p>` : '', ...same.map((l) => l.html)].join('');
+  return [...lines.filter((l) => l.moved).map((l) => l.html), same.length ? `<p class="line-group">Unchanged lines: ${same.length}</p>` : '', ...same.map((l) => l.html)].join('');
 }
 
 // 사람별 몫(사용자 테스트 11/5: '₩50,605 → ₩101,210' 화살표의 뜻을 몰랐다). 화살표 대신 이름 아래에 '지금 ₩…'을,
 // 오른쪽에 바뀐 몫과 차이를 적는다. 차이는 부호와 '더 내요·덜 내요'로 말해 색에 기대지 않는다.
 // 휴대폰 폭에서도 세 칸 표처럼 깨지지 않게 줄마다 두 줄로 쌓는다. rows: [{ uid, now, after, role? }], label: 바뀐 몫의 이름
-export function sharesDiffHtml(rows, { nameOf, avatar, label = '중재안' }) {
+export function sharesDiffHtml(rows, { nameOf, avatar, label = 'Proposal' }) {
   return rows.map(({ uid, now, after, role = '' }) => {
     const d = after - now;
-    const say = d === 0 ? '그대로' : `${d > 0 ? '+' : '−'}${won(Math.abs(d))} ${d > 0 ? '더 내요' : '덜 내요'}`;
-    return `<div class="row share-row" role="group" aria-label="${esc(`${nameOf(uid)}: 지금 ${won(now)}, ${label} ${won(after)}, ${say}`)}">${avatar(uid)}
-      <span class="grow"><span class="title">${esc(nameOf(uid))}${role ? `<small>${esc(role)}</small>` : ''}</span><span class="meta" style="display:block">지금 ${won(now)}</span></span>
+    const say = d === 0 ? 'No change' : `${d > 0 ? '+' : '−'}${won(Math.abs(d))} ${d > 0 ? 'more' : 'less'}`;
+    return `<div class="row share-row" role="group" aria-label="${esc(`${nameOf(uid)}: now ${won(now)}, ${label} ${won(after)}, ${say}`)}">${avatar(uid)}
+      <span class="grow"><span class="title">${esc(nameOf(uid))}${role ? `<small>${esc(role)}</small>` : ''}</span><span class="meta" style="display:block">Now ${won(now)}</span></span>
       <span class="share-end"><span class="amount num">${won(after)}</span><span class="delta ${d > 0 ? 'up' : d < 0 ? 'down' : 'same'}">${say}</span></span></div>`;
   }).join('');
 }
@@ -123,9 +123,9 @@ export function sharesDiffHtml(rows, { nameOf, avatar, label = '중재안' }) {
 // 보내면 내가 그 배분에 동의한 것이 되므로, 누구에게 다시 묻는지 버튼 바로 아래에 알린다
 export function reviseChoicesHtml({ disputeId, other, busy = false }) {
   const off = busy ? ' disabled' : '';
-  return `<div class="stack"><button class="btn lead" data-action="revise-send" data-id="${esc(disputeId)}"${off}>${ARROW}${busy ? '제안하는 중…' : '고친 배분으로 제안하기'}</button>
-      <button class="btn plain" data-action="revise-reset"${off}>되돌리기</button></div>
-    <p class="group-note">보내면 내가 이 배분에 동의한 것으로 보고 ${esc(other)}에게 다시 물어요.</p>`;
+  return `<div class="stack"><button class="btn lead" data-action="revise-send" data-id="${esc(disputeId)}"${off}>${ARROW}${busy ? 'Proposing…' : 'Propose edited split'}</button>
+      <button class="btn plain" data-action="revise-reset"${off}>Undo changes</button></div>
+    <p class="group-note">Sending counts as your acceptance of this split, and ${esc(other)} will be asked again.</p>`;
 }
 
 // 영수증 사진을 넣는 버튼(#6). capture가 붙은 입력은 iOS·Android 모두 고르는 메뉴 없이 카메라로 바로 가고,
@@ -135,8 +135,8 @@ export function receiptPickers(touch) {
   const pick = (label, cls, attrs = '') => `<label class="btn${cls}" style="display:inline-flex;align-items:center;justify-content:center${touch ? ';flex:1' : ''}">${label}
       <input type="file" accept="image/*"${attrs} data-receipt hidden></label>`;
   return touch
-    ? pick('사진 찍기', '', ' capture="environment"') + pick('앨범에서 고르기', ' secondary')
-    : pick('사진 고르기', '');
+    ? pick('Take photo', '', ' capture="environment"') + pick('Choose from library', ' secondary')
+    : pick('Choose photo', '');
 }
 
 const ICONS = {
@@ -182,10 +182,10 @@ export function qrIsFresh(qr, transferId, now = Date.now(), marginMs = 60_000) {
 // 메뉴 배분 버튼. 이미 나눴고 그 뒤로 비서의 기억이 그대로면(fresh, 서버의 allocFresh) 다시 나눠도 같은 답이고
 // 확인한 줄만 지워지니 막는다. 막을 때는 무엇이 남았는지 버튼 아래(hint)에 알려 준다
 export function allocButton({ allocated, fresh, flagged }) {
-  if (!allocated) return { label: '비서에게 나누기 맡기기', disabled: false, hint: '' };
-  if (!fresh) return { label: '비서에게 다시 나누기', disabled: false, hint: '' };
-  if (flagged) return { label: '비서가 나누기를 마쳤어요', disabled: true, hint: `확인 필요한 ${flagged}줄만 확인하면 끝나요.` };
-  return { label: '나누기를 모두 마쳤어요', disabled: true, hint: '지출을 고치거나 비서의 기억이 바뀌면 다시 나눌 수 있어요.' };
+  if (!allocated) return { label: 'Let agents split it', disabled: false, hint: '' };
+  if (!fresh) return { label: 'Ask agents to split again', disabled: false, hint: '' };
+  if (flagged) return { label: 'Agents finished splitting', disabled: true, hint: `Just confirm the lines that need review (${flagged}).` };
+  return { label: 'All lines are split', disabled: true, hint: 'You can split again if the expense or agent memories change.' };
 }
 
 // 청구서를 막는 줄(비서가 근거 없이 짐작하지 않고 사람에게 물은 줄)을 지출별로 모은다.
@@ -201,8 +201,8 @@ export function flaggedLines(expenses, isFlagged) {
 // '누가 확인해야 한다'가 아니라 '누구의 비서가 물어봤다'고 쓴다: 서버는 방 멤버 누구나 줄을 확인하게 두므로 철수만 할 수 있다는 말이 되면 안 된다.
 // 데모 방에는 이름이 '나'인 사람이 있어 내가 보는 사람이 아닐 때는 ‘나’로 따옴표를 쳐서 구분한다
 export function askedBy(uid, { me, nameOf }) {
-  const agent = uid === me ? '내 비서' : nameOf(uid) === '나' ? '‘나’의 비서' : `${nameOf(uid)}의 비서`;
-  return `${agent}가 물어봤어요`;
+  const agent = uid === me ? 'My agent' : nameOf(uid) === 'Me' || nameOf(uid) === '나' ? `“${nameOf(uid)}”’s agent` : `${nameOf(uid)}’s agent`;
+  return `${agent} asked`;
 }
 
 // 청구서 보내기를 눌렀는데 막혔을 때 버튼 아래에 보일 안내: 몇 줄이 남았고, 어느 지출의 어느 줄을, 누구의 비서가 물었는지, 어디로 가면 되는지.
@@ -211,13 +211,13 @@ export function blockedNotice(groups, { me, nameOf }) {
   if (!groups.length) return null;
   const total = groups.reduce((n, g) => n + g.lines.length, 0);
   return {
-    title: '청구서를 아직 보낼 수 없어요',
-    lead: `비서가 짐작하지 않고 물어본 줄이 ${total}줄 남았어요.`,
+    title: 'Invoices can’t be sent yet',
+    lead: `Lines an agent asked about instead of guessing are still open: ${total}.`,
     total,
     rows: groups.map((g) => {
       const [first] = g.lines;
       const more = g.lines.length - 1;
-      return { expId: g.expId, lineId: first.id, what: `${g.title}의 ‘${first.name}’${more ? ` 외 ${more}줄` : ''}`, who: askedBy(g.owner, { me, nameOf }), label: '확인하러 가기' };
+      return { expId: g.expId, lineId: first.id, what: `“${first.name}” in ${g.title}${more ? ` and ${more} more` : ''}`, who: askedBy(g.owner, { me, nameOf }), label: 'Review' };
     }),
   };
 }
@@ -270,13 +270,13 @@ export function sendFollowUp(pending, event) {
   return { pending, note: pending.left ? null : 'fallback' }; // timeout
 }
 
-// 비서끼리 기록 한 줄. 시스템 로그가 아니라 비서들의 대화처럼 보이게 한다: 말은 말풍선에, 받는 사람은 '○○에게'로,
+// 비서끼리 기록 한 줄. 시스템 로그가 아니라 비서들의 대화처럼 보이게 한다: 말은 말풍선에, 받는 사람은 'to ○○'로,
 // 근거(규칙·수치)는 말풍선 밖에 접어 두어 궁금한 사람만 연다. 같은 분에 이어진 말은 시각을 비워 한 번만 보인다
 export const logItemHtml = ({ avatar, who, to = '', time = '', text, meta = '', tagHtml = '', enter = false, unread = false, extraHtml = '' }) => `<li class="${enter ? 'enter' : ''}${unread ? ' unread' : ''}">
     ${avatar}
-    <div><div class="who"><span>${esc(who)}${to ? ` <span class="to">${esc(to)}에게</span>` : ''}</span>${time ? `<time>${esc(time)}</time>` : ''}</div>
+    <div><div class="who"><span>${esc(who)}${to ? ` <span class="to">to ${esc(to)}</span>` : ''}</span>${time ? `<time>${esc(time)}</time>` : ''}</div>
       <p class="text">${esc(text)}</p>
-      ${meta ? `<details class="why"><summary>왜 그렇게 했나요</summary><p>${esc(meta)}</p></details>` : ''}
+      ${meta ? `<details class="why"><summary>Why did it do that?</summary><p>${esc(meta)}</p></details>` : ''}
       ${tagHtml ? `<div class="tag">${tagHtml}</div>` : ''}${extraHtml}</div>
   </li>`;
 

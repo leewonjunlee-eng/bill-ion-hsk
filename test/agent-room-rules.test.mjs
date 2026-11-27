@@ -50,8 +50,8 @@ test('한 방의 자동 수락 한도를 0원으로 정하면 그 방 청구서�
 // #59 '직접'은 날짜를 직접 고르는 것으로 읽혀 입력칸을 찾게 만든다. 날짜 없이 내가 편할 때 보내는 모드라서 이름을 '편할 때'로 쓴다
 test('보낼 시기의 세 번째 선택지는 \'편할 때\'이고, 요약과 기록도 같은 말을 쓴다', () => {
   const html = sendHtml({ mode: 'manual', payday: 25 });
-  assert.match(html, /<button[^>]*role="radio"[^>]*aria-checked="true"[^>]*data-id="manual"[^>]*>편할 때</);
-  assert.ok(!html.includes('직접'), '\'직접\'이라는 말은 쓰지 않는다');
+  assert.match(html, /<button[^>]*role="radio"[^>]*aria-checked="true"[^>]*data-id="manual"[^>]*>Any time</);
+  assert.ok(!html.includes('직접') && !/>\s*(direct|manual(ly)?)\b/i.test(html), '\'직접\'이라는 말은 쓰지 않는다');
   assert.ok(!html.includes('<select'), '날짜를 고르는 칸은 없다(지정일에만 있다)');
   assert.equal(sendWhenLabel('manual'), 'Send whenever convenient');
 });
@@ -112,10 +112,10 @@ test('API: 내 계정에서 방 없이 받을 계좌를 정하고, 끝 4자리�
 
 test('방 비서 설정: 규칙마다 기본 설정을 따를지 이 방에서만 정할지 고르고, 기본 설정 값을 함께 보여 준다', () => {
   const follow = roomRuleHtml('autoAccept', { custom: false, defaultText: '₩30,000 이하는 비서가 받아요', body: '<input data-ag="autoAccept">' });
-  assert.match(follow, /role="radio" aria-checked="true"[^>]*data-action="room-rule-scope"[^>]*data-field="autoAccept"[^>]*data-id="default"[^>]*>기본 설정/);
+  assert.match(follow, /role="radio" aria-checked="true"[^>]*data-action="room-rule-scope"[^>]*data-field="autoAccept"[^>]*data-id="default"[^>]*>Default/);
   assert.match(follow, /₩30,000 이하는 비서가 받아요/);
   assert.ok(!follow.includes('data-ag="autoAccept"'), '기본 설정을 따르는 동안은 값을 고치는 칸이 없다');
   const custom = roomRuleHtml('autoAccept', { custom: true, defaultText: '₩30,000 이하는 비서가 받아요', body: '<input data-ag="autoAccept">' });
-  assert.match(custom, /aria-checked="true"[^>]*data-id="room"[^>]*>이 방에서만/);
+  assert.match(custom, /aria-checked="true"[^>]*data-id="room"[^>]*>This room only/);
   assert.ok(custom.includes('data-ag="autoAccept"'));
 });
