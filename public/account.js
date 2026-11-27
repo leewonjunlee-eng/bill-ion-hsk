@@ -27,7 +27,7 @@ const say = (text, error = false) => {
   else message.className = error ? 'form-error' : 'group-note';
 };
 const MESSAGE = '<p id="message" class="group-note" role="status"></p>';
-const PRIVACY = 'https://github.com/orca-svg/agent-settlement/blob/main/PRIVACY.md';
+const PRIVACY = 'https://github.com/leewonjunlee-eng/bill-ion-hsk/blob/main/PRIVACY.md';
 
 // 상단바는 왼쪽·가운데·오른쪽 세 칸이다. 빈 칸도 자리를 지켜 가운데 제목이 가운데에 오게 한다
 const BRAND = '<a class="nav-brand" href="./">Bill:ION</a>';

@@ -1,49 +1,49 @@
-# #3 Firestore 연결 안내
+# #3 Firestore connection guide
 
-## 지금 된 것
+## What works now
 
-- `src/store/firestore.mjs`의 `FirestoreStore`가 `MemoryStore`와 같은 Store 계약을 지켜요. 서버는 `STORE=firestore`일 때만 이걸 쓰고, 아니면 지금처럼 메모리에 둬요. 어느 쪽이든 `encryptedStore`로 계좌·위치 요약 칸을 잠가요.
-- 비서 기록 `seq`는 방마다 트랜잭션으로 매기고, 탈퇴(`eraseUser`)도 한 트랜잭션으로 써요. 결과는 `MemoryStore`와 같아요(`eraseUserSnapshot`을 같이 씀).
-- 영수증 사진은 Firestore 문서 한도(1MiB)를 넘을 수 있어서 Cloud Storage `receipts/{지출 id}`에 둬요.
-- 보안 규칙: `firestore.rules`(방 멤버만 읽기, 송금은 당사자만, 쓰기는 모두 서버만), `storage.rules`(전부 서버만).
-- 방 화면은 서버가 Firestore이고 로그인한 상태면 비서 기록을 `onSnapshot`으로 받아요. 그 밖에는 2초 폴링이에요. 실시간 연결이 거부되면 폴링으로 이어 가고, 다음에 방을 열 때 실시간을 다시 시도해요.
-- Firestore는 읽은 문서 수만큼 돈이 들어서 자주 도는 읽기를 줄였어요. `tick()`(1분마다)은 할 일이 있는 송금(`scheduled`·`due`·`opened`·`sent`)만 읽고, 방은 tick 한 번에 방마다 한 번만 읽어요. 내 방 목록과 프로필 변경은 `roomsOf(uid)`로 `_memberUids` 색인을 써서 내 방만 읽어요. 또 서버는 Firestore 앞에 읽기 캐시(`src/store/cached.mjs`)를 둬서, 한 번 읽은 문서·목록은 60초 동안 메모리에서 돌려주고 쓰기가 있으면 그 컬렉션을 비워요.
-- 돈 계산은 원래 서버가 해요. 화면은 지출 입력(줄·단가·함께한 사람)만 보내고, 몫·차액·청구서·송금은 서버가 `public/core.js`로 계산해요. Firestore 위에서도 "몫의 합 = 결제액, 차액의 합 = 0"을 테스트로 확인했어요.
-- 체험 데모(`index.html`·`demo/`)는 서버 저장소를 쓰지 않고 브라우저 안에서 돌아서 그대로예요.
+- `FirestoreStore` in `src/store/firestore.mjs` follows the same Store contract as `MemoryStore`. The server uses it only with `STORE=firestore`; otherwise data stays in memory as before. Either way, `encryptedStore` encrypts account and location summary fields.
+- The agent log `seq` is assigned per room in a transaction, and account deletion (`eraseUser`) is written in one transaction. The result is the same as `MemoryStore` (both use `eraseUserSnapshot`).
+- Receipt photos can exceed the Firestore document limit (1MiB), so they go in Cloud Storage `receipts/{expense id}`.
+- Security rules: `firestore.rules` (only room members read, transfers only by their parties, all writes by the server only) and `storage.rules` (everything server only).
+- If the server uses Firestore and the user is logged in, the room screen receives the agent log with `onSnapshot`. Otherwise it polls every 2 seconds. If the real-time connection is refused, it continues with polling and tries real-time again the next time the room is opened.
+- Firestore charges per document read, so frequent reads were reduced. `tick()` (every minute) reads only transfers with work to do (`scheduled`, `due`, `opened`, `sent`) and reads each room only once per tick. The My rooms list and profile changes use `roomsOf(uid)` with the `_memberUids` index to read only my rooms. The server also puts a read cache (`src/store/cached.mjs`) in front of Firestore: a document or list read once is returned from memory for 60 seconds, and a write clears that collection.
+- The server already does the money math. The front end sends only expense input (lines, unit prices, people present), and the server computes shares, net balances, invoices and transfers with `public/core.js`. Tests confirm on Firestore too that "shares sum to the amount paid, and net balances sum to 0".
+- The demo (`index.html`, `demo/`) does not use the server store and runs inside the browser, so it is unchanged.
 
-## 팀 Firebase 프로젝트에 붙일 때
+## Connecting to a team Firebase project
 
-#2 안내(`docs/auth-location-setup.md`)대로 프로젝트와 로그인을 먼저 준비한 뒤:
+After preparing the project and login as in the #2 guide (`docs/auth-location-setup.md`):
 
-1. **Firestore 만들기.** Console → Firestore Database → 데이터베이스 만들기 → Standard 버전, Native 모드. 데이터베이스 ID는 `(default)`로 둬요(코드가 기본 DB만 열어요). 위치는 Cloud Run과 같은 `asia-northeast1`(도쿄)을 권장해요. 위치는 나중에 못 바꿔요. 시작 규칙은 **프로덕션 모드**(전부 거부)로 골라요. 테스트 모드는 30일 동안 누구나 읽고 쓰게 열리고, 어차피 3번에서 우리 규칙으로 덮어요.
-2. **Storage 만들기.** Console → Storage. 2026-02-03부터 Cloud Storage for Firebase는 **Blaze 요금제**가 필요해요(무료 사용량은 그대로 있어요). 버킷 이름(`<project>.firebasestorage.app` 또는 예전 `<project>.appspot.com`)을 적어 둬요. Blaze는 쓴 만큼 과금되니 Cloud Console → 결제 → 예산 및 알림에서 예산 알림도 함께 걸어요. 예산은 알림만 보내고 과금을 멈추지는 않아요.
-3. **규칙 배포.** `firebase deploy --only firestore:rules,storage --project <project>`. 서버를 `STORE=firestore`로 바꾸기(5번) 전에 해요. 규칙이 없으면 화면의 실시간 구독이 거부돼 2초 폴링으로 돌아가는데, 폴링은 2초마다 최소 4읽기(탈퇴 표식·위치 동의·방·기록)라 방을 연 탭 하나가 시간당 약 7,200읽기를 써요(하루 무료 5만 읽기).
-4. **서버 권한.** Cloud Run 서비스 계정에 `Cloud Datastore 사용자`(roles/datastore.user)와 버킷의 `Storage 개체 관리자`(roles/storage.objectAdmin)를 줘요. 기본 compute 서비스 계정이 프로젝트 `편집자`(roles/editor)면 두 권한이 이미 들어 있어서 따로 줄 필요가 없어요. 로컬 서버는 실제 Firestore에 붙이지 말고 아래 에뮬레이터로 확인해요. 로컬에는 운영 `PAYOUT_ENC_KEY`가 없어서 개발용 열쇠로 잠그는데, 그렇게 잠긴 문서가 실제 DB에 섞이면 배포 서버의 `tick()`이 풀지 못해 멈춰요(7번).
-5. **환경변수.** #2의 Firebase 값 네 개에 더해:
+1. **Create Firestore.** Console → Firestore Database → Create database → Standard edition, Native mode. Keep the database ID `(default)` (the code opens only the default DB). `asia-northeast1` (Tokyo), the same as Cloud Run, is recommended. The location cannot be changed later. Choose **production mode** (deny all) as the starting rules. Test mode lets anyone read and write for 30 days, and step 3 overwrites it with our rules anyway.
+2. **Create Storage.** Console → Storage. Since 2026-02-03, Cloud Storage for Firebase requires the **Blaze plan** (the free usage quota remains). Note the bucket name (`<project>.firebasestorage.app` or the old `<project>.appspot.com`). Blaze bills by usage, so also set a budget alert in Cloud Console → Billing → Budgets and alerts. A budget only sends alerts; it does not stop billing.
+3. **Deploy the rules.** `firebase deploy --only firestore:rules,storage --project <project>`. Do this before switching the server to `STORE=firestore` (step 5). Without the rules, the screen's real-time subscription is refused and falls back to 2-second polling, which reads at least 4 documents every 2 seconds (deletion marker, location consent, room, log), so one tab with a room open uses about 7,200 reads per hour (the free quota is 50,000 reads per day).
+4. **Server permissions.** Give the Cloud Run service account `Cloud Datastore User` (roles/datastore.user) and `Storage Object Admin` (roles/storage.objectAdmin) on the bucket. If the default compute service account has the project `Editor` role (roles/editor), both permissions are already included. Do not connect a local server to real Firestore; check with the emulator below. Locally there is no production `PAYOUT_ENC_KEY`, so a development key is used, and if documents encrypted that way get into the real DB, the deployed server's `tick()` cannot decrypt them and stops (step 7).
+5. **Environment variables.** In addition to the four Firebase values from #2:
 
    ```dotenv
    STORE=firestore
-   FIREBASE_STORAGE_BUCKET=<버킷 이름>
+   FIREBASE_STORAGE_BUCKET=<bucket name>
    ```
 
-6. **배포.** 이미 배포된 서비스라면 다시 빌드하지 않고 환경변수만 더해요. `--set-env-vars`는 목록 전체를 갈아 끼워 Firebase 값이 빠지니 `--update-env-vars`를 써요.
+6. **Deploy.** For an already deployed service, add only the environment variables without rebuilding. `--set-env-vars` replaces the whole list and drops the Firebase values, so use `--update-env-vars`.
 
    ```bash
-   gcloud run services update agent-settlement --region asia-northeast1 --project <project> --update-env-vars STORE=firestore,FIREBASE_STORAGE_BUCKET=<버킷 이름>
+   gcloud run services update agent-settlement --region asia-northeast1 --project <project> --update-env-vars STORE=firestore,FIREBASE_STORAGE_BUCKET=<bucket name>
    ```
 
-   `--max-instances 1`은 그대로 둬요. 서버 안의 요청 줄(`src/state-locks.mjs`), QR 토큰, AI 캐시, 읽기 캐시가 인스턴스 하나를 전제로 해요(`ARCHITECTURE.md` 참고). 문제가 생기면 `gcloud run services update-traffic agent-settlement --region asia-northeast1 --project <project> --to-revisions <전환 전 리비전>=100`으로 메모리 저장소 리비전에 되돌려요. 되돌려도 Firestore 데이터는 그대로 남고, 다시 앞으로 갈 때는 `--to-revisions` 대신 `--to-latest`를 써요.
-7. **`PAYOUT_ENC_KEY`는 Firestore에 계좌가 들어간 뒤로 절대 바꾸지 않아요.** 바뀌면 잠긴 계좌를 못 풀어서 `tick()`이 멈추고, 모든 방의 송금 알림이 멈춰요.
+   Keep `--max-instances 1`. The in-server request queue (`src/state-locks.mjs`), QR tokens, AI cache and read cache assume a single instance (see `ARCHITECTURE.md`). If there is a problem, return to the memory-store revision with `gcloud run services update-traffic agent-settlement --region asia-northeast1 --project <project> --to-revisions <revision before the switch>=100`. Firestore data stays as it is after rolling back, and to move forward again use `--to-latest` instead of `--to-revisions`.
+7. **Never change `PAYOUT_ENC_KEY` once accounts are in Firestore.** If it changes, encrypted accounts cannot be decrypted, `tick()` stops, and transfer reminders stop for every room.
 
-## 프로젝트 없이 에뮬레이터로
+## With the emulator, without a project
 
-Java 21 이상과 firebase-tools가 필요해요.
+Java 21 or newer and firebase-tools are required.
 
 ```sh
-npm run test:emulators   # 에뮬레이터를 띄우고 전체 테스트(Firestore 계약·규칙 포함)를 돌린 뒤 내림
+npm run test:emulators   # starts the emulators, runs all tests (including Firestore contract and rules), then stops them
 ```
 
-서버를 에뮬레이터에 붙여 화면까지 보려면 `firebase emulators:start --only auth,firestore,storage --project demo-agent-settlement`를 띄우고, `.env`에 #2 안내의 에뮬레이터 값과 아래를 더해요.
+To connect the server to the emulators and view the screens, run `firebase emulators:start --only auth,firestore,storage --project demo-agent-settlement`, and add the emulator values from the #2 guide plus the following to `.env`.
 
 ```dotenv
 STORE=firestore
@@ -52,13 +52,13 @@ FIREBASE_STORAGE_EMULATOR_HOST=127.0.0.1:9199
 FIREBASE_STORAGE_BUCKET=demo-agent-settlement.appspot.com
 ```
 
-운영(`NODE_ENV=production`)에서는 에뮬레이터 값이 있으면 서버가 시작하지 않아요.
+In production (`NODE_ENV=production`), the server does not start if emulator values are present.
 
-## 아직 남은 것
+## What remains
 
-- **방이 생기는 길이 없어요.** Firebase가 켜지면 #2 규칙상 개발용 시드(`/api/dev/seed`)가 꺼져요. 그래서 #4 방 만들기·참가하기 전까지는 실제 계정으로 방을 열 방법이 없어요. 오사카 시드(`src/dev/seed.mjs`)는 어떤 Store에도 그대로 쓸 수 있어요.
-- **`_memberUids`.** #4가 방을 만들 때도 Store의 `put('rooms', …)`을 거치면 자동으로 채워져요. Firestore에 직접 쓰면 규칙이 멤버를 못 알아봐요.
-- **#5 비서 설정**은 `agents/{uid}`에 그대로 쓰면 돼요. 화면에서 직접 읽지 못하게 막아 뒀어요(공유 기억·잠긴 계좌).
-- 메모리에 있던 데이터를 Firestore로 옮기는 작업은 없어요(지금 배포 서버의 데이터는 원래 재시작하면 사라져요).
-- 위치 동의 만료는 지금처럼 요청·tick 때 `sweep()`이 정리해요. 동의가 많아지면 Firestore TTL로 바꾸는 게 좋아요.
-- 실제 Firebase 프로젝트, 실제 Google 로그인으로는 아직 확인하지 않았어요. 에뮬레이터로만 확인했어요.
+- **There is no way to create a room.** With Firebase on, the #2 rules turn off the development seed (`/api/dev/seed`). So until #4 room creation and joining, there is no way to open a room with a real account. The Osaka seed (`src/dev/seed.mjs`) can be used with any Store as is.
+- **`_memberUids`.** When #4 creates rooms, it is filled automatically if it goes through the Store's `put('rooms', …)`. If written to Firestore directly, the rules do not recognize members.
+- **#5 agent settings** can be written to `agents/{uid}` as is. Direct front-end reads are blocked (shared memories, encrypted account).
+- There is no migration of in-memory data to Firestore (data on the currently deployed server is lost on restart anyway).
+- Expired location consent is still cleaned up by `sweep()` on requests and ticks. If consents become numerous, switching to Firestore TTL would be better.
+- It has not yet been checked with a real Firebase project or real Google login. It has been checked only with the emulator.

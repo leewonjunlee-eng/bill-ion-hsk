@@ -77,6 +77,6 @@ npm test
 npm start        # then open http://localhost:4500/demo/hsp.html
 ```
 
-On 2026-11-26 the suite reported 638 passed, 16 skipped (emulator-dependent) and 0 failed.
+On 2026-11-27 the suite reported 637 passed, 16 skipped (emulator-dependent) and 0 failed.
 
 The QA and registry scripts use `ethers` and `solc`, so install development dependencies.

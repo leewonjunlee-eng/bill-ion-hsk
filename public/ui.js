@@ -6,18 +6,6 @@ export const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', 
 export const chip = (text, cls = '') => `<span class="chip ${cls}">${esc(text)}</span>`;
 export const avatarHtml = (label, color, cls = '') => `<span class="avatar ${cls}" style="--c:${color}" aria-hidden="true">${esc(label)}</span>`;
 
-// 받침 유무로 조사를 고른다(오차즈케는 / 생맥주는 / 하이볼은). '나'가 주어면 '내가'.
-const hasBatchim = (w) => {
-  const s = w.replace(/[^가-힣]+$/, '');
-  const c = s.charCodeAt(s.length - 1) - 0xac00;
-  return c >= 0 && c <= 11171 && c % 28 !== 0;
-};
-export const topic = (w) => `${w}${hasBatchim(w) ? '은' : '는'}`;
-export const subj = (w) => (w === '나' ? '내가' : `${w}${hasBatchim(w) ? '이' : '가'}`);
-export const obj = (w) => `${w}${hasBatchim(w) ? '을' : '를'}`;
-// '○○ 몫'의 앞말. 나 혼자면 '내 몫'.
-export const whose = (w) => (w === '나' ? '내' : w);
-
 // 메뉴 배분을 어떻게 했는지(서버 응답의 how) 영수증 줄 위에 짧게 보인다.
 export function allocLabel({ source, how, latencyMs }) {
   if (how === 'obvious') return 'Split without AI';

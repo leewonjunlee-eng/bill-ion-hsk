@@ -1,272 +1,274 @@
-# 개인정보 처리방침
+# Privacy Policy
 
-> **이 방침은 법률 전문가의 검토를 받지 않았습니다.** 개인정보보호위원회 「개인정보 처리방침 작성지침」(2026.4.)의 작성 예시를 바탕으로, 2026년 11월 4일 기준 서비스의 기능(Google 로그인(#2)·위치 근거(#7)·방 만들기와 초대 링크(#4)·Firestore 저장소(#3))에 맞춰 적었습니다.
+> This document is an English translation of the Korean original.
 >
-> 출처: 개인정보보호위원회 「개인정보 처리방침 작성지침」 2026.4.
+> **This policy has not been reviewed by a legal professional.** It was written from the examples in the Personal Information Protection Commission's "Guidelines for Preparing a Privacy Policy" (April 2026), to match the service's features as of November 4, 2026 (Google login (#2), location evidence (#7), room creation and invite links (#4), Firestore storage (#3)).
+>
+> Source: Personal Information Protection Commission, "Guidelines for Preparing a Privacy Policy", April 2026.
 
-서비스 「Bill:ION」 운영팀(이하 '팀')은 「개인정보 보호법」 제30조에 따라 정보주체의 개인정보를 보호하고 이와 관련한 고충을 신속하고 원활하게 처리할 수 있도록 다음과 같이 개인정보 처리방침을 정하여 공개합니다.
+The team that operates the service “Bill:ION” (the "Team") establishes and publishes the following privacy policy under Article 30 of the Personal Information Protection Act (the "Act"), to protect the personal information of data subjects and to handle related grievances promptly and smoothly.
 
-## 한눈에 보기
+## At a glance
 
 | | |
 |---|---|
-| 받는 정보 | Google 계정 정보(로그인할 때), 지출 기록, 영수증 사진, 받을 계좌(은행·계좌번호·예금주), 이의 내용, 위치 요약(이의를 낼 때 타임라인을 올리고 그 지출을 골라 보낸 경우의 시각만), 비서 기억 문장, 비서 규칙과 변경 기록, 체험 데모의 SEQ 점수(익명), 접속 기록(IP 등) |
-| 받지 않는 정보 | 전화번호, 주민등록번호, 위치 좌표·이동 경로·장소 이름. 타임라인 파일은 이용자의 브라우저 안에서만 읽습니다 |
-| 보관하는 곳 | Google Cloud의 데이터베이스(Firestore)와 파일 저장소(Cloud Storage), 일본 도쿄. 서버를 다시 시작해도 남으며, 팀은 따로 백업을 두지 않습니다 |
-| 정보가 가는 곳 | Google(서버, 데이터베이스, 로그인, Gemini AI), GitHub(화면), Foundata GmbH(QR 이미지) |
-| 이용 대상 | 만 18세 이상 |
+| Information collected | Google account information (at login), expense records, receipt photos, receiving account (bank, account number, account holder), dispute content, location summary (only times, and only when you upload a timeline while disputing and choose that expense and send it), agent memory sentences, agent rules and their change history, demo SEQ scores (anonymous), access logs (IP etc.) |
+| Information not collected | Phone number, resident registration number, location coordinates, routes, place names. The timeline file is read only inside the user's browser |
+| Where it is stored | Google Cloud database (Firestore) and file storage (Cloud Storage), Tokyo, Japan. It remains after a server restart, and the Team keeps no separate backup |
+| Where information goes | Google (server, database, login, Gemini AI), GitHub (front end), Foundata GmbH (QR images) |
+| Who may use it | Age 18 or older |
 
-### 시연판에서 꼭 알아 두세요
+### Important for this demonstration version
 
-- **Google 계정으로 로그인한 사람만 자기가 속한 방에 들어올 수 있습니다.** 그래도 시연판이므로 실제 계좌번호나 실제 영수증은 넣지 않는 것을 권합니다.
-- **위치는 이의를 낼 때만, 이용자가 골라 보낸 지출에만 씁니다.** 이의를 쓰다가 Google 지도 타임라인 파일을 올리면, 결제 전에 자리를 떠난 지출을 찾아 미리 골라 둡니다. 이용자가 빼면 보내지 않고, 보내는 것은 그 지출의 떠난 시각 한 줄입니다([제2조](#제2조-처리하는-개인정보의-항목)).
-- **영수증 사진은 Google Gemini가 읽습니다.** 카드번호, 이름처럼 정산에 필요 없는 부분은 가리고 올려 주세요([제8조](#제8조-생성형-aigemini-이용)).
-- **이 서비스는 돈을 보관하거나 옮기지 않습니다.** 송금은 이용자의 토스 앱에서 이용자가 직접 합니다.
+- **Only people logged in with a Google account can enter rooms they belong to.** Even so, because this is a demonstration version, we recommend not entering real account numbers or real receipts.
+- **Location is used only when disputing, and only for expenses the user chooses and sends.** If you upload a Google Maps Timeline file while writing a dispute, the service finds and preselects expenses paid after you had left. Anything you deselect is not sent, and what is sent is one line per expense with the time you left ([Article 2](#article-2-items-of-personal-information-processed)).
+- **Google Gemini reads receipt photos.** Please cover parts not needed for settlement, such as card numbers and names, before uploading ([Article 8](#article-8-use-of-generative-ai-gemini)).
+- **This service does not hold or move money.** Users make transfers themselves in their own Toss app.
 
-## 제1조 개인정보의 처리 목적
+## Article 1. Purposes of processing personal information
 
-팀은 다음의 목적을 위하여 개인정보를 처리합니다. 처리하고 있는 개인정보는 다음의 목적 외의 용도로는 이용되지 않으며, 이용 목적이 변경되는 경우에는 「개인정보 보호법」 제18조에 따라 별도의 동의를 받는 등 필요한 조치를 이행할 예정입니다.
+The Team processes personal information for the following purposes. Personal information being processed is not used for any other purpose, and if the purpose of use changes, the Team will take the necessary measures, such as obtaining separate consent under Article 18 of the Act.
 
-1. **정산:** 지출 기록, 영수증 읽기, 메뉴별로 누가 먹었는지 나누기, 청구서 보내기, 이용자가 정한 규칙에 따른 청구서 처리, 이의 중재
-2. **송금 안내:** 받을 계좌를 송금 당사자에게 보여 주기, 계좌·금액이 채워진 토스 송금 링크와 컴퓨터에서 휴대폰으로 넘기는 QR 만들기
-3. **부정 이용 방지:** 같은 IP나 같은 사람의 AI 호출 횟수 제한
-4. **계정 관리:** Google 로그인, 표시 이름·프로필 색, 내 방 목록, 탈퇴
-5. **이의 근거:** 이용자가 이의와 함께 보낸 위치 요약을 이의 상대와 중재 AI에게 보여 주기
-6. **체험 개선:** 체험 데모의 task가 얼마나 쉬웠는지(SEQ) 점수를 모아 task별·전체 평균을 체험 화면에 보여 주고, 화면을 고치는 데 쓰기
+1. **Settlement:** expense records, reading receipts, splitting by who had each menu item, sending invoices, handling invoices by user-set rules, mediating disputes
+2. **Transfer guidance:** showing the receiving account to the parties to a transfer; creating Toss transfer links with the account and amount filled in, and QR codes that hand over from a computer to a phone
+3. **Preventing misuse:** limiting the number of AI calls from the same IP or the same person
+4. **Account management:** Google login, display name and profile color, my room list, account deletion
+5. **Dispute evidence:** showing the location summary a user sent with a dispute to the other party to the dispute and to the mediation AI
+6. **Improving the demo:** collecting scores for how easy each demo task was (SEQ), showing per-task and overall averages on the demo screens, and using them to improve the screens
 
-## 제2조 처리하는 개인정보의 항목
+## Article 2. Items of personal information processed
 
-팀은 다음의 개인정보 항목을 처리합니다.
+The Team processes the following items of personal information.
 
-<!-- 검토 필요: 처리 근거. 지침 예시를 따라 제15조제1항제4호(계약 체결·이행)로 적었지만, 지금은 이용약관도 동의 화면도 없다 -->
-<!-- 검토 필요: 위치 요약 동의를 따로 묻는 스위치를 없앴다. 이의를 위해 타임라인을 올리고, 보내기 버튼 바로 위의 안내(무엇이 누구에게 가는지)를 본 뒤 보내는 것을 동의로 본다. 이것이 제22조의 '명확히 인지할 수 있도록 알리고 받는 동의'로 충분한지 -->
-- 법적 근거: 「개인정보 보호법」 제15조제1항제4호(계약 체결·이행). 위치 요약은 이의를 낼 때 받는 동의(제15조제1항제1호)로, 이의를 위해 타임라인을 올리고 보내기 버튼 바로 위에서 무엇이 누구에게 가는지 확인한 뒤 그 지출을 골라 보내는 것을 동의로 봅니다
+<!-- Needs review: legal basis for processing. Following the guideline example, it is stated as Article 15(1)(4) (entering into and performing a contract), but there are currently no terms of use and no consent screen -->
+<!-- Needs review: the separate consent switch for the location summary was removed. Uploading a timeline for a dispute, seeing the notice right above the send button (what goes to whom), and then sending is treated as consent. Is this sufficient as consent "obtained after informing in a clearly recognizable way" under Article 22? -->
+- Legal basis: Article 15(1)(4) of the Act (entering into and performing a contract). The location summary relies on consent obtained when disputing (Article 15(1)(1)): uploading a timeline for a dispute, checking right above the send button what goes to whom, and then choosing that expense and sending it is treated as consent
 
-<!-- 검토 필요: 위치 요약(떠난 시각)이 「위치정보의 보호 및 이용 등에 관한 법률」의 개인위치정보에 해당하는지, 해당하면 필요한 신고·동의 절차 -->
+<!-- Needs review: whether the location summary (time of leaving) is personal location information under the Act on the Protection and Use of Location Information, and if so, the required filing and consent procedures -->
 
-**이용자가 직접 넣는 정보**
+**Information users enter directly**
 
-| 항목 | 내용 | 언제 | 볼 수 있는 사람 |
+| Item | Content | When | Who can see it |
 |---|---|---|---|
-| 지출 기록 | 제목, 금액, 날짜·시각, 낸 사람, 결제 방법, 함께 있던 사람, 메뉴 줄 | 지출을 남길 때 | 같은 방 사람 |
-| 영수증 사진 | 사진 한 장. 가게 이름, 결제 시각, 카드번호 일부 등이 찍혀 있을 수 있습니다 | 영수증으로 지출을 남길 때 | 같은 방 사람 |
-| 받을 계좌 | 은행, 계좌번호, 예금주 | 계좌를 등록할 때 | 나에게 보낼 송금이 있는 사람만 |
-| Google 계정 | 계정 ID, 표시 이름. 이메일과 프로필 사진은 로그인을 맡은 Firebase Authentication이 보관하고 서비스 서버에는 저장하지 않습니다 | 로그인할 때 | 본인 |
-| 프로필 | 방에서 보일 표시 이름(40자 이내), 프로필 색 | 계정 화면에서 바꿀 때. 방을 만들거나 초대 링크로 참가할 때도 이 프로필로 방에 들어갑니다 | 같은 방 사람 |
-| 초대 링크 | 방마다 하나인 추측할 수 없는 토큰, 만료 시각(7일 뒤), 링크를 만든 사람 | 방 멤버가 '초대 링크 만들기'를 누를 때. 새로 만들면 이전 링크는 바로 열리지 않습니다 | 링크를 가진 사람은 로그인 없이 방 이름·기간·환율 정책·멤버의 표시 이름을 볼 수 있습니다. 지출·비서 기억·계좌는 보이지 않습니다 |
-| 이의 내용 | 이의를 제기하며 쓴 문장 | 이의를 제기할 때 | 같은 방 사람 |
-| 위치 요약 | 이의를 낸 지출 시간대(첫 주문~결제)에 '첫 주문 때 머물던 곳을 떠난 시각'과 다음 장소에 도착한 시각(집인지 여부 포함). 타임라인 파일·좌표·장소 이름은 받지 않습니다 | 이의를 낼 때 이용자가 타임라인 파일을 올리고, 결제 전에 자리를 떠난 것으로 찾아 골라 둔 지출을 빼지 않고 보낸 경우 | 이의 상대(지출을 낸 사람)와 이의를 낸 사람. 다른 참여자에게는 요약이 붙었다는 사실만 보입니다 |
-| 비서 기억 문장 | 사람당 5개, 60자 이내 문장 | '내 비서'에서 기억을 더할 때 | 본인. 그 방에 공유한 문장(기본은 모든 방에 공유, 방마다 끌 수 있음)만 그 방의 메뉴 배분과 이의 중재의 AI 요청에 쓰입니다. 배분 이유에는 문장을 싣지 않고, 이의를 중재할 때만 중재안에 근거로 인용될 수 있습니다 |
-| 체험 데모에서 입력한 값 | 체험 데모에서 남긴 지출·비서 설정·기억 | 로그인 없이 체험 데모를 할 때 | 서버로 보내지 않습니다. 이 브라우저 탭에만 두었다가 탭을 닫으면 사라집니다. 아래 SEQ 점수만은 예외입니다 |
-| 체험 데모 SEQ 점수 | task마다 고른 쉬움 점수(1 매우 어려움 ~ 7 매우 쉬움), 브라우저가 체험마다 만든 무작위 체험 id, 받은 시각. 이름·계정·IP는 함께 저장하지 않습니다 | 체험 데모에서 task를 끝내고 점수를 누를 때. 건너뛸 수 있습니다 | 누구나 task별·전체 평균과 응답 수만 봅니다. 하나하나의 점수는 팀만 봅니다 |
-| 비서 규칙 | 자동 수락 한도, 보낼 시기, 이의 처리, 알림 수준, 규칙 변경 기록(최근 50개) | '내 비서'에서 규칙을 정할 때 | 본인. 규칙을 적용했다는 사실(예: 한도 안이라 받음)은 비서 기록에 남아 같은 방 사람에게 보이지만, 한도 금액은 싣지 않습니다 |
+| Expense records | Title, amount, date and time, payer, payment method, people present, menu lines | When recording an expense | People in the same room |
+| Receipt photo | One photo. It may show the store name, payment time, part of a card number and so on | When recording an expense from a receipt | People in the same room |
+| Receiving account | Bank, account number, account holder | When registering an account | Only people who have a transfer to send to me |
+| Google account | Account ID, display name. Email and profile photo are kept by Firebase Authentication, which handles login, and are not stored on the service server | At login | The user |
+| Profile | Display name shown in rooms (up to 40 characters), profile color | When changed on the account screen. Creating a room or joining by invite link also enters the room with this profile | People in the same room |
+| Invite link | One unguessable token per room, expiry time (7 days later), the person who created the link | When a room member creates an invite link. Creating a new one immediately stops the previous link from opening | Anyone with the link can see, without logging in, the room name, dates, exchange rate policy and members' display names. Expenses, agent memories and accounts are not shown |
+| Dispute content | Sentences written when raising a dispute | When raising a dispute | People in the same room |
+| Location summary | Within the time window of the disputed expense (first order to payment): "the time you left the place you were at for the first order" and the time of arrival at the next place (including whether it is home). The timeline file, coordinates and place names are not received | When, while disputing, the user uploads a timeline file and sends without deselecting an expense that was found to be paid after they left and was preselected | The other party to the dispute (the person who paid the expense) and the person who raised it. Other participants see only that a summary is attached |
+| Agent memory sentences | Up to 5 per person, 60 characters or fewer | When adding a memory in "My agent" | The user. Only sentences shared with the room (by default shared with all rooms; can be turned off per room) are used in AI requests for that room's menu split and dispute mediation. Split reasons do not include the sentence; only when mediating a dispute may it be quoted as evidence in a mediation proposal |
+| Values entered in the demo | Expenses, agent settings and memories left in the demo | When using the demo without logging in | Not sent to the server. Kept only in this browser tab and gone when the tab is closed. The SEQ score below is the only exception |
+| Demo SEQ score | The ease score chosen for each task (1 very hard to 7 very easy), a random demo id the browser creates for each demo, the time received. No name, account or IP is stored with it | When pressing a score after finishing a demo task. It can be skipped | Anyone sees only per-task and overall averages and response counts. Only the Team sees individual scores |
+| Agent rules | Auto-accept limit, send timing, dispute handling, notification level, rule change history (last 50) | When setting rules in "My agent" | The user. The fact that a rule was applied (for example, accepted because within the limit) stays in the agent log and is visible to people in the same room, but the limit amount is not included |
 
-**서비스를 쓰는 동안 자동으로 생기는 정보**
+**Information generated automatically while using the service**
 
-| 항목 | 내용 | 쓰임 |
+| Item | Content | Use |
 |---|---|---|
-| 접속 기록 | IP 주소, 요청 시각, 요청 주소, 브라우저 정보 | 호출 횟수 제한, 서버·화면 운영 기록 |
-| 로그인 확인 정보 | Google 로그인 토큰(요청마다 검증하고 저장하지 않음) | 누가 요청했는지, 그 방의 멤버인지 확인 |
+| Access logs | IP address, request time, request address, browser information | Rate limiting, server and front-end operation records |
+| Login verification information | Google login token (verified on every request and not stored) | Checking who made the request and whether they are a member of the room |
 
-## 제3조 만 14세 미만 아동과 이용 연령
+## Article 3. Children under 14 and age of use
 
-팀은 만 14세 미만 아동의 개인정보를 처리하지 않습니다. 이 서비스는 만 18세 이상을 대상으로 합니다. 서비스가 쓰는 Google Gemini API의 약관이 만 18세 미만이 이용하거나 이용할 가능성이 높은 서비스에 Gemini API를 쓰지 못하게 하기 때문입니다. 다만 지금은 이용자의 나이를 확인하지 않습니다.
+The Team does not process the personal information of children under 14. This service is intended for people aged 18 or older, because the terms of the Google Gemini API used by the service do not allow the Gemini API to be used in services that people under 18 use or are likely to use. However, the service does not currently verify users' ages.
 
-## 제4조 개인정보의 처리 및 보유 기간
+## Article 4. Processing and retention periods
 
-팀은 처리 목적에 필요한 기간 동안만 개인정보를 처리·보유합니다. 법령에 따라 따로 보존해야 하는 정보는 없습니다.
+The Team processes and retains personal information only for as long as needed for the processing purposes. There is no information that laws require to be preserved separately.
 
-<!-- 검토 필요: 방·지출 기록의 보관 기한(예: 시연이 끝난 뒤 일괄 삭제)을 아직 정하지 않았다 -->
-<!-- 검토 필요: 체험 데모 SEQ 점수의 보관 기한(예: 시연 결과를 정리한 뒤 삭제)을 아직 정하지 않았다 -->
+<!-- Needs review: the retention limit for room and expense records (for example, bulk deletion after the demonstration ends) has not been decided yet -->
+<!-- Needs review: the retention limit for demo SEQ scores (for example, deletion after the demonstration results are compiled) has not been decided yet -->
 
-| 정보 | 보관하는 곳 | 기간 |
+| Information | Where stored | Period |
 |---|---|---|
-| 지출·영수증 사진·받을 계좌·비서 기억·비서 규칙과 변경 기록·이의·청구서·송금 기록 | Google Cloud Firestore(일본 도쿄). 영수증 사진은 Google Cloud Storage(일본 도쿄) | 지우거나 탈퇴할 때까지. 서버를 다시 시작하거나 새로 배포해도 남습니다. 지출을 지우면 그 영수증 사진도 함께 지워지고, 탈퇴하면 [제5조](#제5조-개인정보의-파기-절차-및-방법) ③에 따라 지우거나 익명으로 바꿉니다 |
-| AI 배분 결과 | 서비스 서버의 메모리 | 최대 24시간 |
-| 휴대폰으로 넘기는 QR의 토큰 | 서비스 서버의 메모리 | 15분 |
-| 계정 ID·표시 이름·프로필 색 | Google Cloud Firestore | 탈퇴할 때까지 |
-| 초대 링크 | Google Cloud Firestore | 만료(7일)되면 열리지 않고, 다시 만들면 덮어씁니다. 만든 사람이 탈퇴하면 계정 연결을 끊고, 링크는 남은 멤버를 위해 둡니다 |
-| Google 로그인 계정(이메일·이름·사진) | Google(Firebase Authentication) | 탈퇴할 때 삭제합니다 |
-| 체험 데모 SEQ 점수 | Google Cloud Firestore(일본 도쿄) | 팀이 지울 때까지. 같은 체험에서 다시 고르면 앞의 점수를 덮어씁니다 |
-| 위치 요약 | Google Cloud Firestore(암호화) | 붙인 뒤 7일. 이의 화면에서 지우거나 탈퇴하면 바로 지웁니다 |
-| 탈퇴 표식(계정 ID) | Google Cloud Firestore | 탈퇴 뒤 다시 들어오지 못하게 막고 삭제를 다시 시도하는 데에만 씁니다 |
-| 호출 횟수 제한용 IP·호출 시각 | 서비스 서버의 메모리 | 판단에는 최근 10분만 쓰고, 기록은 서버가 종료될 때 지워집니다 |
-| 서버가 자주 읽는 정보의 사본 | 서비스 서버의 메모리 | 최대 60초. 계좌·위치 요약은 암호화된 채로 둡니다 |
-| 서버 요청 기록(IP, 요청 주소, 시각) | Google Cloud Logging | 30일 |
-| Gemini에 보낸 내용과 응답 | Google | [제8조](#제8조-생성형-aigemini-이용) 참고 |
-| 화면 접속 기록(IP) | GitHub | GitHub 정책에 따릅니다. GitHub는 기간을 밝히지 않습니다 |
-| 브라우저 저장소 | 이용자의 브라우저 | 이용자가 지울 때까지([제10조](#제10조-개인정보-자동-수집-장치의-설치운영-및-거부)) |
+| Expenses, receipt photos, receiving accounts, agent memories, agent rules and change history, disputes, invoices, transfer records | Google Cloud Firestore (Tokyo, Japan). Receipt photos in Google Cloud Storage (Tokyo, Japan) | Until deleted or the account is deleted. Remains after a server restart or redeploy. Deleting an expense also deletes its receipt photo, and on account deletion the data is deleted or anonymized under [Article 5](#article-5-procedure-and-method-of-destruction) ③ |
+| AI split results | Service server memory | Up to 24 hours |
+| Token of the QR code handing over to a phone | Service server memory | 15 minutes |
+| Account ID, display name, profile color | Google Cloud Firestore | Until account deletion |
+| Invite link | Google Cloud Firestore | Does not open after expiry (7 days); overwritten when recreated. If the creator deletes their account, the link to the account is cut and the link is kept for the remaining members |
+| Google login account (email, name, photo) | Google (Firebase Authentication) | Deleted on account deletion |
+| Demo SEQ scores | Google Cloud Firestore (Tokyo, Japan) | Until the Team deletes them. Choosing again in the same demo overwrites the earlier score |
+| Location summary | Google Cloud Firestore (encrypted) | 7 days after it is attached. Deleted immediately if you delete it on the dispute screen or delete your account |
+| Deletion marker (account ID) | Google Cloud Firestore | Used only to block re-entry after account deletion and to retry deletion |
+| IP and call times for rate limiting | Service server memory | Only the last 10 minutes are used for decisions; records are erased when the server shuts down |
+| Copies of information the server reads often | Service server memory | Up to 60 seconds. Accounts and location summaries stay encrypted |
+| Server request logs (IP, request address, time) | Google Cloud Logging | 30 days |
+| Content sent to Gemini and its responses | Google | See [Article 8](#article-8-use-of-generative-ai-gemini) |
+| Front-end access logs (IP) | GitHub | According to GitHub's policy. GitHub does not state a period |
+| Browser storage | User's browser | Until the user deletes it ([Article 10](#article-10-installation-operation-and-refusal-of-automatic-collection-devices)) |
 
-## 제5조 개인정보의 파기 절차 및 방법
+## Article 5. Procedure and method of destruction
 
-① 팀은 개인정보 보유기간의 경과, 처리목적 달성 등 개인정보가 불필요하게 되었을 때에는 지체없이 해당 개인정보를 파기합니다.
+① When personal information becomes unnecessary, for example because the retention period has passed or the processing purpose has been achieved, the Team destroys it without delay.
 
-② Firestore와 Cloud Storage에 있는 정보는 지우면 그 자리에서 지워지고, 팀은 다시 살릴 수 있는 사본(백업)을 따로 두지 않습니다. 다만 Google 내부 시스템에서 완전히 지워지기까지는 Google Cloud의 데이터 삭제 절차에 따라 시간이 걸릴 수 있습니다. 서비스 서버의 메모리에 있는 정보(AI 배분 결과, QR 토큰, 호출 제한 기록, 읽기 사본)는 [제4조](#제4조-개인정보의-처리-및-보유-기간)의 기간이 지나거나 서버가 종료되면 사라집니다. 이용자가 지운 지출과 그 영수증 사진은 그 자리에서 지워집니다.
+② Information in Firestore and Cloud Storage is erased on the spot when deleted, and the Team keeps no separate copy (backup) from which it could be restored. However, complete erasure from Google's internal systems may take time under Google Cloud's data deletion process. Information in service server memory (AI split results, QR tokens, rate-limit records, read copies) disappears after the periods in [Article 4](#article-4-processing-and-retention-periods) or when the server shuts down. Expenses a user deletes, and their receipt photos, are erased on the spot.
 
-③ 탈퇴는 로그인한 상태에서 내 계정 → 프로필 → 계정 탈퇴로 할 수 있고, 되돌릴 수 없어 한 번 더 확인을 받습니다. 탈퇴하면 프로필·비서 설정·위치 요약·본인이 올린 영수증 사진을 지우고, 함께 정산한 금액은 방마다 다른 익명 ID로 바꿔 남깁니다. 원래 계정과 익명 ID를 잇는 정보는 남기지 않습니다. 이미 만든 QR과 계좌 사본도 지웁니다.
+③ While logged in, you can delete your account via My account → Profile → Delete account. It cannot be undone, so you are asked to confirm once more. Account deletion erases your profile, agent settings, location summaries and the receipt photos you uploaded; amounts settled together are kept under a different anonymous ID in each room. No information linking the original account to the anonymous IDs is kept. QR codes and account copies already created are also erased.
 
-④ 팀은 종이 문서로 개인정보를 처리하지 않습니다.
+④ The Team does not process personal information on paper.
 
-## 제6조 개인정보의 제3자 제공
+## Article 6. Provision of personal information to third parties
 
-<!-- 검토 필요: 같은 방 사람·송금 상대에게 보이는 것, 토스로 넘어가는 링크가 제3자 제공에 해당하는지 -->
-팀은 개인정보를 제3자에게 제공하지 않습니다. 다만 서비스의 성격상 다음 정보는 서비스 안에서 다른 이용자에게 보이거나, 이용자의 휴대폰에서 다른 앱으로 넘어갑니다.
+<!-- Needs review: whether what is visible to people in the same room and to transfer counterparts, and the link passed to Toss, count as provision to a third party -->
+The Team does not provide personal information to third parties. However, because of the nature of the service, the following information is visible to other users within the service or passes from the user's phone to another app.
 
-- 지출 기록, 영수증 사진, 이의 내용은 같은 방 사람에게 보입니다.
-- 초대 링크를 받은 사람은 참가 전에도 방 이름·기간·멤버의 표시 이름(외화 방이면 통화와 환율 정책도)을 봅니다. 그래서 링크는 함께 정산할 사람에게만 보내 주세요.
-- 방에서 나가거나 내보내져도 그 방에 남긴 지출·송금 기록과 표시 이름은 남은 사람에게 계속 보입니다. 나간 사람은 그 방을 더 볼 수 없습니다. 이 기록의 이름까지 지우려면 탈퇴하세요([제5조](#제5조-개인정보의-파기-절차-및-방법) ③, 나간 방의 기록도 익명으로 바꿉니다).
-- 받을 계좌는 그 사람에게 보낼 송금이 있는 사람에게만 보입니다.
-- 비서 기억 문장과 자동 수락 한도 금액은 본인만 봅니다. 같은 방 사람에게는 누구 몫으로 나눴는지와 규칙을 적용했다는 사실만 보입니다. 다만 이의를 중재할 때는 그 방에 공유한 기억이 중재안에 근거로 인용될 수 있습니다.
-- 위치 요약은 이의 상대(지출을 낸 사람)와 이의를 낸 사람에게만 보이고, 중재 AI에게 근거로 보냅니다. 같은 방의 다른 참여자에게는 요약이 붙었다는 사실만 보입니다.
-- 이의 내용은 같은 방의 참여자 모두에게 보입니다. 그래서 타임라인으로 '맞지 않는 점'을 미리 채울 때는 떠난 뒤에 시킨 메뉴 이름만 적고, 떠난 시각이나 도착한 곳은 적지 않습니다. 이용자가 직접 고쳐 쓴 내용은 그대로 보입니다.
-- 보내는 사람이 송금 화면에서 토스를 열면, 받는 사람의 은행·계좌번호와 금액이 담긴 링크가 보내는 사람의 휴대폰에서 토스 앱으로 넘어갑니다. 팀은 토스와 정보를 직접 주고받지 않습니다.
+- Expense records, receipt photos and dispute content are visible to people in the same room.
+- A person who receives an invite link sees the room name, dates and members' display names (and, for a foreign-currency room, the currency and exchange rate policy) even before joining. So please send the link only to people you will settle with.
+- Even after you leave or are removed from a room, the expenses, transfer records and display name you left there remain visible to those who stay. The person who left can no longer see the room. To erase the name from these records too, delete your account ([Article 5](#article-5-procedure-and-method-of-destruction) ③; records in rooms you left are also anonymized).
+- A receiving account is visible only to people who have a transfer to send to that person.
+- Only the user sees their agent memory sentences and auto-accept limit amount. People in the same room see only who each share was assigned to and the fact that a rule was applied. However, when a dispute is mediated, memories shared with that room may be quoted as evidence in the mediation proposal.
+- The location summary is visible only to the other party to the dispute (the person who paid the expense) and the person who raised it, and is sent to the mediation AI as evidence. Other participants in the same room see only that a summary is attached.
+- Dispute content is visible to all participants in the same room. So when "what doesn't match" is prefilled from a timeline, it lists only the names of menu items ordered after you left, not the time you left or where you arrived. Anything you edit and write yourself is shown as is.
+- When a sender opens Toss from the transfer screen, a link containing the recipient's bank, account number and the amount passes from the sender's phone to the Toss app. The Team does not exchange information with Toss directly.
 
-## 제7조 개인정보 처리업무의 위탁과 국외 이전
+## Article 7. Outsourcing of processing and overseas transfer
 
-① 팀은 원활한 개인정보 업무처리를 위하여 다음과 같이 개인정보 처리업무를 위탁하고 있습니다.
+① To process personal information smoothly, the Team outsources processing tasks as follows.
 
-| 수탁자 | 위탁하는 업무 |
+| Processor | Outsourced task |
 |---|---|
-| Google LLC | 서비스 서버 운영(Cloud Run), 데이터 보관(Firestore·Cloud Storage), 서버 요청 기록 보관(Cloud Logging), 암호화 열쇠·API 키 보관(Secret Manager) |
-| Google LLC | 영수증 읽기, 메뉴 배분, 이의 중재안 만들기(Gemini API) |
-| Google LLC | Google 로그인과 로그인 계정 보관(Firebase Authentication) |
-| GitHub, Inc. | 화면 파일 제공(GitHub Pages) |
-| Foundata GmbH | 컴퓨터 화면에 띄우는 QR 이미지 만들기(api.qrserver.com) |
+| Google LLC | Running the service server (Cloud Run), data storage (Firestore, Cloud Storage), storing server request logs (Cloud Logging), storing encryption keys and API keys (Secret Manager) |
+| Google LLC | Reading receipts, splitting menu items, creating dispute mediation proposals (Gemini API) |
+| Google LLC | Google login and storing login accounts (Firebase Authentication) |
+| GitHub, Inc. | Serving front-end files (GitHub Pages) |
+| Foundata GmbH | Creating the QR images shown on computer screens (api.qrserver.com) |
 
-② 위탁업무의 내용이나 수탁자가 변경될 경우에는 지체없이 본 개인정보 처리방침을 통하여 공개하도록 하겠습니다.
+② If the outsourced tasks or processors change, we will disclose this through this privacy policy without delay.
 
-③ 위 수탁자는 모두 국외에 있어, 서비스를 이용하면 개인정보가 국외로 이전됩니다. 팀은 「개인정보 보호법」 제28조의8제1항제3호('계약 이행을 위한 국외 처리위탁·보관')에 따라 같은 조 제2항의 사항을 다음과 같이 공개합니다.
+③ All of the above processors are located outside Korea, so using the service transfers personal information overseas. Under Article 28-8(1)(3) of the Act ("overseas outsourcing of processing and storage for performance of a contract"), the Team discloses the matters in paragraph 2 of that article as follows.
 
-<!-- 검토 필요: 국외 이전 근거를 제28조의8제1항제3호로 볼 수 있는지 -->
+<!-- Needs review: whether Article 28-8(1)(3) can be the basis for the overseas transfer -->
 
-| 이전받는 자(연락처) | 국가 | 이전하는 항목 | 이전 시기·방법 | 이용 목적 | 보유·이용 기간 |
+| Recipient (contact) | Country | Items transferred | When and how | Purpose of use | Retention and use period |
 |---|---|---|---|---|---|
-| Google LLC (Cloud Run·Firestore·Cloud Storage·Cloud Logging·Secret Manager) · [Google Cloud 개인정보 보호팀](https://support.google.com/cloud/contact/dpo) | 일본(도쿄) | 제2조의 모든 항목 | 서비스를 쓸 때마다 인터넷(HTTPS)으로 전송 | 서비스 서버 운영, 데이터 보관, 요청 기록 | 제4조와 같음 |
-| Google LLC (Gemini API) · [Google Cloud 개인정보 보호팀](https://support.google.com/cloud/contact/dpo) | Google 또는 그 대리인이 시설을 운영하는 국가 | 영수증 사진, 메뉴 줄, 방 사람의 표시 이름, 비서 기억 문장, 이의 내용과 근거 요약 | 영수증 읽기·배분·중재를 요청할 때 서버에서 HTTPS로 전송 | AI 처리 결과 받기 | [제8조](#제8조-생성형-aigemini-이용) 참고 |
-| Google LLC (Firebase Authentication) · [Google Cloud 개인정보 보호팀](https://support.google.com/cloud/contact/dpo) | 미국 등 Google이 시설을 운영하는 국가 | 이메일, 이름, 프로필 사진, 계정 ID, 로그인 기록 | 로그인할 때 HTTPS로 전송 | 로그인과 계정 확인 | 탈퇴할 때까지 |
-| GitHub, Inc. · 88 Colin P. Kelly Jr. St., San Francisco, CA 94107, USA · dpo[at]github[dot]com | 미국 등 | 화면을 연 기기의 IP 주소 등 접속 기록 | 화면을 열 때 HTTPS로 전송 | 화면 파일 제공, 보안 | GitHub 정책에 따름 |
-| Foundata GmbH (goQR.me) · Steinhäuserstraße 20, 76135 Karlsruhe, Deutschland · info@goqr.me | 독일 | 컴퓨터의 IP 주소, 브라우저 정보, 참조 페이지, 시각. QR에 담는 내용(15분 동안만 쓸 수 있는 토큰 주소)은 저장하거나 기록하지 않는다고 밝히고 있습니다 | 컴퓨터에서 송금 화면을 열 때 HTTPS로 전송 | QR 이미지 만들기 | 이미지는 약 30초 캐시. 접속 기록 기간은 밝히지 않습니다 |
+| Google LLC (Cloud Run, Firestore, Cloud Storage, Cloud Logging, Secret Manager) · [Google Cloud Data Protection Team](https://support.google.com/cloud/contact/dpo) | Japan (Tokyo) | All items in Article 2 | Sent over the internet (HTTPS) each time the service is used | Running the service server, data storage, request logs | Same as Article 4 |
+| Google LLC (Gemini API) · [Google Cloud Data Protection Team](https://support.google.com/cloud/contact/dpo) | Countries where Google or its agents operate facilities | Receipt photos, menu lines, display names of people in the room, agent memory sentences, dispute content and evidence summaries | Sent from the server over HTTPS when receipt reading, splitting or mediation is requested | Receiving AI processing results | See [Article 8](#article-8-use-of-generative-ai-gemini) |
+| Google LLC (Firebase Authentication) · [Google Cloud Data Protection Team](https://support.google.com/cloud/contact/dpo) | The United States and other countries where Google operates facilities | Email, name, profile photo, account ID, login records | Sent over HTTPS at login | Login and account verification | Until account deletion |
+| GitHub, Inc. · 88 Colin P. Kelly Jr. St., San Francisco, CA 94107, USA · dpo[at]github[dot]com | The United States and elsewhere | Access logs such as the IP address of the device that opened the page | Sent over HTTPS when a page is opened | Serving front-end files, security | According to GitHub's policy |
+| Foundata GmbH (goQR.me) · Steinhäuserstraße 20, 76135 Karlsruhe, Deutschland · info@goqr.me | Germany | The computer's IP address, browser information, referring page, time. It states that it does not store or log the QR content (a token address usable for only 15 minutes) | Sent over HTTPS when the transfer screen is opened on a computer | Creating QR images | Images are cached for about 30 seconds. It does not state a period for access logs |
 
-④ 국외 이전을 원하지 않으시면 서비스를 이용하지 않으시면 됩니다. 서비스의 서버와 화면이 모두 국외에 있어, 이전을 거부하면 서비스를 이용할 수 없습니다. 다만 QR 이미지는 휴대폰에서 송금 화면을 열면 만들지 않습니다.
+④ If you do not want overseas transfer, you may choose not to use the service. Both the server and the front end of the service are outside Korea, so if you refuse the transfer you cannot use the service. However, the QR image is not created when the transfer screen is opened on a phone.
 
-## 제8조 생성형 AI(Gemini) 이용
+## Article 8. Use of generative AI (Gemini)
 
-팀은 영수증 읽기, 메뉴 배분, 이의 중재에 Google의 생성형 AI인 Gemini API를 씁니다.
+The Team uses the Gemini API, Google's generative AI, to read receipts, split menu items and mediate disputes.
 
-① **보내는 내용**
+① **What is sent**
 
-| 기능 | Gemini에 보내는 내용 |
+| Function | Sent to Gemini |
 |---|---|
-| 영수증 읽기 | 영수증 사진, 방에서 쓰는 통화 |
-| 메뉴 배분 | 메뉴 줄, 함께 있던 사람의 표시 이름, 그 방에 공유한 비서 기억 문장 |
-| 이의 중재 | 메뉴 줄, 표시 이름, 이의 내용, 근거 요약(보낸 경우 위치 요약의 시각 포함), 그 방에 공유한 비서 기억 문장 |
+| Reading receipts | Receipt photo, the currency used in the room |
+| Splitting menu items | Menu lines, display names of the people present, agent memory sentences shared with the room |
+| Dispute mediation | Menu lines, display names, dispute content, evidence summary (including the location summary times if sent), agent memory sentences shared with the room |
 
-② **결과를 다루는 방법.**
-- 이용자가 쓴 문장은 AI에게 내리는 지시로 따르지 않도록 표시해서 보냅니다.
-- AI의 답은 정해진 형식과 코드 검사를 통과한 것만 반영하고, AI가 실패하면 규칙으로 계산합니다.
-- AI가 낸 배분과 중재안은 제안입니다. 확정은 사람이 하거나, 비서 설정의 규칙(예: 일정 금액 이하의 청구는 자동 수락)에 따릅니다.
-- 팀은 이용자의 정보로 AI 모델을 학습시키지 않습니다.
+② **How results are handled.**
+- Sentences written by users are sent marked so that they are not followed as instructions to the AI.
+- Only AI answers that pass the required format and code checks are applied; if the AI fails, the result is computed by rules.
+- Splits and mediation proposals from the AI are suggestions. They are confirmed by a person, or according to rules in the agent settings (for example, auto-accepting invoices up to a set amount).
+- The Team does not train AI models on user information.
 
-<!-- 검토 필요: AI 배분과 규칙에 따른 자동 수락이 「개인정보 보호법」 제37조의2의 '자동화된 결정'에 해당하는지 -->
+<!-- Needs review: whether AI splitting and rule-based auto-acceptance are "automated decisions" under Article 37-2 of the Act -->
 
-③ **Google이 이 내용을 다루는 방법.** 팀은 결제가 연결된 유료 등급(Paid Services)으로 Gemini API를 씁니다. Google Gemini API 추가 약관의 유료 서비스 조항에 따라 다음과 같이 다뤄집니다.
-- Google은 보낸 내용과 응답을 자사 제품을 개선하는 데 쓰지 않습니다. 처리는 Google의 데이터 처리 부속서를 따릅니다.
-- Google은 보낸 내용과 응답을 제한된 기간 동안 기록합니다. 이 기록은 금지된 사용을 찾아내고 법이 요구하는 공개를 하는 데에만 씁니다.
+③ **How Google handles this content.** The Team uses the Gemini API on the paid tier with billing enabled (Paid Services). Under the paid services terms in the Google Gemini API Additional Terms, it is handled as follows.
+- Google does not use the content sent or the responses to improve its products. Processing follows Google's Data Processing Addendum.
+- Google logs the content sent and the responses for a limited period. These logs are used only to detect prohibited use and to make disclosures required by law.
 
-④ 이용자는 영수증 사진이나 이의 내용에 본인 또는 타인의 민감한 정보(주민등록번호, 여권번호, 의료 정보, 신용카드 번호 등)를 넣지 않도록 각별히 주의하여야 합니다.
+④ Users must take particular care not to include sensitive information about themselves or others (resident registration numbers, passport numbers, medical information, credit card numbers and so on) in receipt photos or dispute content.
 
-## 제9조 개인정보의 안전성 확보조치
+## Article 9. Measures to secure personal information
 
-팀은 개인정보의 안전성 확보를 위해 다음과 같은 조치를 하고 있습니다.
+The Team takes the following measures to keep personal information secure.
 
-1. **계좌·위치 요약 암호화:** 받을 계좌와 송금 링크, 이의에 붙인 위치 요약(요약을 옮겨 적은 이의 근거와 중재안 포함)은 저장할 때 AES-256-GCM으로 암호화합니다. 열쇠는 Google Secret Manager에만 두고 저장소(GitHub)에는 두지 않습니다.
-2. **보이는 사람 제한:** 받을 계좌와 송금 링크는 그 송금의 보내는 사람과 받는 사람에게만 보냅니다.
-3. **전송 구간 암호화:** 화면과 서버, 서버와 Gemini 사이는 모두 HTTPS로 주고받습니다.
-4. **호출 제한:** 서버는 팀의 화면 주소에서 온 요청만 브라우저에 허용합니다. AI 호출은 IP나 사용자당 10분에 30회로 제한합니다.
-5. **QR 토큰:** 컴퓨터에서 휴대폰으로 넘기는 QR에는 계좌가 아니라 15분 뒤 만료되는 토큰만 담습니다.
-6. **AI 지시 주입 대비:** [제8조](#제8조-생성형-aigemini-이용) ②와 같습니다.
+1. **Encryption of accounts and location summaries:** receiving accounts and transfer links, and location summaries attached to disputes (including dispute evidence and mediation proposals that copy the summary), are encrypted with AES-256-GCM when stored. The key is kept only in Google Secret Manager and not in the repository (GitHub).
+2. **Limited visibility:** receiving accounts and transfer links are sent only to the sender and recipient of that transfer.
+3. **Encryption in transit:** all traffic between the front end and the server, and between the server and Gemini, uses HTTPS.
+4. **Rate limits:** the server allows browser requests only from the Team's front-end address. AI calls are limited to 30 per 10 minutes per IP or user.
+5. **QR tokens:** the QR code that hands over from a computer to a phone contains not the account but a token that expires after 15 minutes.
+6. **Protection against AI prompt injection:** as in [Article 8](#article-8-use-of-generative-ai-gemini) ②.
 
-7. **로그인 확인:** 요청마다 Google 로그인 토큰을 확인하고, 토큰이 폐기됐는지는 같은 사람에게 5분에 한 번 Google에 확인합니다(이 서비스에서 탈퇴하면 바로 막힙니다). 그 방의 멤버에게만 방 정보를 보냅니다.
-8. **위치 파일은 브라우저 밖으로 보내지 않음:** 타임라인 파일은 이용자의 브라우저 안에서만 읽고, 서버는 받은 시각이 그 지출 시간대 안인지 다시 확인합니다.
-9. **데이터베이스 접근 제한:** 데이터베이스와 파일 저장소에 쓰는 것은 서버만 할 수 있습니다. 화면이 데이터베이스를 직접 읽는 것은 보안 규칙으로 그 방의 멤버에게만(송금은 보내는 사람과 받는 사람에게만, 프로필은 본인에게만) 허용하고, 영수증 사진·이의·비서 설정은 서버를 거쳐서만 볼 수 있습니다.
+7. **Login verification:** every request's Google login token is checked, and whether the token has been revoked is checked with Google once every 5 minutes per person (deleting your account in this service blocks it immediately). Room information is sent only to members of that room.
+8. **Location files never leave the browser:** the timeline file is read only inside the user's browser, and the server checks again that the times received fall within the expense's time window.
+9. **Database access limits:** only the server can write to the database and file storage. Security rules allow the front end to read the database directly only for members of that room (transfers only for the sender and recipient, profiles only for the user); receipt photos, disputes and agent settings can be seen only through the server.
 
-## 제10조 개인정보 자동 수집 장치의 설치·운영 및 거부
+## Article 10. Installation, operation and refusal of automatic collection devices
 
-① 팀은 쿠키를 쓰지 않습니다. 대신 브라우저의 저장소(localStorage)에 다음을 저장합니다.
+① The Team does not use cookies. Instead, it stores the following in browser storage (localStorage).
 
-| 이름 | 내용 | 쓰임 |
+| Name | Content | Use |
 |---|---|---|
-| Firebase 로그인 상태 | Google 로그인 유지 정보(Firebase가 IndexedDB에 저장) | 다시 열어도 로그인 상태를 유지 |
-| `agent-settlement.uid` | 개발용 방에서 고른 사람의 ID | 개발용 화면에서만 씁니다 |
-| `agent-settlement.last-expense.<방 ID>` | 마지막으로 남긴 지출의 통화, 낸 사람, 결제 방법, 함께 있던 사람 | 다음 지출 입력을 미리 채움. 서버로 보내지 않음 |
-| `agent-settlement.seen.<방 ID>.<사람 ID>` | 비서 기록을 어디까지 읽었는지 | 새 기록 표시. 서버로 보내지 않음 |
-| `agent-settlement.timeline.<방 ID>.<사람 ID>` | 이용자가 올린 Google 지도 타임라인 중 그 정산 지출 시간대에 걸친 방문의 시작·끝 시각, 확신도, 집 여부(좌표·장소 이름 없음) | 이의를 낼 때 파일을 다시 고르지 않고 맞지 않는 지출을 찾음. 서버로 보내지 않음. 7일 뒤, '지우기'를 누를 때, 로그아웃할 때 지움 |
-| `agent-settlement.demo.seq` | 체험 데모의 무작위 체험 id와 내가 고른 SEQ 점수·건너뛴 task. 처음 답할 때 만듦 | 첫 화면에 내 점수를 보여 주고, 이미 답한 task는 다시 묻지 않으며 같은 사람을 두 번 세지 않음. 점수와 체험 id만 서버로 보냄. 이용자가 브라우저 데이터를 지울 때까지 남음 |
+| Firebase login state | Information that keeps the Google login (Firebase stores it in IndexedDB) | Keeps you logged in when you reopen |
+| `agent-settlement.uid` | ID of the person chosen in a development room | Used only on development screens |
+| `agent-settlement.last-expense.<room ID>` | Currency, payer, payment method and people present of the last expense recorded | Prefills the next expense entry. Not sent to the server |
+| `agent-settlement.seen.<room ID>.<person ID>` | How far you have read the agent log | Marks new entries. Not sent to the server |
+| `agent-settlement.timeline.<room ID>.<person ID>` | From the Google Maps Timeline the user uploaded: start and end times, confidence and whether it is home, for visits overlapping the settlement's expense time windows (no coordinates or place names) | Finds mismatched expenses when disputing without choosing the file again. Not sent to the server. Deleted after 7 days, when you press delete, or when you log out |
+| `agent-settlement.demo.seq` | The demo's random demo id, the SEQ scores I chose and the tasks I skipped. Created on the first answer | Shows my scores on the home screen, does not ask answered tasks again and does not count the same person twice. Only scores and the demo id are sent to the server. Remains until the user clears browser data |
 
-② 정보주체는 브라우저 설정에서 이 사이트의 데이터를 지우거나 저장을 막을 수 있습니다. 막으면 방에서 고른 사람이 기억되지 않아 들어올 때마다 다시 골라야 합니다.
+② Data subjects can delete this site's data or block storage in browser settings. If blocked, the person chosen in a room is not remembered, so you must choose again each time you enter.
 
-③ 팀은 광고나 이용 분석 도구를 쓰지 않으며, 제3자가 행태정보를 수집하도록 허용하지 않습니다.
+③ The Team uses no advertising or usage analytics tools and does not allow third parties to collect behavioral information.
 
-## 제11조 정보주체와 법정대리인의 권리·의무 및 행사방법
+## Article 11. Rights and duties of data subjects and legal representatives, and how to exercise them
 
-① 정보주체는 팀에 대해 언제든지 개인정보 열람·전송·정정·삭제·처리정지 및 동의 철회 등을 요구(이하 "권리 행사"라 함)할 수 있습니다.
+① A data subject may at any time ask the Team for access, transmission, correction, deletion or suspension of processing of personal information, or withdraw consent ("exercise of rights").
 
-② 권리 행사는 팀에 대해 「개인정보 보호법 시행령」 제41조제1항에 따라 전자우편 등을 통하여 하실 수 있으며, 팀은 이에 대해 지체없이 조치하겠습니다.
+② Rights may be exercised toward the Team by email or similar means under Article 41(1) of the Enforcement Decree of the Act, and the Team will act without delay.
 
-③ 권리 행사는 정보주체의 법정대리인이나 위임을 받은 자 등 대리인을 통하여 하실 수도 있습니다.
+③ Rights may also be exercised through an agent, such as the data subject's legal representative or an authorized person.
 
-④ 지금 화면에서 바로 할 수 있는 일과 문의가 필요한 일은 다음과 같습니다.
-- **열람:** 방 화면에서 내가 남긴 정보를 볼 수 있습니다.
-- **삭제:** 지출을 지우면 그 영수증 사진도 함께 지워집니다. 위치 요약은 이의 화면의 '내 위치 요약 지우기'로, 계정은 계정 화면의 '계정 탈퇴'로 지웁니다.
-- **정정:** 표시 이름과 프로필 색은 계정 화면에서, 비서 기억과 규칙, 받을 계좌는 '내 비서'(방 화면 맨 위의 내 칩이나 오른쪽 위 내 프로필 메뉴)에서 고칩니다. 비서 기억은 여기서 지울 수도 있습니다.
-- **받을 계좌의 삭제와 그 밖의 요청:** 아직 화면이 없어 [제12조](#제12조-개인정보-보호책임자)의 연락처로 요청해 주세요.
+④ What can be done directly on screen now, and what requires contacting us, is as follows.
+- **Access:** you can see the information you left on the room screen.
+- **Deletion:** deleting an expense also deletes its receipt photo. Delete a location summary with the "delete my location summary" control on the dispute screen, and your account with "Delete account" on the account screen.
+- **Correction:** change your display name and profile color on the account screen; change agent memories and rules and the receiving account in "My agent" (your chip at the top of the room screen, or your profile menu at the top right). Agent memories can also be deleted there.
+- **Deleting a receiving account and other requests:** there is no screen for these yet, so please make the request using the contact in [Article 12](#article-12-chief-privacy-officer).
 
-⑤ 팀은 권리 행사 요청을 받은 날로부터 10일 이내에 답하겠습니다.
+⑤ The Team will respond within 10 days of receiving a request to exercise rights.
 
-## 제12조 개인정보 보호책임자
+## Article 12. Chief privacy officer
 
-① 팀은 개인정보 처리에 관한 업무를 총괄해서 책임지고, 개인정보 처리와 관련한 정보주체의 불만처리 및 피해구제 등을 위하여 아래와 같이 개인정보 보호책임자를 지정하고 있습니다.
+① The Team has overall responsibility for personal information processing, and designates a chief privacy officer as below to handle data subjects' complaints and remedies related to processing.
 
-<!-- 데모 당일에 채운다. 공개 저장소라 적은 연락처는 누구나 볼 수 있으니 팀 공용 이메일을 권한다 -->
-▶ 개인정보 보호책임자
-- 성명: [팀에서 정함]
-- 직위: [팀에서 정함]
-- 연락처: [이메일]
+<!-- Fill in on the demo day. The repository is public, so anyone can see the contact written here; a shared team email is recommended -->
+▶ Chief privacy officer
+- Name: [to be decided by the Team]
+- Position: [to be decided by the Team]
+- Contact: [email]
 
-② 정보주체는 서비스를 이용하면서 생긴 개인정보 보호 관련 문의, 불만처리, 피해구제 등에 관한 사항을 개인정보 보호책임자에게 문의하실 수 있습니다.
+② Data subjects may direct any privacy inquiries, complaints, remedy requests and so on arising from use of the service to the chief privacy officer.
 
-## 제13조 정보주체의 권익침해에 대한 구제방법
+## Article 13. Remedies for infringement of rights
 
-정보주체는 개인정보 침해로 인한 분쟁 해결, 상담 등 피해 구제를 받고자 하는 경우 아래의 기관에 신고·상담 등을 신청하실 수 있습니다.
+Data subjects who want dispute resolution, counseling or other remedies for a privacy infringement may file a report or ask for counseling with the following bodies.
 
-1. 개인정보 분쟁조정위원회: (국번없이) 1833-6972 (www.kopico.go.kr)
-2. 개인정보침해 신고센터: (국번없이) 118 (privacy.kisa.or.kr)
-3. 경찰청: (국번없이) 182 (ecrm.police.go.kr)
+1. Personal Information Dispute Mediation Committee: 1833-6972 (no area code) (www.kopico.go.kr)
+2. Personal Information Infringement Report Center: 118 (no area code) (privacy.kisa.or.kr)
+3. Korean National Police Agency: 182 (no area code) (ecrm.police.go.kr)
 
-## 제14조 해당하지 않는 사항
+## Article 14. Matters that do not apply
 
-팀은 다음 개인정보를 처리하지 않거나, 다음 사항에 해당하지 않습니다.
+The Team does not process the following personal information, or the following do not apply.
 
-- 민감정보, 가명정보
-- 추가적인 이용·제공
-- 고정형·이동형 영상정보처리기기
-- 국내대리인 지정
+- Sensitive information, pseudonymized information
+- Additional use or provision
+- Fixed or mobile video information processing devices
+- Designation of a domestic agent
 
-## 제15조 개인정보 처리방침의 변경
+## Article 15. Changes to this privacy policy
 
-① 이 개인정보 처리방침은 2026년 11월 6일부터 적용됩니다.
+① This privacy policy applies from November 6, 2026.
 
-② 이전 개인정보 처리방침은 이 저장소의 변경 이력에서 확인하실 수 있습니다.
+② Previous privacy policies can be found in this repository's change history.
 
-③ 로그인, 위치 기록처럼 새로 개인정보를 처리하는 기능이 생기면 그 기능을 공개하기 전에 이 방침을 고칩니다.
+③ When a feature that newly processes personal information, such as login or location records, is added, this policy will be updated before the feature is released.
 
-## 참고 자료
+## References
 
-이 문서는 아래 자료를 인용하거나 따랐습니다(2026년 11월 2~3일 확인).
+This document cites or follows the materials below (checked November 2–3, 2026).
 
-- 개인정보보호위원회, [「개인정보 처리방침 작성지침」(2026.4. 개정)](https://www.pipc.go.kr/np/cop/bbs/selectBoardArticle.do?bbsId=BS217&mCode=D010030000&nttId=12018)
-- 「개인정보 보호법」 [제30조](https://www.law.go.kr/법령/개인정보보호법/제30조)(처리방침), [제26조](https://www.law.go.kr/법령/개인정보보호법/제26조)(위탁), [제28조의8](https://www.law.go.kr/법령/개인정보보호법/제28조의8)(국외 이전), [시행령 제31조](https://www.law.go.kr/법령/개인정보보호법시행령/제31조)
-- Google, [Gemini API 추가 약관](https://ai.google.dev/gemini-api/terms)(유료 서비스의 데이터 이용, 이용 연령), [Gemini API 사용 정책](https://ai.google.dev/gemini-api/docs/usage-policies)
-- Google Cloud, [Cloud 데이터 처리 부속서](https://cloud.google.com/terms/data-processing-addendum), [Cloud Run 로그](https://cloud.google.com/run/docs/logging), [Cloud Logging 보관 기간](https://cloud.google.com/logging/quotas), [Google Cloud의 데이터 삭제](https://cloud.google.com/docs/security/deletion)
-- GitHub, [GitHub Pages의 데이터 수집](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages), [GitHub 개인정보 처리방침](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement)
-- goQR.me, [개인정보·보안](https://goqr.me/privacy-safety-security/), [사업자 정보](https://goqr.me/de/rechtliches/impressum.html)
+- Personal Information Protection Commission, ["Guidelines for Preparing a Privacy Policy" (revised April 2026)](https://www.pipc.go.kr/np/cop/bbs/selectBoardArticle.do?bbsId=BS217&mCode=D010030000&nttId=12018)
+- Personal Information Protection Act [Article 30](https://www.law.go.kr/법령/개인정보보호법/제30조) (privacy policy), [Article 26](https://www.law.go.kr/법령/개인정보보호법/제26조) (outsourcing), [Article 28-8](https://www.law.go.kr/법령/개인정보보호법/제28조의8) (overseas transfer), [Enforcement Decree Article 31](https://www.law.go.kr/법령/개인정보보호법시행령/제31조)
+- Google, [Gemini API Additional Terms](https://ai.google.dev/gemini-api/terms) (data use in paid services, age of use), [Gemini API Usage Policies](https://ai.google.dev/gemini-api/docs/usage-policies)
+- Google Cloud, [Cloud Data Processing Addendum](https://cloud.google.com/terms/data-processing-addendum), [Cloud Run logging](https://cloud.google.com/run/docs/logging), [Cloud Logging retention](https://cloud.google.com/logging/quotas), [Data deletion on Google Cloud](https://cloud.google.com/docs/security/deletion)
+- GitHub, [Data collection by GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages), [GitHub General Privacy Statement](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement)
+- goQR.me, [Privacy and security](https://goqr.me/privacy-safety-security/), [Company information](https://goqr.me/de/rechtliches/impressum.html)

@@ -23,7 +23,7 @@ function policyPicker(current, action) {
       ${p.id === current ? chip('Selected', 'tint') : ''}</button>`).join('')}</div>`;
 }
 
-const PRIVACY = 'https://github.com/orca-svg/agent-settlement/blob/main/PRIVACY.md';
+const PRIVACY = 'https://github.com/leewonjunlee-eng/bill-ion-hsk/blob/main/PRIVACY.md';
 
 // 방에 보일 나: 프로필 이름·색을 그대로 쓴다(입력받지 않는다). 프로필로 가는 버튼은 두지 않는다(가면 적던 내용을 잃는다)
 function meRow(profile, dev) {

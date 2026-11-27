@@ -1,7 +1,7 @@
 // 화면 공용 모듈 중 DOM 없이 쓰는 순수 함수.
 import { test, mock } from 'node:test';
 import assert from 'node:assert/strict';
-import { esc, topic, subj, whose, restNote, allocLabel, allocButton, groupRuns, logItemHtml, qrImageUrl, qrIsFresh, receiptPickers, sendMode, sendFollowUp, disputeWaiting, disputeChoices, disputeNote, disputeStatus, disputeLive, changedLines, proposalLinesHtml, reviseChoicesHtml, flaggedLines, blockedNotice, askedBy, shake, nudge } from '../public/ui.js';
+import { esc, restNote, allocLabel, allocButton, groupRuns, logItemHtml, qrImageUrl, qrIsFresh, receiptPickers, sendMode, sendFollowUp, disputeWaiting, disputeChoices, disputeNote, disputeStatus, disputeLive, changedLines, proposalLinesHtml, reviseChoicesHtml, flaggedLines, blockedNotice, askedBy, shake, nudge } from '../public/ui.js';
 import { reduceMotion } from '../public/motion.js';
 
 test('allocButton: 나눈 뒤 바뀐 게 없으면 막고, 남은 일을 알려 준다', () => {
@@ -9,14 +9,6 @@ test('allocButton: 나눈 뒤 바뀐 게 없으면 막고, 남은 일을 알려 
   assert.deepEqual(allocButton({ allocated: true, fresh: false, flagged: 1 }), { label: 'Ask agents to split again', disabled: false, hint: '' }); // 기억이 바뀌었다
   assert.deepEqual(allocButton({ allocated: true, fresh: true, flagged: 1 }), { label: 'Agents finished splitting', disabled: true, hint: 'Just confirm the lines that need review (1).' });
   assert.deepEqual(allocButton({ allocated: true, fresh: true, flagged: 0 }), { label: 'All lines are split', disabled: true, hint: 'You can split again if the expense or agent memories change.' });
-});
-
-test('조사: 받침에 따라 은/는, 이/가, 나는 내가', () => {
-  assert.equal(topic('오차즈케'), '오차즈케는');
-  assert.equal(topic('‘하이볼’'), '‘하이볼’은');
-  assert.equal(subj('나'), '내가');
-  assert.equal(subj('철수'), '철수가');
-  assert.equal(subj('민준'), '민준이');
 });
 
 test('esc: HTML 특수문자를 바꾼다', () => {
@@ -60,12 +52,6 @@ test('disputeChoices: 중재안이 살아 있는 동안 당사자만 동의·거
   for (const status of ['open', 'resolved', 'withdrawn', 'dismissed', 'superseded']) {
     assert.deepEqual(disputeChoices(d({ status }), exp, 'me'), { agree: false, reject: false, revise: false }, status);
   }
-});
-
-test('whose: 나는 내 몫, 다른 이름은 그대로', () => {
-  assert.equal(whose('나'), '내');
-  assert.equal(whose('영희'), '영희');
-  assert.equal(whose('나·철수'), '나·철수');
 });
 
 test('allocLabel: 어떻게 나눴는지 짧게 알린다', () => {

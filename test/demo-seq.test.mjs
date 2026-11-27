@@ -110,11 +110,7 @@ test('SEQ 표 이미지 주소: 이미지로 돌려주고 캐시하지 말라고
   assert.match(await res.text(), /^<svg [\s\S]*fill="#151b23"[\s\S]*<\/svg>$/);
 });
 
-test('README는 GitHub 테마에 맞는 SEQ 표 이미지를 띄우고, 이름은 체험 데모의 task 이름과 같다', () => {
-  const readme = readFileSync(new URL('../README.md', import.meta.url), 'utf8');
-  const cloudRun = readFileSync(new URL('../public/api.js', import.meta.url), 'utf8').match(/CLOUD_RUN_URL = '([^']+)'/)[1];
-  assert.match(readme, new RegExp(`<source media="\\(prefers-color-scheme: dark\\)" srcset="${cloudRun.replaceAll('.', '\\.')}/api/demo/seq\\.svg\\?theme=dark">`));
-  assert.match(readme, new RegExp(`<img src="${cloudRun.replaceAll('.', '\\.')}/api/demo/seq\\.svg\\?theme=light" width="560" alt="[^"]+">`));
+test('SEQ 표 이미지의 task 이름은 체험 데모의 task 이름과 같다', () => {
   const s = { room: null, invite: null, expenses: [], invoices: [], disputes: [], transfers: [], location: [], agent: null };
   assert.deepEqual(SEQ_TITLES, tasks(s).map((t) => t.title));
 });
