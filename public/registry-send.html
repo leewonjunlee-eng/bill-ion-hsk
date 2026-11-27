@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bill:ION · Send to evidence registry</title>
+  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./hsp-demo.css">
+  <script type="module" src="./registry-send.js"></script>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="brand">Bill<span>:ION</span></div>
+      <span class="mode">Wallet signature required</span>
+    </header>
+    <h1>Send to evidence registry</h1>
+    <section class="wallet-approval">
+      <p>Choose the JSON printed by the deploy or record preparation script. Mainnet transactions cost real HSK gas.</p>
+      <label for="file">Transaction JSON</label>
+      <input id="file" type="file" accept="application/json,.json">
+      <pre id="summary" hidden></pre>
+      <button type="button" id="send" disabled>Send with wallet</button>
+      <p id="status" role="status" aria-live="polite">Choose a file.</p>
+    </section>
+  </main>
+</body>
+</html>

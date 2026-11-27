@@ -1,0 +1,13 @@
+.env
+.git/
+.github/
+.claude/
+node_modules/
+.DS_Store
+.superpowers/
+test/
+.firebase/
+firebase-debug*.log
+ui-debug*.log
+# 로컬 결제 DB에는 비공개 proofSalt가 들어 있다
+*.sqlite*

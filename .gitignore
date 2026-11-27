@@ -1,0 +1,20 @@
+.env
+node_modules/
+.claude/
+.DS_Store
+.firebase/
+firebase-debug*.log
+ui-debug*.log
+firestore-debug.log
+/.hsp-demo.sqlite*
+/.hsp-qa-evidence.sqlite*
+/.hsp-qa-orders.sqlite*
+# 로컬 결제 DB에는 비공개 proofSalt가 들어 있다
+*.sqlite*
+
+# video working files
+video/shots/
+
+# not published: auto-deploys public/ on push; old banners
+.github/workflows/pages.yml
+.github/assets/banner-*.png

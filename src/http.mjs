@@ -1,0 +1,88 @@
+// 의존성 없는 작은 HTTP 도구: 라우터, JSON 본문, 응답, CORS, 호출 제한.
+
+export class HttpError extends Error {
+  constructor(status, message) {
+    super(message);
+    this.status = status;
+  }
+}
+
+// path의 ':name'은 경로 파라미터가 된다. match()는 { handler, params } 또는 null.
+export function router() {
+  const routes = [];
+  const add = (method) => (path, handler) => {
+    const keys = [];
+    const re = new RegExp(`^${path.replace(/:([a-zA-Z]+)/g, (_, k) => { keys.push(k); return '([^/]+)'; })}$`);
+    routes.push({ method, re, keys, handler });
+    return api;
+  };
+  const api = {
+    get: add('GET'),
+    post: add('POST'),
+    match(method, pathname) {
+      for (const r of routes) {
+        if (r.method !== method) continue;
+        const m = pathname.match(r.re);
+        if (m) return { handler: r.handler, params: Object.fromEntries(r.keys.map((k, i) => [k, decodeURIComponent(m[i + 1])])) };
+      }
+      return null;
+    },
+  };
+  return api;
+}
+
+// 영수증 사진(긴 변 1600px JPEG, base64)이 실리는 요청의 본문 한도
+export const MAX_RECEIPT = 2_100_000;
+
+// 본문을 글자 그대로 받아 req에 남겨 둔다. 서버는 방·계정 요청을 줄(src/state-locks.mjs)에 세우기 전에 불러 두어,
+// 본문을 느리게 보내는 요청이 줄을 붙잡지 못하게 한다. 이미 받아 두었으면 그것을 돌려준다
+export async function readBody(req, { limit = 20_000 } = {}) {
+  if (req.rawBody !== undefined) return req.rawBody;
+  let body = '';
+  for await (const chunk of req) {
+    body += chunk;
+    if (body.length > limit) throw new HttpError(413, '요청이 너무 커요');
+  }
+  req.rawBody = body;
+  return body;
+}
+
+export async function readJson(req, { limit = 20_000 } = {}) {
+  const body = await readBody(req, { limit });
+  if (body.length > limit) throw new HttpError(413, '요청이 너무 커요'); // 미리 받을 때는 더 큰 한도로 받았을 수 있다
+  if (!body) return {};
+  try {
+    return JSON.parse(body);
+  } catch {
+    throw new HttpError(400, 'JSON 형식이 아니에요');
+  }
+}
+
+export function send(res, status, obj) {
+  res.writeHead(status, { 'content-type': 'application/json; charset=utf-8' });
+  res.end(JSON.stringify(obj));
+}
+
+export function allowCors(req, res, origins) {
+  const origin = req.headers.origin;
+  if (!origin || !origins.includes(origin)) return;
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Vary', 'Origin');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'content-type, authorization, x-demo-user');
+}
+
+// 공개 주소라 누구나 부를 수 있으므로 Gemini 호출을 키(신원 또는 IP)당 창 안에서 max회로 막는다.
+// overLimit(key)는 이번 호출이 한도를 넘었으면 true.
+export function createRateLimiter({ max = 30, windowMs = 600_000, now = () => Date.now() } = {}) {
+  const calls = new Map();
+  return function overLimit(key) {
+    const t = now();
+    const recent = (calls.get(key) || []).filter((c) => t - c < windowMs);
+    recent.push(t);
+    calls.set(key, recent);
+    return recent.length > max;
+  };
+}
+
+export const clientIp = (req) => String(req.headers['x-forwarded-for'] || req.socket.remoteAddress).split(',')[0].trim();

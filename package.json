@@ -1,0 +1,26 @@
+{
+  "name": "agent-settlement",
+  "private": true,
+  "version": "0.0.1",
+  "description": "돈 얘기는 각자의 AI 비서끼리 하고, 사람은 확인만 하는 정산 웹 앱",
+  "type": "module",
+  "imports": {
+    "#src/*": "./src/*"
+  },
+  "engines": {
+    "node": ">=22.9"
+  },
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test",
+    "test:emulators": "firebase emulators:exec --only auth,firestore,storage --project demo-agent-settlement \"node --test\""
+  },
+  "dependencies": {
+    "firebase-admin": "14.5.0"
+  },
+  "devDependencies": {
+    "ethers": "6.15.0",
+    "ganache": "7.9.2",
+    "solc": "0.8.30"
+  }
+}

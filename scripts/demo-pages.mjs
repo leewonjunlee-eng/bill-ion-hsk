@@ -1,0 +1,57 @@
+// 체험 데모 페이지(public/demo/room.html·account.html)를 실제 페이지에서 만든다. 화면은 실제와 같은 room.js·account.js를 쓰고,
+// 데모에서만 붙는 것은 이것뿐이다: 위쪽 띠, demo.css, import map(서버 코드를 브라우저에서 부르기), 그리고 실제 코드보다 먼저 도는 boot.js.
+// /demo/ 아래에 두어서 화면 안의 상대 링크(account.html, room.html?room=…)가 데모 안에 머문다.
+// 사용: node scripts/demo-pages.mjs  (실제 페이지를 고치면 다시 돌린다. test/demo-pages.test.mjs가 최신인지 확인한다)
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'public');
+export const PAGES = ['room.html', 'account.html'];
+
+// 서버 코드(src/)가 브라우저에서 돌도록: node:crypto는 대신할 파일로, src/는 배포본의 /src/로, src/가 부르는 ../public/은 화면 파일로 잇는다
+const IMPORT_MAP = JSON.stringify({ imports: { 'node:crypto': './node-crypto.js', '#src/': '../src/', '../public/': '../' } });
+const BAND = '<div class="demo-band" role="note"><b>Demo</b>All amounts, rates, accounts and locations are fake. No money moves.<a href="../">Home</a></div>';
+
+const swap = (html, from, to) => {
+  if (!html.includes(from)) throw new Error(`demo-pages: '${from}'을 찾지 못했어요. 실제 페이지가 바뀌었으면 이 스크립트도 고쳐 주세요`);
+  return html.replace(from, to);
+};
+
+export function demoPage(name, html) {
+  let out = html;
+  out = swap(out, '<!doctype html>', `<!doctype html>\n<!-- scripts/demo-pages.mjs가 public/${name}에서 만든 체험 데모 페이지예요. 직접 고치지 말고 다시 만들어 주세요 -->`);
+  out = out.replace(/<title>([^<]*)<\/title>/, '<title>Demo · $1</title>');
+  out = swap(out, '<link rel="stylesheet" href="style.css">', '<link rel="stylesheet" href="../style.css">\n  <link rel="stylesheet" href="demo.css">');
+  // 파비콘·홈 화면 아이콘은 실제 페이지 옆(public/)에 있다
+  out = out.replace(/(<link rel="(?:icon|apple-touch-icon)"[^>]*\bhref=")(?![a-z]+:|\/|\.\.\/)/g, '$1../');
+  out = out.replace(/<body( class="([^"]*)")?>/, (_, __, cls) => `<body class="${cls ? `${cls} ` : ''}demo">\n  ${BAND}`);
+  const entry = name.replace('.html', '.js');
+  out = swap(out, `<script type="module" src="${entry}"></script>`,
+    `<script type="importmap">${IMPORT_MAP}</script>\n  <script type="module" src="boot.js"></script>\n  <script type="module" src="../${entry}"></script>`);
+  // 처음 화면(데모 소개)으로 가는 링크
+  out = out.replace('<a class="nav-brand" href="./">', '<a class="nav-brand" href="../">');
+  return out;
+}
+
+// 서버·지갑 없이 여는 HSP 모의 정산 데모(public/demo/hsp.html). 로컬 서버 전용인 지갑 승인 링크는 뺀다
+export function hspDemoPage(html) {
+  let out = html;
+  out = swap(out, '<!doctype html>', '<!doctype html>\n<!-- scripts/demo-pages.mjs가 public/hsp-demo.html에서 만든 페이지예요. 직접 고치지 말고 다시 만들어 주세요 -->');
+  out = swap(out, '<link rel="stylesheet" href="./style.css">', '<link rel="stylesheet" href="../style.css">');
+  out = swap(out, '<link rel="stylesheet" href="./hsp-demo.css">', '<link rel="stylesheet" href="../hsp-demo.css">');
+  out = swap(out, '<script type="module" src="./hsp-demo.js"></script>',
+    `<script type="importmap">${IMPORT_MAP}</script>\n  <script type="module" src="hsp-boot.js"></script>\n  <script type="module" src="../hsp-demo.js"></script>`);
+  out = swap(out, '<span class="mode">Local mock payment</span>', '<span class="mode">Browser mock payment · No real transfer</span>');
+  return swap(out, '    <p><a href="./hsp-wallet-approval.html">Open QA wallet approval</a></p>\n',
+    '    <p>State on this page lives only in browser memory and restarts from the draft on refresh. Member buttons pick a role; they are not authentication or wallet approval.</p>\n');
+}
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  const build = (name, source, make) => {
+    fs.writeFileSync(path.join(root, 'demo', name), make(fs.readFileSync(path.join(root, source), 'utf8').replace(/\r\n/g, '\n')));
+    console.log(`public/demo/${name}`);
+  };
+  for (const name of PAGES) build(name, name, (html) => demoPage(name, html));
+  build('hsp.html', 'hsp-demo.html', hspDemoPage);
+}

@@ -1,0 +1,65 @@
+<!doctype html>
+<!-- scripts/demo-pages.mjs가 public/hsp-demo.html에서 만든 페이지예요. 직접 고치지 말고 다시 만들어 주세요 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bill:ION · Group buy settlement</title>
+  <link rel="stylesheet" href="../style.css">
+  <link rel="stylesheet" href="../hsp-demo.css">
+  <script type="importmap">{"imports":{"node:crypto":"./node-crypto.js","#src/":"../src/","../public/":"../"}}</script>
+  <script type="module" src="hsp-boot.js"></script>
+  <script type="module" src="../hsp-demo.js"></script>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="brand">Bill<span>:ION</span></div>
+      <span class="mode">Browser mock payment · No real transfer</span>
+    </header>
+    <h1>Group buy settlement</h1>
+    <p class="context">A paid upfront. B left before the extra snacks arrived and disputes their share.</p>
+    <section id="mediation" class="mediation" aria-labelledby="mediation-label" hidden>
+      <h2 id="mediation-label">Agent conversation</h2>
+      <dl>
+        <div><dt>B's agent</dt><dd id="claim"></dd></div>
+        <div><dt>A's agent</dt><dd id="counter"></dd></div>
+        <div><dt>Mediator agent</dt><dd id="summary"></dd></div>
+      </dl>
+      <p id="source"></p>
+    </section>
+    <div class="layout">
+      <section aria-labelledby="receipt-label">
+        <div class="section-title"><h2 id="receipt-label">Receipt</h2><span id="version"></span></div>
+        <ul id="lines"></ul>
+        <h2>Share comparison</h2>
+        <table>
+          <thead><tr><th scope="col">Member</th><th scope="col">Draft</th><th scope="col">Current</th></tr></thead>
+          <tbody id="shares"></tbody>
+        </table>
+        <button type="button" id="revise" disabled>Apply B's dispute</button>
+      </section>
+      <section aria-labelledby="payment-label">
+        <h2 id="payment-label">Approval and payment</h2>
+        <p>B can prepare a payment only after all three approve the current split.</p>
+        <div id="approvals" class="approvals"></div>
+        <dl>
+          <div><dt>B → A</dt><dd id="amount">—</dd></div>
+          <div><dt>C → A</dt><dd>Unpaid</dd></div>
+        </dl>
+        <div class="actions">
+          <button type="button" id="pay" disabled>Prepare order for current split</button>
+          <button type="button" id="stale" class="secondary" disabled>Try ordering with the draft</button>
+        </div>
+        <p id="status" role="status" aria-live="polite">Loading settlement status…</p>
+        <output id="order" hidden></output>
+      </section>
+    </div>
+    <section class="attempts" aria-labelledby="log-label">
+      <h2 id="log-label">Server response log</h2>
+      <ol id="log" aria-live="polite"></ol>
+    </section>
+    <p>State on this page lives only in browser memory and restarts from the draft on refresh. Member buttons pick a role; they are not authentication or wallet approval.</p>
+  </main>
+</body>
+</html>

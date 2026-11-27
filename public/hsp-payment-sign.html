@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bill:ION · QA payment signature</title>
+  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./hsp-demo.css">
+  <script type="module" src="./hsp-payment-sign.js"></script>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="brand">Bill<span>:ION</span></div>
+      <span class="mode">Testnet payment signature</span>
+    </header>
+    <h1>QA payment signature</h1>
+    <section class="wallet-approval">
+      <p>Choose the JSON printed by the signature preparation script. Signing authorizes a test token transfer.</p>
+      <label for="file">Payment signature request JSON</label>
+      <input id="file" type="file" accept="application/json,.json">
+      <pre id="summary" hidden></pre>
+      <button type="button" id="sign" disabled>Sign with wallet</button>
+      <p id="status" role="status" aria-live="polite">Choose a file.</p>
+    </section>
+  </main>
+</body>
+</html>

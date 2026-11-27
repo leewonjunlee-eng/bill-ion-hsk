@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bill:ION · QA settlement approval</title>
+  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./hsp-demo.css">
+  <script type="module" src="./hsp-wallet-approval.js"></script>
+</head>
+<body>
+  <main>
+    <header><div class="brand">Bill<span>:ION</span></div><span class="mode">Local QA · Settlement consent</span></header>
+    <h1>Approve the split with your wallet</h1>
+    <p class="context">You sign an approval message. Payment happens in a separate HSP authorization step.</p>
+    <section class="wallet-approval" aria-labelledby="manifest-title">
+      <h2 id="manifest-title">Current settlement manifest</h2>
+      <label for="manifest">Exported manifest file</label>
+      <input type="file" id="manifest" accept=".json,application/json">
+      <pre id="message" hidden></pre>
+      <div class="actions">
+        <button id="sign" type="button" disabled>Approve with connected wallet</button>
+        <button id="download" class="secondary" type="button" disabled>Download signatures</button>
+      </div>
+      <p id="status" role="status" aria-live="polite">Choose a manifest file.</p>
+    </section>
+  </main>
+</body>
+</html>

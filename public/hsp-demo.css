@@ -1,0 +1,40 @@
+/* HSP pages sit on top of style.css: its colors, font, buttons and dark mode. Only layout lives here. */
+main { width: min(100% - 32px, 1000px); margin: 0 auto; padding: 24px 0 60px; }
+header, .section-title { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.brand { font-weight: 700; }
+#version { border-radius: 999px; padding: 4px 10px; background: var(--fill); color: var(--label-2); font-size: 0.8125rem; }
+h1 { margin: 28px 0 6px; font-size: 2.125rem; line-height: 1.12; letter-spacing: -0.025em; }
+.context, section p { color: var(--label-2); font-size: 0.9375rem; }
+.layout { max-width: none; padding: 0; margin-top: 20px; grid-template-columns: 1.05fr 1fr; gap: 20px; align-items: stretch; }
+section { background: var(--card); border-radius: 16px; padding: 18px; }
+h2 { font-size: 1.25rem; margin: 0 0 12px; }
+.section-title h2 { margin: 0; }
+ul { list-style: none; margin: 14px 0 24px; padding: 0; }
+li, dl div { display: flex; justify-content: space-between; gap: 10px; border-bottom: 1px solid var(--sep); padding: 12px 0; }
+li span, th { color: var(--label-2); }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; text-align: left; margin-bottom: 20px; }
+td, th { border-bottom: 1px solid var(--sep); padding: 10px 0; }
+td:not(:first-child), th:not(:first-child) { text-align: right; }
+.changed { color: var(--tint); font-weight: 700; }
+.approvals, .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.approvals { margin-top: 14px; }
+button { appearance: none; border: 0; border-radius: 12px; min-height: 44px; padding: 0 16px; font-weight: 600; font-size: 0.9375rem; color: #fff; background: var(--tint); cursor: pointer; }
+button:active { transform: scale(0.97); opacity: 0.85; }
+button.secondary, .approvals button { background: var(--tint-soft); color: var(--tint); }
+button:disabled { opacity: 0.4; cursor: default; transform: none; }
+dd { margin: 0; font-weight: 700; }
+#status { background: var(--fill); border-radius: 12px; color: var(--label); padding: 10px 12px; min-height: 45px; margin: 14px 0 0; }
+output { margin-top: 10px; overflow-wrap: anywhere; font-size: 0.8125rem; color: var(--label-2); }
+output:not([hidden]) { display: block; }
+.attempts, .wallet-approval, .mediation { margin-top: 20px; }
+.mediation dt { flex: 0 0 9em; font-weight: 700; }
+.mediation dd { flex: 1; font-weight: 400; }
+.mediation p { font-size: 0.8125rem; margin-top: 8px; }
+#lines li { flex-wrap: wrap; }
+#lines small { flex-basis: 100%; color: var(--label-2); }
+.attempts ol { margin: 0; padding-left: 20px; font-size: 0.8125rem; line-height: 1.8; overflow-wrap: anywhere; color: var(--label-2); }
+.wallet-approval label, .wallet-approval input { display: block; margin-bottom: 12px; }
+.wallet-approval pre { white-space: pre-wrap; overflow-wrap: anywhere; padding: 12px; background: var(--card-2); border-radius: 12px; }
+@media (max-width: 740px) {
+  .layout { grid-template-columns: 1fr; padding: 0; }
+}

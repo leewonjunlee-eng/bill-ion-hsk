@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  /* Same system colors as public/style.css (dark). The frame is a pure function of time: call seek(seconds). */
+  :root { --card:#1c1c1e; --label:#fff; --label-2:rgba(235,235,245,.65); --sep:rgba(84,84,88,.7); --tint:#0a84ff; --green:#30d158; --orange:#ff9f0a; --danger:#ff453a; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { width:1920px; height:1080px; overflow:hidden; background:#000; color:var(--label); font-family:"Segoe UI",system-ui,sans-serif; }
+  .scene { position:absolute; inset:0; padding:90px 130px; opacity:0; display:flex; flex-direction:column; justify-content:center; }
+  .brand { position:absolute; left:130px; bottom:40px; font-weight:700; font-size:26px; color:var(--label-2); }
+  .tag { position:absolute; right:130px; bottom:34px; font-size:22px; color:var(--label-2); background:var(--card); padding:8px 20px; border-radius:99px; }
+  #bar { position:absolute; left:0; bottom:0; height:6px; background:var(--tint); }
+  .eyebrow { color:var(--tint); font-size:30px; font-weight:700; margin-bottom:14px; }
+  h1 { font-size:128px; letter-spacing:-.04em; line-height:1.05; }
+  h2 { font-size:68px; letter-spacing:-.025em; line-height:1.12; }
+  .lead { font-size:38px; line-height:1.45; color:var(--label-2); margin-top:22px; max-width:1300px; }
+  .center { display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; }
+  .row { display:flex; gap:36px; margin-top:56px; align-items:stretch; }
+  .card { background:var(--card); border-radius:28px; padding:40px; flex:1; }
+  .card b { display:block; font-size:44px; margin-bottom:12px; }
+  .card span { font-size:30px; color:var(--label-2); line-height:1.4; }
+  img { border-radius:22px; box-shadow:0 30px 90px rgba(10,132,255,.16); display:block; }
+  .split { display:grid; grid-template-columns:1fr 760px; gap:80px; align-items:center; height:820px; }
+  .split img { justify-self:center; max-width:760px; max-height:820px; }
+  .wide img { width:1660px; margin-top:56px; }
+  .code { display:inline-block; margin-top:40px; font:700 40px Consolas,monospace; padding:16px 28px; border-radius:16px; }
+  .bad { color:var(--danger); background:rgba(255,69,58,.16); }
+  .good { color:var(--green); background:rgba(48,209,88,.16); }
+  .num { font-size:112px; font-weight:800; font-variant-numeric:tabular-nums; }
+  .person { text-align:center; }
+  .person em { font-style:normal; font-size:34px; color:var(--label-2); display:block; }
+  .step { position:relative; }
+  .step i { font-style:normal; display:inline-grid; place-items:center; width:58px; height:58px; border-radius:50%; background:var(--tint); font-size:28px; font-weight:700; margin-bottom:24px; }
+  .step b { font-size:33px; }
+  .step span { font-size:25px; }
+  ul { list-style:none; margin-top:48px; }
+  li { font-size:38px; padding:24px 0; border-bottom:1px solid var(--sep); display:flex; justify-content:space-between; gap:40px; }
+  li strong { white-space:nowrap; }
+</style>
+</head>
+<body>
+
+<section class="scene center" data-len="6">
+  <h1 data-in="0.2">Bill<span style="color:var(--tint)">:ION</span></h1>
+  <p class="lead" data-in="1.0" style="font-size:52px;color:#fff">A disputed receipt gets renegotiated.</p>
+  <p class="lead" data-in="2.2">Only the version everyone approved can be paid.</p>
+  <p class="lead" data-in="3.4" style="font-size:28px">HSK Chain Horizon Hackathon · Seoul — Agent Payments &amp; A2A Settlement</p>
+</section>
+
+<section class="scene" data-len="10">
+  <div class="eyebrow" data-in="0.1">THE PROBLEM</div>
+  <h2 data-in="0.3">The receipt is real.<br>The argument is who owes which line.</h2>
+  <div class="row">
+    <div class="card" data-in="2.0"><b>1 · One shared bill</b><span>A pays upfront for A, B and C.</span></div>
+    <div class="card" data-in="3.6"><b>2 · A dispute</b><span>B left early and did not eat the later order.</span></div>
+    <div class="card" data-in="5.2"><b style="color:var(--orange)">3 · The risk</b><span>The old request, with the old amount, must not stay payable after the split changes.</span></div>
+  </div>
+</section>
+
+<section class="scene" data-len="8">
+  <div class="split">
+    <div>
+      <div class="eyebrow" data-in="0.1">VERSION 1 · DRAFT</div>
+      <h2 data-in="0.3">Everyone splits everything.</h2>
+      <p class="lead" data-in="1.4">9 units, three people: 3 each. The extra snacks were ordered at 20:40.</p>
+    </div>
+    <img src="shots/receipt-v1.jpg" data-in="0.8">
+  </div>
+</section>
+
+<section class="scene wide" data-len="11">
+  <div class="eyebrow" data-in="0.1">AGENT TO AGENT</div>
+  <h2 data-in="0.3">The agents state the facts. A mediator proposes.</h2>
+  <img src="shots/agents.jpg" data-in="1.2">
+  <p class="lead" data-in="5.0">The mediator only proposes <b style="color:#fff">who shares each line</b>. The server computes every amount.<br><span style="font-size:28px">This recording runs in rule mode: no AI model call. Claim and reply are synthetic inputs.</span></p>
+</section>
+
+<section class="scene" data-len="10">
+  <div class="eyebrow" data-in="0.1">VERSION 2</div>
+  <h2 data-in="0.3">New split. Every earlier approval is cleared.</h2>
+  <div class="row">
+    <div class="card person" data-in="1.2"><em>A</em><div class="num" data-count="3,3.5">3</div></div>
+    <div class="card person" data-in="1.6"><em>B</em><div class="num" data-count="3,2" style="color:var(--tint)">3</div></div>
+    <div class="card person" data-in="2.0"><em>C</em><div class="num" data-count="3,3.5">3</div></div>
+  </div>
+  <p class="lead" data-in="4.6">The total stays 9. C now owes more, so C has to agree too, not only the two people arguing.</p>
+</section>
+
+<section class="scene" data-len="9">
+  <div class="split">
+    <div>
+      <div class="eyebrow" data-in="0.1">SAFEGUARD 1</div>
+      <h2 data-in="0.3">The old version cannot be ordered.</h2>
+      <p class="lead" data-in="1.4">A request against the draft is refused by the server. No order is created.</p>
+      <div class="code bad" data-in="2.6">409 STALE_SNAPSHOT</div>
+    </div>
+    <img src="shots/stale.jpg" data-in="0.8">
+  </div>
+</section>
+
+<section class="scene" data-len="9">
+  <div class="split">
+    <div>
+      <div class="eyebrow" data-in="0.1">SAFEGUARD 2</div>
+      <h2 data-in="0.3">Two approvals are not enough.</h2>
+      <p class="lead" data-in="1.4">A and B agree. C has not. Payment stays stopped.</p>
+      <div class="code bad" data-in="2.6">409 APPROVALS_MISSING</div>
+    </div>
+    <img src="shots/missing.jpg" data-in="0.8">
+  </div>
+</section>
+
+<section class="scene" data-len="9">
+  <div class="split">
+    <div>
+      <div class="eyebrow" data-in="0.1">ALL THREE APPROVE V2</div>
+      <h2 data-in="0.3">Exactly one order: B → A.</h2>
+      <p class="lead" data-in="1.4">C → A stays unpaid. One finished payment is not shown as a finished room.</p>
+      <div class="code good" data-in="2.6">201 · mock order</div>
+    </div>
+    <img src="shots/created.jpg" data-in="0.8">
+  </div>
+</section>
+
+<section class="scene" data-len="14">
+  <div class="eyebrow" data-in="0.1">THE HSP QA PATH · IMPLEMENTED, TESTED WITH STUBBED GATEWAY REPLIES</div>
+  <h2 data-in="0.3">How a payment is guarded end to end</h2>
+  <div class="row">
+    <div class="card step" data-in="1.4"><i>1</i><b>Three signatures</b><br><span>All wallets sign the same revision, amount, parties, token, chain and expiry.</span></div>
+    <div class="card step" data-in="3.2"><i>2</i><b>One order per room</b><br><span>A stale or unpublished revision cannot reserve.</span></div>
+    <div class="card step" data-in="5.0"><i>3</i><b>Match, then sign</b><br><span>The EIP-712 / x402 request must equal the approved terms.</span></div>
+    <div class="card step" data-in="6.8"><i>4</i><b>No blind retry</b><br><span>A lost reply never triggers a second submission.</span></div>
+    <div class="card step" data-in="8.6"><i>5</i><b>Verify on chain</b><br><span>HSP status, both order IDs, Transfer and AuthorizationUsed logs.</span></div>
+  </div>
+  <p class="lead" data-in="10.6">These gates cover payment authority issued through Bill:ION. They do not claim the HSP Gateway enforces revisions.</p>
+</section>
+
+<section class="scene" data-len="10">
+  <div class="eyebrow" data-in="0.1">WHERE IT STANDS</div>
+  <h2 data-in="0.3">What is done, and what is not yet</h2>
+  <ul>
+    <li data-in="1.2"><span>Dispute, re-split, approvals and reservation (mock adapter)</span><strong style="color:var(--green)">Working</strong></li>
+    <li data-in="2.2"><span>QA order, signing check, submission and reconciliation</span><strong style="color:var(--green)">Tested with stubs</strong></li>
+    <li data-in="3.2"><span>Live HSP QA payment</span><strong style="color:var(--orange)">Not yet run</strong></li>
+    <li data-in="4.2"><span>HSK mainnet evidence registry</span><strong style="color:var(--orange)">Not yet deployed</strong></li>
+  </ul>
+</section>
+
+<div class="brand">Bill:ION</div>
+<div class="tag">Mock demo · No real funds move</div>
+<div id="bar"></div>
+
+<script>
+  const scenes = [...document.querySelectorAll('.scene')];
+  let start = 0;
+  const timeline = scenes.map((el) => { const item = { el, start, len: Number(el.dataset.len) }; start += item.len; return item; });
+  window.DURATION = start;
+  const clamp = (x) => Math.min(1, Math.max(0, x));
+  const ease = (x) => 1 - Math.pow(1 - clamp(x), 3);
+  window.seek = (t) => {
+    for (const { el, start: from, len } of timeline) {
+      const local = t - from;
+      const visible = local >= 0 && local < len;
+      el.style.opacity = visible ? Math.min(ease(local / 0.4), ease((len - local) / 0.4)) : 0;
+      for (const node of el.querySelectorAll('[data-in]')) {
+        const p = ease((local - Number(node.dataset.in)) / 0.7);
+        node.style.opacity = p;
+        // Screenshots drift in with a slow zoom; text slides up.
+        node.style.transform = node.tagName === 'IMG' ? `scale(${0.95 + 0.05 * p + 0.015 * clamp(local / len)})` : `translateY(${(1 - p) * 36}px)`;
+      }
+      for (const node of el.querySelectorAll('[data-count]')) {
+        const [a, b] = node.dataset.count.split(',').map(Number);
+        const value = a + (b - a) * ease((local - 2.8) / 1.2);
+        node.textContent = String(Math.round(value * 10) / 10);
+      }
+    }
+    document.getElementById('bar').style.width = `${(t / window.DURATION) * 100}%`;
+  };
+  window.seek(0);
+</script>
+</body>
+</html>
