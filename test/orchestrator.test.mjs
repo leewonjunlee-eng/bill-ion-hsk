@@ -110,7 +110,7 @@ test('이의는 여러 지출에 한 번에 내고, 맞지 않는 점을 비우�
   const mine = await byCs();
   assert.deepEqual(mine.map((d) => d.expenseId).sort(), ['demo-t-bar', 'demo-t-limo'], '같은 지출은 한 번만');
   assert.equal(mine.find((d) => d.expenseId === 'demo-t-bar').claim, '23:10에 자리를 떠났어요.');
-  assert.match(mine.find((d) => d.expenseId === 'demo-t-limo').claim, /공항 리무진 버스/, '비운 이유는 지출 이름을 넣은 기본 문구');
+  assert.match(mine.find((d) => d.expenseId === 'demo-t-limo').claim, /Airport limousine bus/, '비운 이유는 지출 이름을 넣은 기본 문구');
 });
 
 test('라우트: 청구서 보내기와 남의 청구서 답하기(403)', async () => {

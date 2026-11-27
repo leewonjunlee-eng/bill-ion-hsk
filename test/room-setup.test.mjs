@@ -26,7 +26,7 @@ test('방 만들기: 로그인하면 프로필 이름·색으로 들어가고, �
   assert.ok(!html.includes('account.html#profile'), '프로필로 가는 버튼은 없다(가면 적던 내용을 잃는다)');
   assert.match(html, /data-action="range-toggle"/, '기간은 한 줄을 눌러 펼친 달력에서 고른다');
   assert.ok(!html.includes('type="date"'), '브라우저 기본 날짜 칸(연도. 월. 일.)은 쓰지 않는다');
-  assert.match(html, /data-action="cf-foreign" data-id="no">원화만/, '쓴 돈의 통화는 원화만이 기본이다');
+  assert.match(html, /data-action="cf-foreign" data-id="no">KRW only/, '쓴 돈의 통화는 원화만이 기본이다');
   assert.ok(!html.includes('data-action="seed"'), '배포에는 개발용 데모 방이 없다');
 });
 
@@ -44,20 +44,20 @@ test('참가: 로그인 전에는 방 미리보기와 Google 로그인, 로그�
   assert.ok(!out.includes('data-action="join-room"'));
 
   const inn = joinHtml(invite, {}, { profile, dev: false });
-  assert.match(inn, /data-action="join-room"[^>]*>동의하고 참가하기</, '동의는 체크박스가 아니라 무엇에 동의하는지 적은 버튼으로 받는다');
+  assert.match(inn, /data-action="join-room"[^>]*>Agree and join</, '동의는 체크박스가 아니라 무엇에 동의하는지 적은 버튼으로 받는다');
   assert.ok(!inn.includes('type="checkbox"'), '체크박스는 없다(iOS에는 체크박스가 없다)');
-  assert.match(inn, /멤버들에게 보여요/, '버튼 바로 위에 무엇이 보이게 되는지 적는다');
+  assert.match(inn, /members see your profile name/, '버튼 바로 위에 무엇이 보이게 되는지 적는다');
   assert.ok(!inn.includes('data-jf="name"'), '이름 입력칸은 없다');
   assert.ok(inn.includes('&lt;재윤&gt;') && inn.includes('#34c759'));
   assert.ok(!inn.includes('account.html#profile'));
 });
 
 test('기간 글자: 달력에서 고른 두 날짜를 짧게 쓴다', () => {
-  assert.equal(datesLabel('2026-11-07', '2026-11-09'), '11월 7일 – 9일');
-  assert.equal(datesLabel('2026-11-30', '2026-12-02'), '11월 30일 – 12월 2일');
-  assert.equal(datesLabel('2026-12-31', '2027-01-02'), '2026년 12월 31일 – 2027년 1월 2일');
-  assert.equal(datesLabel('2026-11-07', '2026-11-07'), '11월 7일');
-  assert.equal(datesLabel('2026-11-07', ''), '11월 7일');
+  assert.equal(datesLabel('2026-11-07', '2026-11-09'), 'Nov 7 – 9');
+  assert.equal(datesLabel('2026-11-30', '2026-12-02'), 'Nov 30 – Dec 2');
+  assert.equal(datesLabel('2026-12-31', '2027-01-02'), 'Dec 31, 2026 – Jan 2, 2027');
+  assert.equal(datesLabel('2026-11-07', '2026-11-07'), 'Nov 7');
+  assert.equal(datesLabel('2026-11-07', ''), 'Nov 7');
   assert.equal(datesLabel('', ''), '');
 });
 
@@ -69,8 +69,8 @@ test('방 화면: 모두 동의한 정책은 한 줄로 접히고(눌러서 펼�
   const folded = setupHtml({ room, me, avatar });
   assert.ok(!folded.includes('preview-note'), '주황 안내 상자를 쓰지 않는다');
   assert.match(folded, /<button type="button" class="row disclosure" data-action="toggle-policy" aria-expanded="false" aria-controls="policy-detail">/, '줄 전체가 누르는 자리다');
-  assert.match(folded, /실제 낸 원화/);
-  assert.match(folded, /모두 동의함/, '끝난 일은 한 줄로 알린다(사용자 테스트)');
+  assert.match(folded, /Actual KRW paid/);
+  assert.match(folded, /All agreed/, '끝난 일은 한 줄로 알린다(사용자 테스트)');
   assert.match(folded, /<div class="collapsible" id="policy-detail" inert>/, '접힌 내용은 초점·읽기에서 빠진다');
   assert.match(folded, /data-action="edit-policy"/, '바꾸기는 펼친 안에 있다');
 
@@ -81,7 +81,7 @@ test('방 화면: 모두 동의한 정책은 한 줄로 접히고(눌러서 펼�
   assert.match(setupHtml({ room, me, avatar, policyEdit: true }), /aria-expanded="true"/, '바꾸는 중에는 펼쳐 둔다');
 
   const waiting = setupHtml({ room: { ...room, policyAgreedBy: ['me'] }, me, avatar });
-  assert.match(waiting, /동의 전/, '아직 동의하지 않은 사람이 있으면 누가 남았는지 펼쳐 보여 준다');
+  assert.match(waiting, /Not agreed yet/, '아직 동의하지 않은 사람이 있으면 누가 남았는지 펼쳐 보여 준다');
   assert.ok(!waiting.includes('toggle-policy'), '할 일이 남았으면 접지 않는다');
   assert.ok(!waiting.includes('preview-note'));
 });
@@ -90,8 +90,8 @@ test('친구 초대는 방 본문(환율·지출 사이)에 두지 않고, 참�
   const me = { uid: 'me', name: '재윤' };
   const room = { members: [me], policy: 'actual', policyAgreedBy: ['me'], status: 'ready' };
   const body = setupHtml({ room, me, avatar: () => '', invite: { token: 'AbCdEfGhIjKlMnOpQrStUv_-', expiresAt: '2026-11-11T03:00:00Z' } });
-  assert.ok(!body.includes('copy-invite') && !body.includes('친구 초대'), '본문에는 초대 칸이 없다');
-  assert.match(inviteButtonHtml(), /<button[^>]*data-action="open-invite"[^>]*aria-label="친구 초대"/);
+  assert.ok(!body.includes('copy-invite') && !body.includes('친구 초대') && !body.includes('Invite friends'), '본문에는 초대 칸이 없다');
+  assert.match(inviteButtonHtml(), /<button[^>]*data-action="open-invite"[^>]*aria-label="Invite friends"/);
 });
 
 test('초대 시트: 링크 줄(복사·공유 아이콘), 친구에게 보일 초대 화면, 참가하면 바로 보일 참여자 목록', () => {
@@ -100,21 +100,21 @@ test('초대 시트: 링크 줄(복사·공유 아이콘), 친구에게 보일 �
   const room = { name: '오사카 2박 3일', dates: '11월 7일 – 9일', members: [me], fx: { currency: 'JPY' }, policy: 'actual', policyAgreedBy: ['me'], status: 'ready' };
   const invite = { token: 'AbCdEfGhIjKlMnOpQrStUv_-', expiresAt: '2026-11-11T03:00:00Z' };
   const sheet = inviteSheetHtml({ room, me, avatar: () => '<i></i>', invite, canShare: true });
-  assert.match(sheet, /친구에게 이렇게 보여요/);
+  assert.match(sheet, /What your friend sees/);
   assert.match(sheet, /오사카 2박 3일/);
-  assert.match(sheet, /실제 낸 원화/, '친구가 참가 전에 볼 환율 정책');
-  assert.match(sheet, /지금 1명/);
-  assert.match(sheet, /참가하면 여기에 바로 보여요/);
-  assert.match(inviteSheetHtml({ room, me, avatar: () => '', invite: null }), /링크를 만드는 중/, '링크가 없으면 여는 순간 만든다');
+  assert.match(sheet, /Actual KRW paid/, '친구가 참가 전에 볼 환율 정책');
+  assert.match(sheet, /In the room: 1/);
+  assert.match(sheet, /appear here as soon as they join/);
+  assert.match(inviteSheetHtml({ room, me, avatar: () => '', invite: null }), /Creating the link/, '링크가 없으면 여는 순간 만든다');
   const html = sheet;
-  assert.match(html, /<button[^>]*class="icon-btn"[^>]*data-action="copy-invite"[^>]*aria-label="링크 복사"/);
-  assert.match(html, /<button[^>]*class="icon-btn"[^>]*data-action="share-invite"[^>]*aria-label="공유하기"/);
-  assert.ok(!html.includes('>링크 복사<') && !html.includes('>공유하기<'), '글자 버튼은 없다');
+  assert.match(html, /<button[^>]*class="icon-btn"[^>]*data-action="copy-invite"[^>]*aria-label="Copy link"/);
+  assert.match(html, /<button[^>]*class="icon-btn"[^>]*data-action="share-invite"[^>]*aria-label="Share"/);
+  assert.ok(!html.includes('>링크 복사<') && !html.includes('>공유하기<') && !html.includes('>Copy link<') && !html.includes('>Share<'), '글자 버튼은 없다');
   assert.match(html, /<input[^>]*readonly[^>]*data-select-all/, '링크는 눌러서 통째로 고를 수 있다');
-  assert.match(html, /11월 11일까지 열 수 있어요/);
-  assert.match(html, /class="text-btn"[^>]*data-action="make-invite"[^>]*>새 링크 만들기/);
+  assert.match(html, /Opens until November 11/);
+  assert.match(html, /class="text-btn"[^>]*data-action="make-invite"[^>]*>Create new link/);
   const copied = inviteSheetHtml({ room, me, avatar: () => '', invite, copied: true, canShare: false });
-  assert.match(copied, /class="icon-btn done"[^>]*data-action="copy-invite"[^>]*aria-label="복사했어요"/, '복사하면 그 버튼이 체크로 바뀌고 읽어 주기도 바뀐다');
+  assert.match(copied, /class="icon-btn done"[^>]*data-action="copy-invite"[^>]*aria-label="Copied"/, '복사하면 그 버튼이 체크로 바뀌고 읽어 주기도 바뀐다');
   assert.ok(!copied.includes('share-invite'), '공유를 못 하는 브라우저에는 공유 버튼이 없다');
 });
 
@@ -124,15 +124,15 @@ test('초대 시트: 체험 데모에서는 링크를 보내지 않아도 친구
   const me = { uid: 'me', name: '나' };
   const room = { name: '오사카 2박 3일', dates: '11월 6일 – 8일', members: [me], fx: null, policy: 'actual', policyAgreedBy: ['me'], status: 'ready' };
   const invite = { token: 'AbCdEfGhIjKlMnOpQrStUv_-', expiresAt: '2026-11-11T03:00:00Z' };
-  assert.match(inviteSheetHtml({ room, me, avatar: () => '', invite, demo: true }), /<p class="how">[^<]*보내지 않아도[^<]*철수·영희·민수가[^<]*<\/p>/);
-  assert.doesNotMatch(inviteSheetHtml({ room, me, avatar: () => '', invite }), /체험 데모|철수/, '실제 방에는 데모 안내가 없다');
+  assert.match(inviteSheetHtml({ room, me, avatar: () => '', invite, demo: true }), /<p class="how">No need to send the link[^<]*Chulsoo, Younghee and Minsu[^<]*<\/p>/);
+  assert.doesNotMatch(inviteSheetHtml({ room, me, avatar: () => '', invite }), /체험 데모|철수|demo|Chulsoo/i, '실제 방에는 데모 안내가 없다');
 });
 
 // 체험 데모는 방 이름·기간을 미리 채운다. 미리 채운 이름은 누르면 통째로 골라, 바로 타이핑하면 덮어쓴다(깨지기 쉬운 기본값)
 test('방 만들기: 미리 채운 방 이름은 누르면 통째로 골라 바로 덮어쓸 수 있다', () => {
   const preset = createRoomHtml({ ...empty, name: '오사카 2박 3일', start: '2026-11-06', end: '2026-11-08', preset: true }, { profile, dev: false, today: '2026-11-06' });
   assert.match(preset, /<input data-cf="name" value="오사카 2박 3일"[^>]*data-select-all/);
-  assert.match(preset, /11월 6일 – 8일 · 2박 3일/, '기간도 채워져 있다');
+  assert.match(preset, /Nov 6 – 8 · 2 nights/, '기간도 채워져 있다');
   assert.doesNotMatch(createRoomHtml(empty, { profile, dev: false }), /data-cf="name"[^>]*data-select-all/, '직접 적는 빈 칸은 고르지 않는다');
 });
 
@@ -148,31 +148,31 @@ test('로그인 뒤 돌아갈 곳은 이 서비스의 방·초대 주소만 받�
 test('방 만들기: 원화만 쓰는 방(기본)에는 환율 정책을 묻지도 보이지도 않는다', () => {
   const html = createRoomHtml(empty, { profile, dev: false });
   assert.ok(!html.includes('data-action="cf-policy"'), '정책 고르기가 없다');
-  assert.ok(!html.includes('환율'), html.match(/.{20}환율.{20}/)?.[0]);
+  assert.ok(!html.includes('환율') && !/rate policy|exchange.rate/i.test(html), html.match(/.{20}(환율|[Rr]ate).{20}/)?.[0]);
   assert.ok(!html.includes('data-cf="fxCurrency"'), '외화 고르기도 접혀 있다');
 });
 
 test('방 만들기: 외화도 있어요를 고르면 어느 외화인지와 환율 정책을 펼친다', () => {
   const html = createRoomHtml({ ...empty, foreign: true, fxCurrency: 'USD', policy: 'payday' }, { profile, dev: false });
-  assert.match(html, /data-action="cf-foreign" data-id="yes">외화도 있어요/);
+  assert.match(html, /data-action="cf-foreign" data-id="yes">Foreign too/);
   assert.match(html, /aria-checked="true" data-action="cf-foreign" data-id="yes"/);
   assert.match(html, /<select data-cf="fxCurrency">[\s\S]*<option value="USD" selected>US dollar \(USD\)/);
   assert.match(html, /role="radio" aria-checked="true" data-action="cf-policy" data-id="payday"/);
-  assert.match(html, /유럽중앙은행\(ECB\) 기준 환율/, '환율을 어디서 언제 받는지 알린다');
+  assert.match(html, /European Central Bank \(ECB\) reference rate/, '환율을 어디서 언제 받는지 알린다');
 });
 
 test('참가 화면·초대 미리보기: 원화 방은 환율 정책 칸이 없고, 외화 방만 보인다', () => {
   globalThis.location ??= { origin: 'http://localhost:4562', pathname: '/room.html' };
   const krw = { room: { id: 'r-1', name: '회식', dates: '', members: [{ name: '재윤' }] }, alreadyMember: false, settling: false };
-  assert.ok(!joinHtml(krw, {}, { profile }).includes('환율'));
+  assert.doesNotMatch(joinHtml(krw, {}, { profile }), /환율|rate policy|exchange.rate/i);
   const jpy = { ...invite, room: { ...invite.room, currency: 'JPY', policy: 'actual' } };
-  assert.match(joinHtml(jpy, {}, { profile }), /이 방의 환율 정책[\s\S]*JPY로 쓴 돈[\s\S]*실제 낸 원화/);
-  assert.ok(!joinHtml(invite, {}, { profile }).includes('환율 정책'), '정책 값이 와도 통화가 없으면(원화 방) 보이지 않는다');
-  assert.match(joinHtml({ ...krw, settling: true, done: true }, {}, { profile }), /이미 정산이 끝난 방이라 들어갈 수 없어요/);
+  assert.match(joinHtml(jpy, {}, { profile }), /Exchange-rate policy[\s\S]*JPY spending[\s\S]*Actual KRW paid/);
+  assert.doesNotMatch(joinHtml(invite, {}, { profile }), /환율 정책|rate policy|exchange.rate/i, '정책 값이 와도 통화가 없으면(원화 방) 보이지 않는다');
+  assert.match(joinHtml({ ...krw, settling: true, done: true }, {}, { profile }), /This room is already settled, so you can’t join/);
 
   const me = { uid: 'me', name: '재윤' };
   const sheet = inviteSheetHtml({ room: { name: '회식', members: [me], policy: 'actual', policyAgreedBy: ['me'], fx: null }, me, avatar: () => '', invite: null });
-  assert.ok(!sheet.includes('환율'), '예전 원화 방에 남은 정책 값도 보이지 않는다');
+  assert.ok(!sheet.includes('환율') && !/rate policy|exchange.rate/i.test(sheet), '예전 원화 방에 남은 정책 값도 보이지 않는다');
 });
 
 test('방 화면: 원화 방에는 환율 정책 칸·동의 버튼이 없다(예전 방에 남은 값도 무시)', () => {
@@ -189,16 +189,16 @@ test('초대 시트: 방을 만든 사람만 낀 돈이 없는 사람을 내보�
   const room = { name: '회식', members: [me, { uid: 'cs', name: '철수' }, { uid: 'yh', name: '영희' }, { uid: 'ms', name: '민수', left: true }], createdBy: 'me', status: 'ready', fx: null };
   const expenses = [{ id: 'e1', title: '저녁', payer: 'me', present: ['me', 'cs'] }];
   const sheet = inviteSheetHtml({ room, me, avatar: () => '', invite: null, expenses });
-  assert.match(sheet, /지금 3명/, '나간 사람은 세지 않는다');
+  assert.match(sheet, /In the room: 3/, '나간 사람은 세지 않는다');
   assert.ok(!sheet.includes('민수'));
-  assert.match(sheet, /data-action="remove-member" data-id="yh">내보내기/);
-  assert.ok(!sheet.includes('data-id="cs">내보내기'), '낀 지출이 있는 사람은 버튼 대신 까닭');
-  assert.match(sheet, /철수<span class="meta"[^>]*>지출에 몫이 있어 내보낼 수 없어요/);
+  assert.match(sheet, /data-action="remove-member" data-id="yh">Remove/);
+  assert.ok(!sheet.includes('data-id="cs">내보내기') && !sheet.includes('data-id="cs">Remove'), '낀 지출이 있는 사람은 버튼 대신 까닭');
+  assert.match(sheet, /철수<span class="meta"[^>]*>Has a share in an expense, so can’t be removed/);
   assert.ok(!sheet.includes('data-id="me"'), '나는 내보내기가 아니라 나가기로');
-  assert.match(inviteSheetHtml({ room, me, avatar: () => '', invite: null, expenses, armed: 'yh' }), /class="btn sm danger armed"[^>]*data-id="yh">한 번 더 누르면 내보내요/);
+  assert.match(inviteSheetHtml({ room, me, avatar: () => '', invite: null, expenses, armed: 'yh' }), /class="btn sm danger armed"[^>]*data-id="yh">Tap again to remove/);
   assert.match(inviteSheetHtml({ room, me, avatar: () => '', invite: null, expenses, removeError: { uid: 'yh', message: '바뀌었어요' } }), /영희[\s\S]*role="alert"[^>]*>바뀌었어요/, '막힌 까닭은 누른 줄 바로 아래에');
   const asFriend = inviteSheetHtml({ room, me: { uid: 'cs', name: '철수' }, avatar: () => '', invite: null, expenses });
-  assert.ok(!asFriend.includes('remove-member') && !asFriend.includes('내보낼 수 없어요'), '방을 만든 사람이 아니면 내보내기가 없다');
+  assert.ok(!asFriend.includes('remove-member') && !asFriend.includes('내보낼 수 없어요') && !asFriend.includes('can’t be removed'), '방을 만든 사람이 아니면 내보내기가 없다');
 });
 
 test('나가기 시트: 돈이 남아 있으면 까닭만 보이고 나가기 버튼이 없다', () => {
@@ -206,18 +206,18 @@ test('나가기 시트: 돈이 남아 있으면 까닭만 보이고 나가기 �
   assert.match(blocked, /재윤에게 보낼 ₩15,000/);
   assert.ok(!blocked.includes('data-action="leave-room"'));
   const ready = leaveSheetHtml({ room: { status: 'ready' }, why: null });
-  assert.match(ready, /class="btn danger" data-action="leave-room"[^>]*>이 방에서 나가기/);
-  assert.match(ready, /내 방 목록에서도 빠져요[\s\S]*초대 링크를 다시/, '무엇을 잃는지 버튼 위에 적는다');
+  assert.match(ready, /class="btn danger" data-action="leave-room"[^>]*>Leave this room/);
+  assert.match(ready, /disappears from My rooms[\s\S]*invite link again/, '무엇을 잃는지 버튼 위에 적는다');
   const done = leaveSheetHtml({ room: { status: 'done' }, why: null, error: '이미 나갔어요' });
-  assert.match(done, /정산이 끝난 방이라 나갈 수 있어요/);
-  assert.ok(!done.includes('초대 링크를 다시'), '끝난 방은 다시 들어올 수 없다');
+  assert.match(done, /This room is settled, so you can leave/);
+  assert.ok(!done.includes('초대 링크를 다시') && !done.includes('invite link again'), '끝난 방은 다시 들어올 수 없다');
   assert.match(done, /role="alert">이미 나갔어요/);
-  assert.match(leaveSheetHtml({ room: {}, why: null, busy: true }), /disabled>나가는 중…/);
+  assert.match(leaveSheetHtml({ room: {}, why: null, busy: true }), /disabled>Leaving…/);
 });
 
 // 나가기 시트는 다음 할 일 카드(.next) 밖, 시트 안에 그려진다. 버튼 줄 간격이 .next에만 있으면 '이 방에서 나가기'와 '그대로 있기'가 붙는다(11/5)
 test('버튼 줄(.actions)은 어디에 있든 버튼 사이가 8px 떨어진다(나가기 시트 포함)', () => {
-  assert.match(leaveSheetHtml({ room: { status: 'done' }, why: null }), /<div class="actions"><button[^>]*data-action="leave-room"[\s\S]*data-action="close-sheet">그대로 있기<\/button><\/div>/);
+  assert.match(leaveSheetHtml({ room: { status: 'done' }, why: null }), /<div class="actions"><button[^>]*data-action="leave-room"[\s\S]*data-action="close-sheet">Stay<\/button><\/div>/);
   const css = readFileSync(new URL('../public/style.css', import.meta.url), 'utf8');
   assert.match(css, /^\.actions \{ display: flex; gap: 8px; flex-wrap: wrap; \}$/m, '카드·알림·시트 어디서든 같은 규칙');
   assert.doesNotMatch(css, /\.(next|pop-todo) \.actions \{/, '같은 규칙을 자리마다 따로 두지 않는다');
@@ -264,9 +264,9 @@ test('위쪽 알림은 글이 길수록 오래 두되 2.5~8초 사이', () => {
 
 test('정산이 끝난 방의 카드에서 바로 나가기 시트를 연다(메뉴에 숨기지 않는다)', () => {
   const html = doneCardHtml();
-  assert.match(html, /<p class="eyebrow">정산 완료<\/p><h2>정산이 끝났어요<\/h2>/);
-  assert.match(html, /<button type="button" class="btn secondary" data-action="open-leave" aria-haspopup="dialog">이 방에서 나가기<\/button>/, '메뉴와 같은 이름으로, 시트가 열린다는 걸 알린다');
-  assert.match(html, /내 방 목록에서도 빠져요/, '누르면 무엇이 달라지는지 버튼 가까이에 적는다');
+  assert.match(html, /<p class="eyebrow">Settled<\/p><h2>Settlement is complete<\/h2>/);
+  assert.match(html, /<button type="button" class="btn secondary" data-action="open-leave" aria-haspopup="dialog">Leave this room<\/button>/, '메뉴와 같은 이름으로, 시트가 열린다는 걸 알린다');
+  assert.match(html, /removes it from My rooms/, '누르면 무엇이 달라지는지 버튼 가까이에 적는다');
   const src = readFileSync(new URL('../public/room.js', import.meta.url), 'utf8');
   assert.match(src, /room\.status === 'done'\) return doneCardHtml\(\)/, '방 화면의 다음 할 일 카드가 이 카드를 쓴다');
 });

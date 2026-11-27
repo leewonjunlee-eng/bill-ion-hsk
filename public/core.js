@@ -2,10 +2,10 @@
 // AI는 '줄마다 누구 몫인가'만 추정하고, 환율 적용·나누기·송금 경로는 코드가 정한다.
 // 모든 함수는 방(room)과 지출(expense)을 인자로 받는다. 사람 키는 member.uid다.
 
-export const won = (n) => `₩${Math.round(n).toLocaleString('ko-KR')}`;
-export const yen = (n) => `¥${Math.round(n).toLocaleString('ko-KR')}`;
+export const won = (n) => `₩${Math.round(n).toLocaleString('en-US')}`;
+export const yen = (n) => `¥${Math.round(n).toLocaleString('en-US')}`;
 // 원·엔이 아닌 외화는 센트 같은 소수 둘째 자리까지 보인다(#55 외화 방)
-export const money = (n, currency) => (currency === 'KRW' ? won(n) : currency === 'JPY' ? yen(n) : `${(Math.round(n * 100) / 100).toLocaleString('ko-KR', { maximumFractionDigits: 2 })} ${currency}`);
+export const money = (n, currency) => (currency === 'KRW' ? won(n) : currency === 'JPY' ? yen(n) : `${(Math.round(n * 100) / 100).toLocaleString('en-US', { maximumFractionDigits: 2 })} ${currency}`);
 // 'YYYY-MM-DD' → 'M/D'
 export const dayLabel = (d) => `${Number(d.slice(5, 7))}/${Number(d.slice(8, 10))}`;
 
@@ -22,28 +22,28 @@ export const isForeign = (room) => Boolean(room?.fx?.currency);
 // 환율 정책에 따라 이 지출을 원화로 바꾸고, 그 근거를 한 줄로 남긴다.
 export function toKrw(exp, room, policy) {
   const amount = amountOf(exp);
-  if (exp.currency === 'KRW') return { krw: amount, how: '원화 결제' };
+  if (exp.currency === 'KRW') return { krw: amount, how: 'Paid in KRW' };
   const fx = room.fx;
   const cur = money(amount, exp.currency);
   const day = fx.base[exp.date];
   if (policy === 'settle' && fx.settle) {
-    return { krw: Math.round((amount * fx.settle.rate) / 100), how: `${cur} × 정산일(${dayLabel(fx.settle.date)}) 기준율 ${fx.settle.rate.toFixed(2)}원/100` };
+    return { krw: Math.round((amount * fx.settle.rate) / 100), how: `${cur} × settlement-day (${dayLabel(fx.settle.date)}) base rate ${fx.settle.rate.toFixed(2)} KRW/100` };
   }
   // 정산일 환율은 청구서를 처음 보낼 때 정해진다(#55). 그 전에는 결제일 기준율로 미리 보여 준다
   if (policy === 'payday' || policy === 'settle') {
-    const later = policy === 'settle' ? ' · 정산일 환율은 청구서를 보낼 때 정해져요' : '';
-    return { krw: Math.round((amount * day) / 100), how: `${cur} × 결제일(${dayLabel(exp.date)}) 기준율 ${day.toFixed(2)}원/100${later}` };
+    const later = policy === 'settle' ? ' · the settlement-day rate is set when invoices are sent' : '';
+    return { krw: Math.round((amount * day) / 100), how: `${cur} × payment-day (${dayLabel(exp.date)}) base rate ${day.toFixed(2)} KRW/100${later}` };
   }
   if (exp.method === 'card') {
     return {
       krw: Math.round(((amount * day) / 100) * (1 + fx.cardFee)),
-      how: `카드 청구액: ${cur} × ${day.toFixed(2)}원/100 × 해외 이용 수수료 ${(fx.cardFee * 100).toFixed(1)}%`,
+      how: `Card charge: ${cur} × ${day.toFixed(2)} KRW/100 × foreign transaction fee ${(fx.cardFee * 100).toFixed(1)}%`,
     };
   }
   const rate = fx.cash?.[exp.payer];
   // 환전한 환율을 적지 않았으면(#55 실제 방) 결제일 기준율로 셈하고 그렇다고 밝힌다
-  if (!rate) return { krw: Math.round((amount * day) / 100), how: `현금: ${cur} × 결제일(${dayLabel(exp.date)}) 기준율 ${day.toFixed(2)}원/100 · ${nameOf(room.members, exp.payer)}의 환전 환율이 없어서` };
-  return { krw: Math.round((amount * rate) / 100), how: `현금: ${cur} × ${nameOf(room.members, exp.payer)}가 환전한 평균 ${rate.toFixed(2)}원/100` };
+  if (!rate) return { krw: Math.round((amount * day) / 100), how: `Cash: ${cur} × payment-day (${dayLabel(exp.date)}) base rate ${day.toFixed(2)} KRW/100 · no exchange rate recorded for ${nameOf(room.members, exp.payer)}` };
+  return { krw: Math.round((amount * rate) / 100), how: `Cash: ${cur} × ${nameOf(room.members, exp.payer)}’s average exchange rate ${rate.toFixed(2)} KRW/100` };
 }
 
 // 사람별 몫. split이 'items'면 줄마다 그 줄의 몫인 사람끼리 나누고, 아니면 함께 있던 사람이 똑같이 나눈다.
@@ -104,8 +104,10 @@ export function settle(rows) {
 
 // --- Gemini가 없을 때 쓰는 규칙 배분. 서버의 대체 응답과 화면의 오프라인 모드가 함께 쓴다. ---
 const mentions = (memory, p, re) => (memory[p] || []).find((m) => re.test(m));
-const NO_ALCOHOL = /술을\s*(마시지|안\s*마시|못\s*마시)/;
-const NO_RAW = /날생선|회를?\s*(먹지|안\s*먹|못\s*먹)/;
+// 비서 기억은 사람이 쓴 글이라 한국어와 영어를 모두 알아본다
+const NO = String.raw`\b(?:don['’]?t|doesn['’]?t|do not|does not|can['’]?t|cannot|can not|won['’]?t|never)`;
+const NO_ALCOHOL = new RegExp(String.raw`술을\s*(?:마시지|안\s*마시|못\s*마시)|${NO}\s+(?:drink|have)s?\s+(?:any\s+)?(?:alcohol|liquor)\b`, 'i');
+const NO_RAW = new RegExp(String.raw`날생선|회를?\s*(?:먹지|안\s*먹|못\s*먹)|${NO}\s+(?:eat|have)s?\s+(?:any\s+)?(?:raw\s+(?:fish|seafood)|sashimi)\b`, 'i');
 const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 export function ruleAllocate(exp, memoryByUid, members, presentAt = () => exp.present) {
@@ -119,7 +121,7 @@ export function ruleAllocate(exp, memoryByUid, members, presentAt = () => exp.pr
       if (m) notes.push(`${name(p)}'s agent memory “${m}”`);
       return !m;
     });
-    const itemRe = new RegExp(escapeRe(it.name));
+    const itemRe = new RegExp(escapeRe(it.name), 'i');
     const named = eligible.filter((p) => mentions(memoryByUid, p, itemRe));
     const sober = present.filter((p) => mentions(memoryByUid, p, NO_ALCOHOL));
     const except = notes.length ? ` (${notes.join(', ')} → excluded)` : '';

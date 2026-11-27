@@ -11,7 +11,7 @@ test('profileFormHtml: 견본마다 라디오 하나, 지금 색만 골라져 �
   assert.equal(r.length, PROFILE_COLORS.length);
   assert.deepEqual(r.filter((x) => x.checked).map((x) => x.value.toLowerCase()), ['#5856d6']);
   for (const [, label] of PROFILE_COLORS) assert.match(html, new RegExp(`aria-label="${label}"`));
-  assert.doesNotMatch(html, /지금 색/);
+  assert.doesNotMatch(html, /지금 색|Current color/i);
 });
 
 test('profileFormHtml: 견본에 없는 색이면 지우지 않고 맨 앞에 지금 색으로 둔다', () => {

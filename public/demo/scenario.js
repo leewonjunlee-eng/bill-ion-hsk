@@ -4,29 +4,29 @@
 import { DEMO_EXPENSES, DEMO_MEMORY } from '../data.js';
 
 export const ME = 'me';
-export const ME_PROFILE = { id: ME, name: '나', color: '#007aff' };
+export const ME_PROFILE = { id: ME, name: 'Me', color: '#007aff' };
 
 // 가상 계좌다. 실제 계좌가 아니다
 export const FRIENDS = [
   {
-    uid: 'cs', name: '철수', color: '#248a3d',
+    uid: 'cs', name: 'Chulsoo', color: '#248a3d',
     memory: DEMO_MEMORY.철수,
     // 낸 돈이 가장 많다. 이의가 오면 중재 비서에게 맡긴다
     rules: { autoAccept: 150_000, sendWhen: 'manual', onDispute: 'mediator', notify: 'actions' },
-    payout: { bank: '토스뱅크', accountNo: '100000000002', holder: '철수' },
+    payout: { bank: '토스뱅크', accountNo: '100000000002', holder: 'Chulsoo' },
   },
   {
-    uid: 'yh', name: '영희', color: '#af52de',
+    uid: 'yh', name: 'Younghee', color: '#af52de',
     memory: DEMO_MEMORY.영희,
     rules: { autoAccept: 100_000, sendWhen: 'manual', onDispute: 'ask', notify: 'actions' },
-    payout: { bank: '카카오뱅크', accountNo: '333300000003', holder: '영희' },
+    payout: { bank: '카카오뱅크', accountNo: '333300000003', holder: 'Younghee' },
   },
   {
-    uid: 'ms', name: '민수', color: '#c93400',
+    uid: 'ms', name: 'Minsu', color: '#c93400',
     memory: DEMO_MEMORY.민수,
     // 한도가 작아서 청구서가 오면 비서가 민수에게 묻는다(진행자가 민수 대신 받는다)
     rules: { autoAccept: 50_000, sendWhen: 'manual', onDispute: 'ask', notify: 'actions' },
-    payout: { bank: '국민은행', accountNo: '940200000004', holder: '민수' },
+    payout: { bank: '국민은행', accountNo: '940200000004', holder: 'Minsu' },
   },
 ];
 export const friendOf = (uid) => FRIENDS.find((f) => f.uid === uid);
@@ -40,18 +40,26 @@ export function fakeRate(currency, date) {
   return Math.round(base * (1 + wobble / 2000) * 100) / 100;
 }
 
-// '11월 7일 – 9일'·'2026년 12월 30일 – 2027년 1월 1일' 같은 방 기간 글에서 여행 첫 사흘을 읽는다(당일·1박이면 마지막 날에 멈춘다).
+// 'Nov 7 – 9'·'Dec 30, 2026 – Jan 1, 2027' 같은 방 기간 글(date-range.js의 datesLabel)에서 여행 첫 사흘을 읽는다(당일·1박이면 마지막 날에 멈춘다).
+// 예전에 저장한 '11월 7일 – 9일' 형식도 읽는다.
 // 못 읽으면 오늘부터 사흘
 export const addDays = (day, n) => new Date(Date.parse(`${day}T00:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10);
 
 // 새 방 만들기에 미리 채우는 값: 이 이야기의 방 이름과 오늘부터 2박 3일(팀 점검 11/5: 매번 적지 않게).
 // preset이면 이름 칸을 누를 때 통째로 골라, 바로 타이핑하면 덮어쓴다
-export const roomDraft = (today) => ({ name: '오사카 2박 3일', start: today, end: addDays(today, 2), preset: true });
+export const roomDraft = (today) => ({ name: 'Osaka 3-day trip', start: today, end: addDays(today, 2), preset: true });
 const DAY_RE = /(?:(\d{4})년 )?(?:(\d{1,2})월 )?(\d{1,2})일/g;
+const EN_DAY_RE = /(?:\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* )?\b(\d{1,2})\b(?:, (\d{4}))?/g;
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+// 두 형식 모두 [전체, 연, 월, 일] 모양으로 맞춘다. 영어 끝 날짜의 월은 생략될 수 있다('Nov 7 – 9')
+const daysIn = (label) => {
+  const ko = [...label.matchAll(DAY_RE)];
+  return ko.length ? ko : [...label.matchAll(EN_DAY_RE)].map(([all, m, d, y]) => [all, y, m && MONTHS.indexOf(m) + 1, d]);
+};
 const iso = (y, m, d) => new Date(Date.UTC(y, m - 1, d)).toISOString().slice(0, 10);
 export function tripDays(label, today) {
   const [y0, m0] = today.split('-').map(Number);
-  const found = [...String(label ?? '').matchAll(DAY_RE)];
+  const found = daysIn(String(label ?? ''));
   if (!found.length || !found[0][2]) return [0, 1, 2].map((n) => addDays(today, n));
   const [, sy, sm, sd] = found[0];
   const start = iso(Number(sy || y0), Number(sm), Number(sd));
@@ -100,12 +108,12 @@ export function sampleReceipt(room, today) {
   const yen = room.fx?.currency === 'JPY';
   const items = IZAKAYA.items.map(({ id, name, qty, unit, tags }) => ({ id, name, qty, unit: yen ? unit : wonOf(unit, date), tags }));
   return {
-    merchant: '이자카야 나니와',
+    merchant: 'Izakaya Naniwa',
     currency: yen ? 'JPY' : 'KRW',
     date,
     time: IZAKAYA.time,
     total: items.reduce((s, it) => s + it.qty * it.unit, 0),
     items,
-    notes: ['체험용 데모라 고른 사진 대신 샘플 영수증(이자카야 나니와)을 읽은 결과예요'],
+    notes: ['Demo: this is a sample receipt (Izakaya Naniwa), not your photo'], // 80자 안(receipt.mjs가 자른다)
   };
 }

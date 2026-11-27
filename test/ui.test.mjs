@@ -5,10 +5,10 @@ import { esc, topic, subj, whose, restNote, allocLabel, allocButton, groupRuns, 
 import { reduceMotion } from '../public/motion.js';
 
 test('allocButton: 나눈 뒤 바뀐 게 없으면 막고, 남은 일을 알려 준다', () => {
-  assert.deepEqual(allocButton({ allocated: false, fresh: false, flagged: 0 }), { label: '비서에게 나누기 맡기기', disabled: false, hint: '' });
-  assert.deepEqual(allocButton({ allocated: true, fresh: false, flagged: 1 }), { label: '비서에게 다시 나누기', disabled: false, hint: '' }); // 기억이 바뀌었다
-  assert.deepEqual(allocButton({ allocated: true, fresh: true, flagged: 1 }), { label: '비서가 나누기를 마쳤어요', disabled: true, hint: '확인 필요한 1줄만 확인하면 끝나요.' });
-  assert.deepEqual(allocButton({ allocated: true, fresh: true, flagged: 0 }), { label: '나누기를 모두 마쳤어요', disabled: true, hint: '지출을 고치거나 비서의 기억이 바뀌면 다시 나눌 수 있어요.' });
+  assert.deepEqual(allocButton({ allocated: false, fresh: false, flagged: 0 }), { label: 'Let agents split it', disabled: false, hint: '' });
+  assert.deepEqual(allocButton({ allocated: true, fresh: false, flagged: 1 }), { label: 'Ask agents to split again', disabled: false, hint: '' }); // 기억이 바뀌었다
+  assert.deepEqual(allocButton({ allocated: true, fresh: true, flagged: 1 }), { label: 'Agents finished splitting', disabled: true, hint: 'Just confirm the lines that need review (1).' });
+  assert.deepEqual(allocButton({ allocated: true, fresh: true, flagged: 0 }), { label: 'All lines are split', disabled: true, hint: 'You can split again if the expense or agent memories change.' });
 });
 
 test('조사: 받침에 따라 은/는, 이/가, 나는 내가', () => {
@@ -25,7 +25,7 @@ test('esc: HTML 특수문자를 바꾼다', () => {
 
 test('restNote: 남은 원이 있을 때만 한 줄로 알린다', () => {
   assert.equal(restNote(0), '');
-  assert.equal(restNote(1), '<p class="group-note">나누고 남은 ₩1은 낸 사람 몫에 더했어요.</p>');
+  assert.equal(restNote(1), '<p class="group-note">The ₩1 left over after splitting was added to the payer’s share.</p>');
 });
 
 test('disputeWaiting: 지출을 낸 사람과 이의를 낸 사람 중 아직 동의하지 않은 사람', () => {
@@ -39,16 +39,16 @@ test('disputeWaiting: 지출을 낸 사람과 이의를 낸 사람 중 아직 �
 test('disputeNote: 동의·거부한 뒤 방 화면에 남길 한 줄. 지금 이의 상태로 만든다', () => {
   const exp = { title: '2차 바', payer: 'me' };
   const nameOf = (u) => ({ me: '나', ms: '민수', cs: '철수' })[u];
-  assert.equal(disputeNote({ status: 'proposed', by: 'ms', agreedBy: ['me'] }, exp, nameOf), '중재안에 동의했어요. 민수의 동의를 기다려요.');
-  assert.equal(disputeNote({ status: 'proposed', by: 'ms', agreedBy: ['ms'] }, { ...exp, payer: 'cs' }, nameOf), '중재안에 동의했어요. 철수의 동의를 기다려요.');
-  assert.equal(disputeNote({ status: 'resolved', by: 'ms', agreedBy: ['ms', 'me'] }, exp, nameOf), '양쪽이 동의해서 ‘2차 바’를 중재안대로 다시 나눴어요. 청구서도 다시 보냈어요.');
+  assert.equal(disputeNote({ status: 'proposed', by: 'ms', agreedBy: ['me'] }, exp, nameOf), 'The mediation proposal was accepted. Waiting for 민수 to accept.');
+  assert.equal(disputeNote({ status: 'proposed', by: 'ms', agreedBy: ['ms'] }, { ...exp, payer: 'cs' }, nameOf), 'The mediation proposal was accepted. Waiting for 철수 to accept.');
+  assert.equal(disputeNote({ status: 'resolved', by: 'ms', agreedBy: ['ms', 'me'] }, exp, nameOf), 'Both accepted, so “2차 바” was split again using the mediation proposal. Invoices were sent again.');
 });
 
 test('disputeNote: 거부로 끝난 이의는 누가 거부했는지와 다음 단계를 알린다', () => {
   const exp = { title: '2차 바', payer: 'me' };
   const nameOf = (u) => ({ me: '나', ms: '민수', cs: '철수' })[u];
-  assert.equal(disputeNote({ status: 'dismissed', by: 'ms', agreedBy: ['ms'], rejectedBy: 'me' }, exp, nameOf), '내가 중재안을 거부해서 ‘2차 바’ 이의가 끝났어요. 지금 배분 그대로 정산해요.');
-  assert.equal(disputeNote({ status: 'withdrawn', by: 'ms', agreedBy: [], rejectedBy: 'ms' }, exp, nameOf), '민수가 중재안을 거부하고 ‘2차 바’ 이의를 거뒀어요. 지금 배분 그대로 정산해요.');
+  assert.equal(disputeNote({ status: 'dismissed', by: 'ms', agreedBy: ['ms'], rejectedBy: 'me' }, exp, nameOf), '나 rejected the proposal, so the dispute on “2차 바” ended. It settles with the current split.');
+  assert.equal(disputeNote({ status: 'withdrawn', by: 'ms', agreedBy: [], rejectedBy: 'ms' }, exp, nameOf), '민수 rejected the proposal and withdrew the dispute on “2차 바”. It settles with the current split.');
 });
 
 test('disputeChoices: 중재안이 살아 있는 동안 당사자만 동의·거부하고 줄별 사람을 고친다', () => {
@@ -69,10 +69,10 @@ test('whose: 나는 내 몫, 다른 이름은 그대로', () => {
 });
 
 test('allocLabel: 어떻게 나눴는지 짧게 알린다', () => {
-  assert.equal(allocLabel({ source: 'gemini-3.8-flash', how: 'gemini', latencyMs: 2000 }), 'Gemini 3.8 Flash · 2.0초');
-  assert.equal(allocLabel({ source: 'gemini-3.8-flash', how: 'cache', latencyMs: 3 }), 'Gemini 3.8 Flash · 이전 답 재사용');
-  assert.equal(allocLabel({ source: 'rules', how: 'obvious', latencyMs: 1 }), 'AI 없이 나눔');
-  assert.equal(allocLabel({ source: 'rules', how: 'rules', latencyMs: 0 }), '규칙');
+  assert.equal(allocLabel({ source: 'gemini-3.8-flash', how: 'gemini', latencyMs: 2000 }), 'Gemini 3.8 Flash · 2.0s');
+  assert.equal(allocLabel({ source: 'gemini-3.8-flash', how: 'cache', latencyMs: 3 }), 'Gemini 3.8 Flash · reused earlier answer');
+  assert.equal(allocLabel({ source: 'rules', how: 'obvious', latencyMs: 1 }), 'Split without AI');
+  assert.equal(allocLabel({ source: 'rules', how: 'rules', latencyMs: 0 }), 'Rules');
 });
 
 test('groupRuns: 이어진 같은 종류의 기록만 묶고, 할 일이 있거나 종류가 없으면 묶지 않는다', () => {
@@ -93,10 +93,10 @@ test('logItemHtml: 안 읽은 기록 표시와 덧붙일 내용', () => {
 // 근거(규칙·수치)는 말풍선 밖 '왜 그렇게 했나요'를 눌러야 펼쳐지고, 같은 분의 시각은 한 번만 보인다
 test('logItemHtml: 받는 사람은 문장처럼, 근거는 펼쳐 보기로, 빈 시각은 그리지 않는다', () => {
   const html = logItemHtml({ avatar: '', who: '민수의 비서', to: '중재 비서', time: '9:01', text: '동의할게요', meta: '규칙: 근거와 맞으면 <동의>' });
-  assert.match(html, /<span class="to">중재 비서에게<\/span>/);
+  assert.match(html, /<span class="to">to 중재 비서<\/span>/);
   assert.doesNotMatch(html, /→/);
   assert.match(html, /<p class="text">동의할게요<\/p>/);
-  assert.match(html, /<details class="why"><summary>왜 그렇게 했나요<\/summary><p>규칙: 근거와 맞으면 &lt;동의&gt;<\/p><\/details>/);
+  assert.match(html, /<details class="why"><summary>Why did it do that\?<\/summary><p>규칙: 근거와 맞으면 &lt;동의&gt;<\/p><\/details>/);
   const quiet = logItemHtml({ avatar: '', who: '나의 비서', time: '', text: '다음 말' });
   assert.doesNotMatch(quiet, /<time>/);
   assert.doesNotMatch(quiet, /class="why"|class="to"/);
@@ -136,20 +136,20 @@ test('qrImageUrl: 빈 값이면 null', () => {
 
 test('disputeNote: 지출이 바뀌어 닫힌 이의도 알린다', () => {
   const exp = { title: '2차 바', payer: 'me' };
-  assert.equal(disputeNote({ status: 'superseded', by: 'ms', agreedBy: ['ms', 'me'] }, exp, () => '나'), '지출이 바뀌어 ‘2차 바’ 이의가 닫혔어요.');
+  assert.equal(disputeNote({ status: 'superseded', by: 'ms', agreedBy: ['ms', 'me'] }, exp, () => '나'), 'The dispute on “2차 바” closed because the expense changed.');
 });
 
 test('disputeStatus: 이의 목록의 한 줄. 열린 이의는 누구를 기다리는지, 끝난 이의는 어떻게 끝났는지', () => {
   const exp = { title: '2차 바', payer: 'me' };
   const nameOf = (u) => ({ me: '나', ms: '민수', cs: '철수' })[u];
   const d = (over) => ({ status: 'proposed', by: 'ms', agreedBy: [], ...over });
-  assert.equal(disputeStatus(d({ status: 'open' }), exp, nameOf), '아직 중재 전이에요');
-  assert.equal(disputeStatus(d({ agreedBy: ['ms'] }), exp, nameOf), '중재안이 나왔어요. 나의 동의를 기다려요');
-  assert.equal(disputeStatus(d(), exp, nameOf), '중재안이 나왔어요. 나·민수의 동의를 기다려요');
-  assert.equal(disputeStatus(d({ status: 'resolved', agreedBy: ['ms', 'me'] }), exp, nameOf), '양쪽이 동의해서 다시 나눴어요');
-  assert.equal(disputeStatus(d({ status: 'withdrawn', rejectedBy: 'ms' }), exp, nameOf), '민수가 중재안을 거부하고 이의를 거뒀어요');
-  assert.equal(disputeStatus(d({ status: 'dismissed', rejectedBy: 'me' }), exp, nameOf), '내가 중재안을 거부해서 끝났어요');
-  assert.equal(disputeStatus(d({ status: 'superseded' }), exp, nameOf), '지출이 바뀌어 닫혔어요');
+  assert.equal(disputeStatus(d({ status: 'open' }), exp, nameOf), 'Not mediated yet');
+  assert.equal(disputeStatus(d({ agreedBy: ['ms'] }), exp, nameOf), 'A mediation proposal is ready. Waiting for 나 to accept');
+  assert.equal(disputeStatus(d(), exp, nameOf), 'A mediation proposal is ready. Waiting for 나, 민수 to accept');
+  assert.equal(disputeStatus(d({ status: 'resolved', agreedBy: ['ms', 'me'] }), exp, nameOf), 'Both accepted, so it was split again');
+  assert.equal(disputeStatus(d({ status: 'withdrawn', rejectedBy: 'ms' }), exp, nameOf), '민수 rejected the proposal and withdrew the dispute');
+  assert.equal(disputeStatus(d({ status: 'dismissed', rejectedBy: 'me' }), exp, nameOf), '나 rejected the proposal, so the dispute ended');
+  assert.equal(disputeStatus(d({ status: 'superseded' }), exp, nameOf), 'Closed because the expense changed');
 });
 
 test('disputeLive: 열린(open·proposed) 이의만', () => {
@@ -161,10 +161,10 @@ test('중재안을 고친 뒤의 한 줄들: 누가 고쳤는지 알리고, 고�
   const exp = { title: '2차 바', payer: 'me' };
   const nameOf = (u) => ({ me: '나', ms: '민수' })[u];
   const revised = { status: 'proposed', by: 'ms', agreedBy: ['me'], proposal: { source: 'human', revisedBy: 'me', rev: 1 } };
-  assert.equal(allocLabel({ source: 'human' }), '당사자가 고친 배분');
-  assert.equal(disputeStatus(revised, exp, nameOf), '내가 중재안을 고쳤어요. 민수의 동의를 기다려요');
-  assert.equal(disputeNote(revised, exp, nameOf), '내가 중재안을 고쳐 다시 제안했어요. 민수의 동의를 기다려요.');
-  assert.equal(disputeNote({ ...revised, status: 'resolved', agreedBy: ['me', 'ms'] }, exp, nameOf), '양쪽이 동의해서 ‘2차 바’를 고친 배분대로 다시 나눴어요. 청구서도 다시 보냈어요.');
+  assert.equal(allocLabel({ source: 'human' }), 'Split edited by a party');
+  assert.equal(disputeStatus(revised, exp, nameOf), '나 edited the mediation proposal. Waiting for 민수 to accept');
+  assert.equal(disputeNote(revised, exp, nameOf), '나 edited the proposal and sent it again. Waiting for 민수 to accept.');
+  assert.equal(disputeNote({ ...revised, status: 'resolved', agreedBy: ['me', 'ms'] }, exp, nameOf), 'Both accepted, so “2차 바” was split again using the edited split. Invoices were sent again.');
 });
 
 const bar = {
@@ -199,7 +199,7 @@ test('proposalLinesHtml: 당사자에게는 줄마다 지출 시트와 같은 �
 test('proposalLinesHtml: 고친 줄은 고친 대로 눌리고 "내가 고친 줄"로 표시된다', () => {
   const html = proposalLinesHtml(bar, proposal, { ...lineOpts, editable: true, draft: { w: ['me', 'cs', 'ms'], n: ['me', 'cs', 'ms'] } });
   assert.deepEqual(picksOf(html).filter(([line]) => line === 'w').map(([, , on]) => on), [true, true, true]);
-  assert.equal((html.match(/내가 고친 줄/g) ?? []).length, 1); // 중재안과 같아진 줄은 고친 줄이 아니다
+  assert.equal((html.match(/Line you edited/g) ?? []).length, 1); // 중재안과 같아진 줄은 고친 줄이 아니다
   assert.ok(!html.includes('22:55 뒤 주문이라 민수는 빠져요'));
 });
 
@@ -210,12 +210,12 @@ test('proposalLinesHtml: 당사자가 아니거나 끝난 이의는 칩을 누�
 
 test('reviseChoicesHtml: 고친 뒤에는 동의 대신 "고친 배분으로 제안하기"와 "되돌리기"', () => {
   const html = reviseChoicesHtml({ disputeId: 'd"1', other: '민수' });
-  assert.match(html, /data-action="revise-send" data-id="d&quot;1"[^>]*>[\s\S]*고친 배분으로 제안하기<\/button>/);
-  assert.match(html, /data-action="revise-reset"[^>]*>되돌리기<\/button>/);
+  assert.match(html, /data-action="revise-send" data-id="d&quot;1"[^>]*>[\s\S]*Propose edited split<\/button>/);
+  assert.match(html, /data-action="revise-reset"[^>]*>Undo changes<\/button>/);
   assert.ok(!html.includes('data-action="agree"') && !html.includes('data-action="reject-ask"'));
-  assert.match(html, /민수에게 다시 물어요/);
+  assert.match(html, /민수 will be asked again/);
   const busy = reviseChoicesHtml({ disputeId: 'd1', other: '민수', busy: true });
-  assert.match(busy, /data-action="revise-send" data-id="d1" disabled>[\s\S]*제안하는 중…/);
+  assert.match(busy, /data-action="revise-send" data-id="d1" disabled>[\s\S]*Proposing…/);
   assert.match(busy, /data-action="revise-reset" disabled>/);
 });
 
@@ -228,11 +228,11 @@ const pickers = (html) => [...html.matchAll(/<label[^>]*>([^<]+)<input([^>]*)>/g
 });
 
 test('receiptPickers: 휴대폰·태블릿은 카메라로 찍기와 앨범에서 고르기를 따로 둔다', () => {
-  assert.deepEqual(pickers(receiptPickers(true)), [['사진 찍기', 'environment'], ['앨범에서 고르기', null]]);
+  assert.deepEqual(pickers(receiptPickers(true)), [['Take photo', 'environment'], ['Choose from library', null]]);
 });
 
 test('receiptPickers: 컴퓨터는 capture 없이 파일 고르기 하나만', () => {
-  assert.deepEqual(pickers(receiptPickers(false)), [['사진 고르기', null]]);
+  assert.deepEqual(pickers(receiptPickers(false)), [['Choose photo', null]]);
 });
 
 // ---------------------------------------------------------------- 청구서를 막는 줄(확인이 필요한 줄) 안내
@@ -256,10 +256,10 @@ test('flaggedLines: 확인이 필요한 줄만 지출별로 모은다', () => {
 test('blockedNotice: 몇 줄이 남았고 어느 지출의 줄이며 누구의 비서가 물었는지, 어디로 가야 하는지 알린다', () => {
   const groups = flaggedLines(expenses, flagged);
   assert.deepEqual(blockedNotice(groups, { me: 'ms', nameOf }), {
-    title: '청구서를 아직 보낼 수 없어요',
-    lead: '비서가 짐작하지 않고 물어본 줄이 1줄 남았어요.',
+    title: 'Invoices can’t be sent yet',
+    lead: 'Lines an agent asked about instead of guessing are still open: 1.',
     total: 1, // '남은 N줄 모두 짐작한 대로 확인' 버튼이 쓴다
-    rows: [{ expId: 'e2', lineId: 'i1', what: '이자카야 저녁의 ‘오차즈케’', who: '철수의 비서가 물어봤어요', label: '확인하러 가기' }],
+    rows: [{ expId: 'e2', lineId: 'i1', what: '“오차즈케” in 이자카야 저녁', who: '철수’s agent asked', label: 'Review' }],
   });
   assert.equal(blockedNotice([], { me: 'ms', nameOf }), null); // 막는 줄이 없으면 안내도 없다
 });
@@ -268,23 +268,24 @@ test('blockedNotice: 내 비서가 물었으면 내 비서, 줄이 여럿이면 
   const two = { ...izakaya, alloc: { i1: { confidence: 0.4 }, i2: { confidence: 0.5 } } };
   const other = { id: 'e5', title: '난바 호텔 2박', createdBy: 'yh', items: [{ id: 'i9', name: '조식' }], alloc: { i9: { confidence: 0.2 } } };
   const n = blockedNotice(flaggedLines([two, other], flagged), { me: 'cs', nameOf });
-  assert.equal(n.lead, '비서가 짐작하지 않고 물어본 줄이 3줄 남았어요.');
+  assert.equal(n.lead, 'Lines an agent asked about instead of guessing are still open: 3.');
   assert.deepEqual(n.rows.map((r) => [r.what, r.who, r.lineId]), [
-    ['이자카야 저녁의 ‘오차즈케’ 외 1줄', '내 비서가 물어봤어요', 'i1'],
-    ['난바 호텔 2박의 ‘조식’', '영희의 비서가 물어봤어요', 'i9'],
+    ['“오차즈케” in 이자카야 저녁 and 1 more', 'My agent asked', 'i1'],
+    ['“조식” in 난바 호텔 2박', '영희’s agent asked', 'i9'],
   ]);
 });
 
 test('blockedNotice: 데모 방의 이름 "나"는 보는 사람이 아닐 때 내 비서로 읽히지 않는다', () => {
   const mine = flaggedLines([{ ...izakaya, createdBy: 'me' }], flagged);
-  assert.equal(blockedNotice(mine, { me: 'me', nameOf }).rows[0].who, '내 비서가 물어봤어요');
-  assert.equal(blockedNotice(mine, { me: 'yh', nameOf }).rows[0].who, '‘나’의 비서가 물어봤어요');
+  assert.equal(blockedNotice(mine, { me: 'me', nameOf }).rows[0].who, 'My agent asked');
+  assert.equal(blockedNotice(mine, { me: 'yh', nameOf }).rows[0].who, '“나”’s agent asked');
 });
 
 test('askedBy: 막힌 줄을 누구의 비서가 물었는지. 안내와 시트의 칩이 같은 말을 쓴다', () => {
-  assert.equal(askedBy('cs', { me: 'ms', nameOf }), '철수의 비서가 물어봤어요');
-  assert.equal(askedBy('ms', { me: 'ms', nameOf }), '내 비서가 물어봤어요');
-  assert.equal(askedBy('me', { me: 'yh', nameOf }), '‘나’의 비서가 물어봤어요'); // 데모 방의 이름 "나"
+  assert.equal(askedBy('cs', { me: 'ms', nameOf }), '철수’s agent asked');
+  assert.equal(askedBy('ms', { me: 'ms', nameOf }), 'My agent asked');
+  assert.equal(askedBy('me', { me: 'yh', nameOf }), '“나”’s agent asked'); // 데모 방의 이름 "나"
+  assert.equal(askedBy('me', { me: 'yh', nameOf: () => 'Me' }), '“Me”’s agent asked'); // 영어 데모 방의 이름 "Me"
 });
 
 // 가짜 프레임 시계: requestAnimationFrame을 1/60초씩 직접 돌려 스프링이 멈출 때까지 지켜본다

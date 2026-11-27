@@ -34,14 +34,14 @@ test("예전 화면이 '바로'를 보내도 '편할 때'로 저장한다", asyn
 
 test('보낼 시기 고르기에는 바로가 없고, 고른 것이 무슨 뜻인지 한 줄로 알린다', () => {
   const manual = sendHtml(draftFromRules(DEFAULT_RULES));
-  assert.doesNotMatch(manual, />바로</);
-  assert.match(manual, /data-id="manual">편할 때</);
+  assert.doesNotMatch(manual, />바로<|>(Now|Right away|Immediately)</i);
+  assert.match(manual, /data-id="manual">Any time</);
   assert.match(manual, /9 AM the next day/);
   const payday = sendHtml({ ...draftFromRules(DEFAULT_RULES), mode: 'payday' });
-  assert.match(payday, /매달 그날 오전 9시/);
+  assert.match(payday, /9 AM on that day each month/);
 });
 
 test("방의 '보내면 돼요' 카드는 없어진 '바로'와 견주지 않고, 언제 알리는지만 말한다", () => {
   const room = readFileSync(new URL('../public/room.js', import.meta.url), 'utf8');
-  assert.doesNotMatch(room, /바로 알리지 않아요/);
+  assert.doesNotMatch(room, /바로 알리지 않아요|not (be )?notif\w* right away|no immediate (reminder|notification)/i);
 });

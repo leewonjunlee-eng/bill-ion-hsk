@@ -31,10 +31,10 @@ test('시드 방은 ASCII uid 4명, 지출 7건, 비서 설정과 함께 만들�
   assert.equal(res.status, 200);
   const data = await res.json();
   assert.deepEqual(data.room.members.map((m) => m.uid), ['me', 'cs', 'yh', 'ms']);
-  assert.deepEqual(data.room.members.map((m) => m.name), ['나', '철수', '영희', '민수']);
+  assert.deepEqual(data.room.members.map((m) => m.name), ['Me', 'Chulsoo', 'Younghee', 'Minsu']);
   assert.equal(data.expenses.length, 7);
   assert.ok(data.expenses.every((e) => e.roomId === roomId && ['me', 'cs', 'yh', 'ms'].includes(e.payer)));
-  assert.deepEqual(data.me, { uid: 'me', name: '나' });
+  assert.deepEqual(data.me, { uid: 'me', name: 'Me' });
   assert.ok(data.ledger.me.net > 0 && data.ledger.ms.net < 0);
   const agent = await store.get('agents', 'cs');
   assert.deepEqual(agent.rules.sendWhen, { payday: 25 });

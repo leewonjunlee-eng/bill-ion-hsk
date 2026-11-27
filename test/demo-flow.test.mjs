@@ -44,11 +44,17 @@ test('데모 설정: Firebase 없이 나로 로그인한 것처럼, 화면에는
   const { ok } = demo();
   assert.deepEqual(await ok('GET', '/api/config'), DEMO_CONFIG);
   const { profile } = await ok('GET', '/api/me');
-  assert.equal(profile.name, '나');
+  assert.equal(profile.name, 'Me');
   assert.deepEqual((await ok('GET', '/api/rooms')).rooms, []);
 });
 
 test('방 기간 글에서 여행 사흘을 읽는다(당일·1박은 마지막 날에 멈춘다)', () => {
+  assert.deepEqual(tripDays('Nov 7 – 9', '2026-11-06'), ['2026-11-07', '2026-11-08', '2026-11-09']);
+  assert.deepEqual(tripDays('Nov 30 – Dec 2', '2026-11-06'), ['2026-11-30', '2026-12-01', '2026-12-02']);
+  assert.deepEqual(tripDays('Dec 31 – Jan 1', '2026-12-20'), ['2026-12-31', '2027-01-01', '2027-01-01']);
+  assert.deepEqual(tripDays('Dec 31, 2026 – Jan 2, 2027', '2026-11-06'), ['2026-12-31', '2027-01-01', '2027-01-02']);
+  assert.deepEqual(tripDays('Nov 7', '2026-11-06'), ['2026-11-07', '2026-11-07', '2026-11-07']);
+  // 예전에 저장한 한국어 형식
   assert.deepEqual(tripDays('11월 7일 – 9일', '2026-11-06'), ['2026-11-07', '2026-11-08', '2026-11-09']);
   assert.deepEqual(tripDays('12월 31일 – 1월 1일', '2026-12-20'), ['2026-12-31', '2027-01-01', '2027-01-01']);
   assert.deepEqual(tripDays('2026년 12월 31일 – 2027년 1월 2일', '2026-11-06'), ['2026-12-31', '2027-01-01', '2027-01-02']);
@@ -65,8 +71,8 @@ test('원화 방에서도 친구들의 지출은 원으로 들어간다', () => 
 
 // 팀 점검(11/5): 방 이름·기간을 매번 적지 않게 미리 채운다. 오늘부터 2박 3일이라 Demo Market 날이면 금~일이다
 test('체험 데모의 새 방은 오사카 2박 3일, 오늘부터 사흘로 미리 채운다', () => {
-  assert.deepEqual(roomDraft('2026-11-06'), { name: '오사카 2박 3일', start: '2026-11-06', end: '2026-11-08', preset: true });
-  assert.deepEqual(tripDays('11월 6일 – 8일', '2026-11-06'), ['2026-11-06', '2026-11-07', '2026-11-08'], '친구들의 지출도 그 사흘에 들어간다');
+  assert.deepEqual(roomDraft('2026-11-06'), { name: 'Osaka 3-day trip', start: '2026-11-06', end: '2026-11-08', preset: true });
+  assert.deepEqual(tripDays('Nov 6 – 8', '2026-11-06'), ['2026-11-06', '2026-11-07', '2026-11-08'], '친구들의 지출도 그 사흘에 들어간다');
   const room = readFileSync(new URL('../public/room.js', import.meta.url), 'utf8');
   assert.match(room, /authOptions\(\)\.demo[^\n]*roomDraft\(todayIso\(\)\)/, '방 화면은 체험 데모일 때만 미리 채운다');
   assert.match(room, /inviteSheetHtml\(\{[^\n]*demo: authOptions\(\)\.demo/, '초대 시트에도 체험 데모인지 알린다');
@@ -79,15 +85,15 @@ test('task 순서와 안내: 계좌·비서 범위가 지출 남기기보다 먼
   const s = { room, invite: null, expenses: [], invoices: [{ to: 'me', status: 'accepted', decidedBy: 'agent', version: 1 }], disputes: [], transfers: [], location: [], agent: null };
   const list = tasks(s);
   assert.deepEqual(list.map((t) => t.title), ['Create a trip room and invite friends', 'Set your account and what your agent may do', 'Add an expense', 'Fix a wrong share', 'Send and wrap up']);
-  assert.match(list[0].steps[0].note, /미리 채워/);
+  assert.match(list[0].steps[0].note, /prefilled/);
   const plus = list[0].steps.find((st) => st.show === '[data-action="open-invite"]');
   assert.match(plus.text, /＋/);
-  assert.match(plus.text, /데모에서는 임의로 들어와요/, '접힌 머리에는 단계 본문만 굵게 보이므로 핵심을 본문에 둔다(리뷰 11/5)');
-  assert.match(plus.note, /보내지 않아도/);
+  assert.match(plus.text, /In the demo they join on their own/, '접힌 머리에는 단계 본문만 굵게 보이므로 핵심을 본문에 둔다(리뷰 11/5)');
+  assert.match(plus.note, /don’t need to send the invite link/);
   // 다른 task를 번호로 가리키는 안내는 바뀐 순서를 따른다
   const nOf = (re) => list.find((t) => re.test(t.title)).n;
-  assert.match(list[1].steps[0].note, new RegExp(`task ${nOf(/wrong share/)}에서 비서가 먼저`));
-  assert.match(list[3].steps.find((st) => st.skipped).note, new RegExp(`task ${nOf(/agent may do/)}에서 한도를 낮추면`));
+  assert.match(list[1].steps[0].note, new RegExp(`your agent asks first in task ${nOf(/wrong share/)}`));
+  assert.match(list[3].steps.find((st) => st.skipped).note, new RegExp(`lower the limit in task ${nOf(/agent may do/)}`));
 });
 
 // 첫 화면(public/index.html)의 다섯 task 목록은 체크리스트와 같은 순서·같은 이름이어야 한다(같은 개념은 같은 단어로)
@@ -108,16 +114,16 @@ test('task 1~5: 방 만들기부터 이의·중재, 송금, 정산 완료와 나
   // 처음에는 task 1만 열려 있고, 다음에 할 일은 '새 방 만들기'다
   let list = tasks(await snapshot(server));
   assert.deepEqual(list.map((t) => t.done), [false, false, false, false, false]);
-  assert.match(nextStep(list[0]).text, /새 방 만들기/);
+  assert.match(nextStep(list[0]).text, /“New room”/);
 
   // task 1. 엔화 방을 만들고 초대 링크를 만들면 셋이 들어와 환율 정책에 동의하고, 각자의 지출을 남긴다
   const { room } = await ok('POST', '/api/rooms', { name: '오사카 2박 3일', dates: '11월 7일 – 9일', currency: 'JPY', policy: 'actual' });
   await ok('POST', `${base(room.id)}/invite`, {});
   let view = await ok('GET', base(room.id));
-  assert.deepEqual(view.room.members.map((m) => m.name), ['나', '철수', '영희', '민수']);
+  assert.deepEqual(view.room.members.map((m) => m.name), ['Me', 'Chulsoo', 'Younghee', 'Minsu']);
   assert.deepEqual([...view.room.policyAgreedBy].sort(), ['cs', 'me', 'ms', 'yh']);
   assert.equal(view.expenses.length, 6);
-  const bar = view.expenses.find((e) => e.title === '2차 바');
+  const bar = view.expenses.find((e) => e.title === 'Second-round bar');
   assert.equal(bar.payer, 'cs');
   assert.ok(bar.alloc, '철수의 비서가 2차 바 영수증 줄을 나눴다');
   assert.ok(view.expenses.every((e) => e.date >= '2026-11-07' && e.date <= '2026-11-09'));
@@ -139,7 +145,7 @@ test('task 1~5: 방 만들기부터 이의·중재, 송금, 정산 완료와 나
   assert.equal(draft.ok, true);
   assert.equal(draft.currency, 'JPY');
   assert.equal(draft.date, '2026-11-07');
-  assert.match(draft.warnings.join(' '), /샘플 영수증/);
+  assert.match(draft.warnings.join(' '), /sample receipt/);
   const { expense } = await ok('POST', `${base(room.id)}/expenses`, { expense: {
     title: draft.merchant, kind: 'food', date: draft.date, time: draft.time, payer: 'me', method: 'cash', currency: draft.currency,
     items: draft.items, present: ['me', 'cs', 'yh', 'ms'], source: 'receipt',
@@ -209,7 +215,7 @@ test('원화만 쓰는 방: 친구들의 지출도, 샘플 영수증도 원화�
   assert.equal(draft.ok, true, draft.reason);
   assert.equal(draft.currency, 'KRW');
   assert.ok(draft.items.every((it) => Number.isInteger(it.unit) && it.unit > 0));
-  assert.ok(!draft.items.some((it) => ['차액 조정', 'Difference adjustment'].includes(it.name)), '줄의 합과 합계가 같다');
+  assert.ok(!draft.items.some((it) => it.name === '차액 조정' || /adjustment/i.test(it.name)), '줄의 합과 합계가 같다');
   const { expense } = await ok('POST', `${base(room.id)}/expenses`, { expense: {
     title: draft.merchant, kind: 'food', date: draft.date, time: draft.time, payer: 'me', method: 'card', currency: draft.currency,
     items: draft.items, present: ['me', 'cs', 'yh', 'ms'], source: 'receipt',
@@ -221,5 +227,5 @@ test('데모에서는 계정을 지울 수 없다', async () => {
   const { call } = demo();
   const out = await call('POST', '/api/me/delete', {});
   assert.equal(out.status, 400);
-  assert.match(out.body.error, /처음부터 다시/);
+  assert.match(out.body.error, /Start over/);
 });

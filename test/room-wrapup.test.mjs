@@ -63,7 +63,7 @@ test('원화 방은 환율 정책을 받지 않고(409), 정책 동의 없이 �
   const preview = (await get(`/api/invites/${token}`)).json.room;
   assert.ok(!('policy' in preview) && !('currency' in preview), '참가 화면에도 정책이 없다');
   const joined = (await store.listEvents(roomId)).find((e) => e.kind === 'member_joined');
-  assert.ok(!/환율|exchange rate/i.test(joined.text), joined.text);
+  assert.ok(!joined.text.includes('환율') && !/rate policy|exchange.rate/i.test(joined.text), joined.text);
   await spend(roomId, 'me', ['me', 'cs']);
   assert.equal((await post(`/api/rooms/${roomId}/invoices/send`, 'me')).status, 200);
   assert.equal((await room(roomId)).status, 'settling');
@@ -87,7 +87,7 @@ test('외화 방은 여전히 전원이 정책에 동의해야 정산을 시작�
   const { json: inv } = await post(`/api/rooms/${json.room.id}/invite`, 'me');
   await post(`/api/invites/${inv.token}/join`, 'cs', { agree: true });
   const joined = (await store.listEvents(json.room.id)).find((e) => e.kind === 'member_joined');
-  assert.match(joined.text, /exchange rate policy ‘실제 낸 원화’/);
+  assert.match(joined.text, /exchange rate policy ‘Actual KRW paid’/);
   const blocked = await post(`/api/rooms/${json.room.id}/invoices/send`, 'me');
   assert.equal(blocked.status, 409);
   assert.match(blocked.json.error, /철수/);
@@ -115,7 +115,7 @@ test('완료 기준 1(정산 전): 내가 낀 지출이 있으면 나가기가 �
   await spend(roomId, 'me', ['me', 'cs']);
   const blocked = await post(`/api/rooms/${roomId}/leave`, 'cs');
   assert.equal(blocked.status, 409);
-  assert.match(blocked.json.error, /‘저녁’ 지출에 내 몫이 있어요/);
+  assert.match(blocked.json.error, /“저녁” includes your share/);
 
   assert.equal((await post(`/api/rooms/${roomId}/leave`, 'yh')).status, 200);
   const saved = await room(roomId);
@@ -135,8 +135,8 @@ test('완료 기준 1·2: 정산 중에는 남은 송금을 알려 주며 막고
 
   const cs = await post(`/api/rooms/${roomId}/leave`, 'cs');
   assert.equal(cs.status, 409);
-  assert.match(cs.json.error, /재윤에게 보낼 ₩15,000/);
-  assert.match((await post(`/api/rooms/${roomId}/leave`, 'me')).json.error, /철수에게서 받을 ₩15,000/);
+  assert.match(cs.json.error, /₩15,000 to send to 재윤/);
+  assert.match((await post(`/api/rooms/${roomId}/leave`, 'me')).json.error, /₩15,000 to receive from 철수/);
   assert.equal((await get('/api/rooms', 'me')).json.rooms.find((r) => r.id === roomId).status, 'settling');
 
   assert.equal((await post(`/api/rooms/${roomId}/transfers/${encodeURIComponent(t.id)}/confirm`, 'me')).status, 200);
@@ -177,7 +177,7 @@ test('내보내기: 방을 만든 사람만, 낀 돈이 없는 사람만 내보�
   assert.equal((await post(`/api/rooms/${roomId}/members/yh/remove`, 'cs')).status, 403);
   const blocked = await post(`/api/rooms/${roomId}/members/cs/remove`, 'me');
   assert.equal(blocked.status, 409);
-  assert.match(blocked.json.error, /철수의 몫이 있어요.*내보낼 수 있어요/);
+  assert.match(blocked.json.error, /includes 철수’s share.*you can remove them/);
   assert.equal((await post(`/api/rooms/${roomId}/members/me/remove`, 'me')).status, 400);
   assert.equal((await post(`/api/rooms/${roomId}/members/nobody/remove`, 'me')).status, 404);
 

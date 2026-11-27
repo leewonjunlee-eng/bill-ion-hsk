@@ -57,7 +57,7 @@ export function sha256(bytes) {
 }
 
 export function createHash(algorithm) {
-  if (algorithm !== 'sha256') throw new Error(`데모는 sha256만 계산해요: ${algorithm}`);
+  if (algorithm !== 'sha256') throw new Error(`The demo only computes sha256: ${algorithm}`);
   const chunks = [];
   const hash = {
     update(data) {

@@ -17,14 +17,14 @@ test('이의를 낼 수 있는 지출은 영수증 줄이 있는 지출뿐이다
 
 test('줄 없는 지출은 흐리게 두고 누를 수 없다고 알리며, 누르면 고르지 않고 안내를 연다', () => {
   assert.match(lines, /aria-disabled="true" data-action="dispute-no-lines"/);
-  assert.match(lines, /영수증 줄 없음/, '줄마다 글로도 알린다(색·흐림에만 기대지 않는다)');
-  assert.match(lines, /영수증 줄이 있는 지출을 골라 중재를 맡겨요\./, '무엇을 고르면 되는지 목록 바로 아래에서 알린다');
+  assert.match(lines, /no receipt lines/, '줄마다 글로도 알린다(색·흐림에만 기대지 않는다)');
+  assert.match(lines, /Choose expenses with receipt lines to send to mediation\./, '무엇을 고르면 되는지 목록 바로 아래에서 알린다');
 });
 
 test("누른 줄 바로 아래의 노란 안내는 한 줄이고, 그 옆 '지출 고치기'가 지출 고치기 화면을 연다", () => {
   assert.match(lines, /class="row lines-hint" role="alert"/);
-  assert.match(lines, /<span class="grow hint-text">줄이 없어 중재할 수 없어요<\/span>/, '설명 없이 한 줄');
-  assert.match(lines, /data-action="edit-exp" data-id="\$\{esc\(exp\.id\)\}">지출 고치기<\/button>/);
+  assert.match(lines, /<span class="grow hint-text">No lines to mediate<\/span>/, '설명 없이 한 줄');
+  assert.match(lines, /data-action="edit-exp" data-id="\$\{esc\(exp\.id\)\}">Edit expense<\/button>/);
   assert.match(read('style.css'), /\.lines-hint \.hint-text \{[^}]*white-space: nowrap;/, '좁은 화면에서도 두 줄로 넘어가지 않는다');
 });
 
@@ -45,5 +45,5 @@ test('줄 없는 지출을 누르면 그 줄을 흔든다(움직임 줄이기면
 
 test('체험 데모 task 4 안내도 영수증 줄이 있는 지출을 고르라고 말한다', () => {
   const guide = read('demo/guide.js');
-  assert.match(guide, /영수증 줄이 있는 지출만 골라 중재를 맡길 수 있어요/);
+  assert.match(guide, /Only expenses with receipt lines can go to mediation/);
 });

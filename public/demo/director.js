@@ -28,7 +28,7 @@ export function createDirector({ store, call, schedule, clock }) {
         if (await still()) await work();
       } catch (e) {
         failed.add(key);
-        console.warn('[demo] 진행자 일 실패:', key, e.message);
+        console.warn('[demo] director task failed:', key, e.message);
       } finally {
         pending.delete(key);
         await nudge().catch(() => {});
@@ -142,7 +142,7 @@ export function createDirector({ store, call, schedule, clock }) {
   }
 
   return {
-    nudge: () => nudge().catch((e) => console.warn('[demo] 진행자:', e.message)),
+    nudge: () => nudge().catch((e) => console.warn('[demo] director:', e.message)),
     // 예약한 일이 모두 끝날 때까지 기다린다(테스트용)
     idle: () => (running ? new Promise((resolve) => waiters.push(resolve)) : Promise.resolve()),
   };

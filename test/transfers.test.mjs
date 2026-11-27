@@ -161,8 +161,8 @@ test('보내는 사람만 승인·보냈어요, 받는 사람만 받았어요(�
 
 // 보냈어요 뒤 받는 사람이 답이 없으면 sentAt 기준 1일·3일 뒤에 다시 묻는다. 그 뒤로는 할 일 카드만 남는다
 const reminderTexts = async (ctx, id) => (await ctx.store.listEvents('demo-t')).filter((e) => e.kind === 'receipt_reminder' && e.action?.ref === id).map((e) => e.text);
-const FIRST = 'Did you receive ₩41,155 from 철수?';
-const SECOND = 'It has been over 3 days since 철수 sent it. Did you receive ₩41,155?';
+const FIRST = 'Did you receive ₩41,155 from Chulsoo?';
+const SECOND = 'It has been over 3 days since Chulsoo sent it. Did you receive ₩41,155?';
 
 test('보냈어요 뒤 미확인이면 1일·3일에 한 번씩, 두 번만 다시 묻는다', async () => {
   const ctx = await setup();
@@ -333,7 +333,7 @@ test('안 들어왔다고 한 뒤 보내는 사람이 보냈어요: 표시를 �
   assert.equal(saved.notReceivedAt, undefined);
   assert.equal(saved.recheckedAt, '2026-11-11T06:00:00.000Z'); // 받는 사람 쪽 문구("송금 내역을 확인했대요")에 쓴다
   const sent = (await ctx.store.listEvents('demo-t')).filter((e) => e.kind === 'transfer_sent').map((e) => e.text);
-  assert.deepEqual(sent, ['Sent ₩41,155 to 영희', 'Checked the transfer history. Sent ₩41,155 to 영희']);
+  assert.deepEqual(sent, ['Sent ₩41,155 to Younghee', 'Checked the transfer history. Sent ₩41,155 to Younghee']);
   await assert.rejects(ctx.orch.markSent('demo-t', id, 'cs'), (e) => e.status === 409); // 표시가 없는 sent에는 다시 못 누른다
   ctx.clock.now = new Date('2026-11-11T07:00:00Z');
   assert.equal((await ctx.orch.reportNotReceived('demo-t', id, 'yh')).notReceivedAt, '2026-11-11T07:00:00.000Z'); // 그래도 안 들어왔으면 또 알릴 수 있다
@@ -343,13 +343,13 @@ test('할 일 문구: 안 들어왔다고 하면 보내는 사람에게 "아직 
   const ctx = await setup();
   const id = await sentCsYh(ctx);
   const of = async (type, uid) => (await ctx.actions()).filter((a) => a.type === type && a.for === uid && a.ref === id).map((a) => a.text);
-  assert.deepEqual(await of('confirm_receipt', 'yh'), ['Did you receive ₩41,155 from 철수?']);
+  assert.deepEqual(await of('confirm_receipt', 'yh'), ['Did you receive ₩41,155 from Chulsoo?']);
   await ctx.orch.reportNotReceived('demo-t', id, 'yh');
-  assert.deepEqual(await of('approve_transfer', 'cs'), ['영희 reported not receiving ₩41,155 yet']);
-  assert.deepEqual(await of('confirm_receipt', 'yh'), ['Let us know when the ₩41,155 from 철수 arrives']); // 늦게 들어오면 여기서 끝낸다
+  assert.deepEqual(await of('approve_transfer', 'cs'), ['Younghee reported not receiving ₩41,155 yet']);
+  assert.deepEqual(await of('confirm_receipt', 'yh'), ['Let us know when the ₩41,155 from Chulsoo arrives']); // 늦게 들어오면 여기서 끝낸다
   await ctx.orch.markSent('demo-t', id, 'cs');
   assert.deepEqual(await of('approve_transfer', 'cs'), []);
-  assert.deepEqual(await of('confirm_receipt', 'yh'), ['철수 checked the transfer history. Did you receive ₩41,155?']);
+  assert.deepEqual(await of('confirm_receipt', 'yh'), ['Chulsoo checked the transfer history. Did you receive ₩41,155?']);
 });
 
 test('안 들어왔다고 한 뒤에 돈이 들어왔으면 받는 사람이 받았어요로 끝낼 수 있다', async () => {

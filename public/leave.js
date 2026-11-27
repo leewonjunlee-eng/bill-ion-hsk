@@ -10,18 +10,18 @@ export function leaveBlock({ room, expenses = [], invoices = [], disputes = [], 
   const name = (u) => room.members.find((m) => m.uid === u)?.name ?? u;
   const mine = expenses.filter((e) => e.payer === uid || e.present.includes(uid));
   if (!mine.length) return null; // 낀 돈이 없다. 청구서를 받았어도 0원이다
-  const verb = self ? '나갈' : '내보낼';
+  const verb = self ? 'leave' : 'remove them';
   if (room.status !== 'settling') {
-    const more = mine.length > 1 ? ` 외 ${mine.length - 1}건` : '';
-    return `‘${mine[0].title}’${more} 지출에 ${self ? '내' : `${name(uid)}의`} 몫이 있어요. 그 지출에서 빼거나 지운 뒤에 ${verb} 수 있어요.`;
+    const more = mine.length > 1 ? ` (and ${mine.length - 1} more)` : '';
+    return `The expense “${mine[0].title}”${more} includes ${self ? 'your' : `${name(uid)}’s`} share. Take that share out or delete the expense, then you can ${verb}.`;
   }
   const current = (x) => x.version === room.version;
   const left = [
     ...transfers.filter((t) => current(t) && t.status !== 'confirmed' && t.status !== 'superseded' && (t.from === uid || t.to === uid))
-      .map((t) => (t.from === uid ? `${name(t.to)}에게 보낼 ${won(t.amount)}` : `${name(t.from)}에게서 받을 ${won(t.amount)}`)),
-    ...(invoices.some((i) => current(i) && i.to === uid && i.status === 'asked') ? ['확인할 청구서'] : []),
-    ...(disputes.some((d) => disputeLive(d) && (d.by === uid || expenses.find((e) => e.id === d.expenseId)?.payer === uid)) ? ['진행 중인 이의'] : []),
+      .map((t) => (t.from === uid ? `${won(t.amount)} to send to ${name(t.to)}` : `${won(t.amount)} to receive from ${name(t.from)}`)),
+    ...(invoices.some((i) => current(i) && i.to === uid && i.status === 'asked') ? ['an invoice to review'] : []),
+    ...(disputes.some((d) => disputeLive(d) && (d.by === uid || expenses.find((e) => e.id === d.expenseId)?.payer === uid)) ? ['an open dispute'] : []),
   ];
-  if (left.length) return `정산이 끝나지 않아 ${verb} 수 없어요. 남은 일: ${left.join(', ')}`;
-  return `방의 정산이 아직 끝나지 않아 ${verb} 수 없어요. 모든 송금이 ‘받았어요’로 끝나면 ${verb} 수 있어요.`;
+  if (left.length) return `Settlement isn’t finished, so you can’t ${verb} yet. Still open: ${left.join(', ')}`;
+  return `This room’s settlement isn’t finished, so you can’t ${verb} yet. You can once every transfer ends with “Received”.`;
 }

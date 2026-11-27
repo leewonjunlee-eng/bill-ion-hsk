@@ -40,19 +40,19 @@ const setView = (view) => { document.body.dataset.view = view; };
 const linkRow = (href, title, meta) => `<a class="row" href="${href}"><span class="grow"><span class="title">${title}</span>
   <span class="meta" style="display:block">${meta}</span></span>${CHEVRON}</a>`;
 const demoRows = (label, dev) => `<section class="group"><h2 class="group-label"><span>${label}</span></h2><div class="list">
-    ${linkRow('./', '데모 체험하기', '로그인 없이 ‘나’가 되어 오사카 여행 정산을 다섯 task로 따라가요')}
-    ${dev ? linkRow('room.html', '개발용 방 열기', '시드 신원으로 실제 방 화면을 시험해요') : ''}
+    ${linkRow('./', 'Try the demo', 'No sign-in: play “Me” and settle an Osaka trip in five tasks')}
+    ${dev ? linkRow('room.html', 'Open development room', 'Test the real room screen with a seed identity') : ''}
   </div></section>`;
 
 // 탈퇴하면 로그아웃하고 이 화면의 로그인으로 돌아와 결과를 버튼 바로 아래에 알린다
 const DELETED = 'account.html?deleted=1';
-let notice = new URLSearchParams(location.search).has('deleted') ? '계정을 지웠어요. 함께 정산한 금액은 익명 기록으로 남아요.' : ''; // 화면을 옮긴 뒤 그 화면에 띄울 한 줄
+let notice = new URLSearchParams(location.search).has('deleted') ? 'Your account was deleted. Amounts you settled with others remain as anonymous records.' : ''; // 화면을 옮긴 뒤 그 화면에 띄울 한 줄
 if (notice) history.replaceState(null, '', location.pathname); // 새로고침해도 다시 뜨지 않게
 
 // 내 계정의 주소: #profile(맨 위)·#agent(방의 '기본 설정 바꾸기')·#payout·#rules·#notify·#account. 목차 링크도 이 #으로 간다
 const onProfile = () => SETTINGS_IDS.includes(location.hash.slice(1));
 let settings = null; // 내 계정 화면이 열려 있는 동안 { pending(): 저장하지 않은 변경 수, save() }
-const DISCARD = '저장하지 않은 변경이 있어요. 버리고 나갈까요?';
+const DISCARD = 'You have unsaved changes. Discard them and leave?';
 const mayLeave = () => !settings?.pending() || confirm(DISCARD);
 function openProfile() {
   history.pushState({ view: 'profile' }, '', '#profile');
@@ -137,14 +137,14 @@ async function render() {
     const ready = Boolean(config.firebase);
     setView('login');
     setNav(BRAND);
-    panel.innerHTML = `<section class="hero"><h1>내 계정</h1><p class="sub">${next ? '로그인하면 보던 방으로 돌아가요.' : '로그인하면 내 방과 비서 설정을 어느 기기에서든 이어 봐요.'}</p></section>
+    panel.innerHTML = `<section class="hero"><h1>My account</h1><p class="sub">${next ? 'Sign in to return to the room you were viewing.' : 'Sign in to pick up your rooms and agent settings on any device.'}</p></section>
       <section class="group">
-        <button class="btn google" id="login" ${ready ? '' : 'disabled'}>${GOOGLE_G}<span>Google로 계속하기</span></button>
+        <button class="btn google" id="login" ${ready ? '' : 'disabled'}>${GOOGLE_G}<span>Continue with Google</span></button>
         ${MESSAGE}
-        <p class="group-note">${ready ? '처음이면 이때 계정이 만들어져요.' : '이 서버에는 아직 Google 로그인이 연결되지 않았어요. 데모는 로그인 없이 해 볼 수 있어요.'}
-          <a href="${PRIVACY}" target="_blank" rel="noopener">개인정보 처리방침</a></p>
-      </section>${demoRows('로그인 없이', config.dev)}`;
-    if (ready) panel.querySelector('#login').onclick = () => run(async () => { say('Google 창에서 계정을 골라 주세요…'); await login(); await render(); });
+        <p class="group-note">${ready ? 'If this is your first time, your account is created now.' : 'Google sign-in isn’t connected on this server yet. You can try the demo without signing in.'}
+          <a href="${PRIVACY}" target="_blank" rel="noopener">Privacy Policy</a></p>
+      </section>${demoRows('Without signing in', config.dev)}`;
+    if (ready) panel.querySelector('#login').onclick = () => run(async () => { say('Choose an account in the Google window…'); await login(); await render(); });
     say(notice);
     notice = '';
     return;
@@ -154,9 +154,9 @@ async function render() {
     await settle();
     setView('login');
     setNav(BRAND);
-    panel.innerHTML = `<section class="hero"><h1>탈퇴 마무리</h1></section>
-      <section class="group"><button class="btn" style="width:100%" id="finish-delete">탈퇴 마무리</button>${MESSAGE}</section>`;
-    say('개인 데이터는 지웠어요. Google 계정 연결 삭제만 남았어요.');
+    panel.innerHTML = `<section class="hero"><h1>Finish deleting</h1></section>
+      <section class="group"><button class="btn" style="width:100%" id="finish-delete">Finish deleting</button>${MESSAGE}</section>`;
+    say('Your personal data is deleted. Only the Google account link is left to remove.');
     panel.querySelector('button').onclick = () => run(async () => { await api('/api/me/delete', { method: 'POST' }); await logout(DELETED); });
     return;
   }
@@ -180,22 +180,22 @@ let roomsEditing = false;
 function roomsView(profile, rooms, config) {
   settings = null;
   setView('rooms');
-  setNav(BRAND, '', `<button type="button" class="nav-avatar" id="open-profile" aria-label="내 계정 · ${esc(profile.name)}">${avatarHtml(initial(profile.name), profile.color, 'lg')}</button>`);
+  setNav(BRAND, '', `<button type="button" class="nav-avatar" id="open-profile" aria-label="My account · ${esc(profile.name)}">${avatarHtml(initial(profile.name), profile.color, 'lg')}</button>`);
   const view = roomTabs(rooms, roomsTab);
   roomsEditing &&= view.rooms.length > 0; // 나갈 방이 없으면 편집도 끝난다
   const list = view.rooms.length
     ? roomRowsHtml(view.rooms, { editing: roomsEditing })
     : `<div class="room-empty"><p class="title">${view.empty.title}</p><p class="meta">${view.empty.meta}</p></div>`;
-  const edit = view.rooms.length ? `<button type="button" class="text-btn" id="rooms-edit" aria-pressed="${roomsEditing}">${roomsEditing ? '완료' : '편집'}</button>` : '';
-  panel.innerHTML = `<header class="hero page-head"><div><h1>내 방</h1><p class="sub">${config.demo ? '체험 데모예요. 로그인 없이 ‘나’로 둘러봐요.' : `${esc(profile.name)}님으로 로그인했어요.`}</p></div>
+  const edit = view.rooms.length ? `<button type="button" class="text-btn" id="rooms-edit" aria-pressed="${roomsEditing}">${roomsEditing ? 'Done' : 'Edit'}</button>` : '';
+  panel.innerHTML = `<header class="hero page-head"><div><h1>My rooms</h1><p class="sub">${config.demo ? 'This is the demo. Look around as “Me” without signing in.' : `Signed in as ${esc(profile.name)}.`}</p></div>
       <div class="page-actions">
-        <button type="button" class="btn sm plain" id="join-toggle" aria-expanded="false" aria-controls="join-link">${ICON_LINK}<span>초대 링크로 참가</span></button>
-        <a class="btn sm" href="room.html"><span aria-hidden="true">+</span><span>새 방 만들기</span></a>
+        <button type="button" class="btn sm plain" id="join-toggle" aria-expanded="false" aria-controls="join-link">${ICON_LINK}<span>Join with invite link</span></button>
+        <a class="btn sm" href="room.html"><span aria-hidden="true">+</span><span>New room</span></a>
       </div></header>
     ${MESSAGE}
     <div class="join-panel">${joinFormHtml()}</div>
-    <section class="group" id="rooms" aria-labelledby="rooms-title"><div class="group-head"><h2 class="group-label" id="rooms-title"><span>참여한 방${rooms.length ? ` ${rooms.length}개` : ''}</span></h2>${edit}</div>${view.html}${list}</section>
-    ${config.demo ? '' : demoRows('둘러보기', config.dev)}`;
+    <section class="group" id="rooms" aria-labelledby="rooms-title"><div class="group-head"><h2 class="group-label" id="rooms-title"><span>Joined rooms${rooms.length ? ` (${rooms.length})` : ''}</span></h2>${edit}</div>${view.html}${list}</section>
+    ${config.demo ? '' : demoRows('Explore', config.dev)}`;
   say(notice);
   notice = '';
   nav.querySelector('#open-profile').onclick = openProfile;
@@ -210,7 +210,7 @@ function roomsView(profile, rooms, config) {
     const btn = e.target.closest('[data-leave]');
     const room = btn && rooms.find((r) => r.id === btn.dataset.leave);
     if (room) leaveFromList(btn, room, () => {
-      notice = `‘${room.name}’에서 나갔어요.`;
+      notice = `You left “${room.name}”.`;
       const rest = rooms.filter((r) => r.id !== room.id);
       const next = view.rooms[view.rooms.indexOf(room) + 1] ?? view.rooms[view.rooms.indexOf(room) - 1];
       roomsView(profile, rest, config);
@@ -235,20 +235,20 @@ async function leaveFromList(btn, room, onLeft) {
   if (btn.getAttribute('aria-busy') === 'true') return;
   const show = (text, busy = false) => { btn.textContent = text; btn.setAttribute('aria-busy', String(busy)); };
   if (btn.classList.contains('armed')) {
-    show('나가는 중…', true);
+    show('Leaving…', true);
     try {
       await api(`/api/rooms/${encodeURIComponent(room.id)}/leave`, { method: 'POST' });
     } catch (e) {
       btn.classList.remove('armed');
-      show('나가기');
+      show('Leave');
       return toast(e.message);
     }
     await collapse(btn.closest('li'));
     return onLeft();
   }
-  for (const other of panel.querySelectorAll('[data-leave].armed')) { other.classList.remove('armed'); other.textContent = '나가기'; } // 한 번에 한 방만
+  for (const other of panel.querySelectorAll('[data-leave].armed')) { other.classList.remove('armed'); other.textContent = 'Leave'; } // 한 번에 한 방만
   if (room.status !== 'done') {
-    show('확인 중…', true);
+    show('Checking…', true);
     let why;
     try {
       const data = await api(`/api/rooms/${encodeURIComponent(room.id)}`);
@@ -256,11 +256,11 @@ async function leaveFromList(btn, room, onLeft) {
     } catch (e) {
       why = e.message;
     }
-    show('나가기');
+    show('Leave');
     if (why) return toast(why);
   }
   btn.classList.add('armed');
-  show('한 번 더 누르면 나가요');
+  show('Tap again to leave');
 }
 
 // 나간 방의 줄을 접어 아래 줄이 자연스럽게 올라오게 한다. 움직임 줄이기면 바로 뺀다
@@ -289,7 +289,7 @@ function mountJoinLink(root) {
     const token = inviteTokenFrom(input.value);
     if (token) return void location.assign(`room.html?invite=${encodeURIComponent(token)}`);
     input.setAttribute('aria-invalid', 'true');
-    error.textContent = input.value.trim() ? '초대 링크를 알아볼 수 없어요. 친구에게 받은 링크를 그대로 붙여 넣어 주세요.' : '받은 초대 링크를 붙여 넣어 주세요.';
+    error.textContent = input.value.trim() ? 'That isn’t a recognizable invite link. Paste the link your friend sent, as is.' : 'Paste the invite link you received.';
     input.focus();
   };
 }
@@ -298,8 +298,8 @@ function mountJoinLink(root) {
 // 되돌릴 수 없는 탈퇴는 이 줄과 떨어진 카드에 따로 둔다
 function accountRow(profile) {
   const email = currentUser()?.email;
-  return settingRow({ action: true, label: '로그인한 계정', desc: email ? `Google 계정 · ${esc(email)}` : `${esc(profile.name)}님으로 로그인했어요.`,
-    control: '<button type="button" class="btn sm plain" id="logout">로그아웃</button>' });
+  return settingRow({ action: true, label: 'Signed-in account', desc: email ? `Google account · ${esc(email)}` : `Signed in as ${esc(profile.name)}.`,
+    control: '<button type="button" class="btn sm plain" id="logout">Sign out</button>' });
 }
 
 // 내 계정: 프로필(이름·색) → 내 비서 기본 설정(받을 계좌·비서 규칙·알림) → 계정을 한 페이지에.
@@ -308,18 +308,18 @@ function accountRow(profile) {
 function profileView(profile, agent, status = '') {
   setView('settings');
   // 왼쪽 위 뒤로는 온 곳으로 간다: 방에서 왔으면 그 방 이름, 아니면 내 방(목록)
-  const backLabel = backRoom ? `<span class="nav-back-label">${esc(backRoom.name)}</span>` : '<span>내 방</span>';
-  setNav(`<button type="button" class="nav-text" id="back"${backRoom ? ` aria-label="돌아가기: ${esc(backRoom.name)}"` : ''}>${BACK}${backLabel}</button>`, '내 계정');
+  const backLabel = backRoom ? `<span class="nav-back-label">${esc(backRoom.name)}</span>` : '<span>My rooms</span>';
+  setNav(`<button type="button" class="nav-text" id="back"${backRoom ? ` aria-label="Back to ${esc(backRoom.name)}"` : ''}>${BACK}${backLabel}</button>`, 'My account');
   panel.innerHTML = `<div class="settings">${tocHtml()}<div class="settings-body">
-      ${settingsSection({ id: 'profile', level: 2, title: '프로필', desc: '방 사람들에게 이 이름과 색으로 보여요. 바꾸면 모든 방에서 함께 바뀌어요.', body: profileFormHtml(profile) })}
+      ${settingsSection({ id: 'profile', level: 2, title: 'Profile', desc: 'This is how room members see you. Changes apply in every room.', body: profileFormHtml(profile) })}
       <div id="agent-box"></div>
-      ${settingsSection({ id: 'account', level: 2, title: '계정', body: [accountRow(profile), settingRow({ action: true, label: '계정 탈퇴',
-        desc: '프로필·비서 설정·위치 요약을 지우고 방에서 내 이름과 계정 연결을 끊어요. 함께 정산한 금액은 익명 기록으로 남고, 내야 할 돈이 없어지지는 않아요.',
-        control: '<button type="button" class="btn sm danger" id="delete">탈퇴하기</button>' })] })}
+      ${settingsSection({ id: 'account', level: 2, title: 'Account', body: [accountRow(profile), settingRow({ action: true, label: 'Delete account',
+        desc: 'Deletes your profile, agent settings and location summaries, and unlinks your name and account from rooms. Settled amounts remain as anonymous records, and money you owe does not go away.',
+        control: '<button type="button" class="btn sm danger" id="delete">Delete account</button>' })] })}
       <div class="save-bar" id="save-bar" hidden>
         <p class="save-status" id="message" role="status"></p>
-        <div class="save-actions" id="save-actions"><button type="button" class="btn sm plain" id="revert">되돌리기</button>
-          <button type="button" class="btn sm" id="save" aria-keyshortcuts="Meta+S Control+S" title="저장 (${SAVE_KEY})">저장</button></div>
+        <div class="save-actions" id="save-actions"><button type="button" class="btn sm plain" id="revert">Revert</button>
+          <button type="button" class="btn sm" id="save" aria-keyshortcuts="Meta+S Control+S" title="Save (${SAVE_KEY})">Save</button></div>
       </div>
     </div></div>`;
   const formEl = panel.querySelector('#profile-form');
@@ -337,7 +337,7 @@ function profileView(profile, agent, status = '') {
     const showDone = Boolean(done) && !n;
     clearTimeout(statusTimer);
     if (showDone) statusTimer = setTimeout(syncBar, 4000);
-    say(showDone ? done : n ? `저장하지 않은 변경 ${n}개` : '');
+    say(showDone ? done : n ? `Unsaved changes: ${n}` : '');
     bar.hidden = !n && !showDone;
     panel.querySelector('#save-actions').hidden = !n;
   };
@@ -393,11 +393,11 @@ function profileView(profile, agent, status = '') {
     const { rules, payout } = defaultsBody(agent, ui);
     if (!changedProfile && !rules && !payout) return;
     if (changedProfile && !body.name.trim()) {
-      say('표시 이름을 적어 주세요.', true);
+      say('Enter a display name.', true);
       return void panel.querySelector('#profile-name').focus();
     }
     saveButton.disabled = true;
-    saveButton.textContent = '저장 중…';
+    saveButton.textContent = 'Saving…';
     const saved = await run(async () => {
       if (changedProfile) await api('/api/me', { method: 'POST', body });
       if (payout) await api('/api/me/payout', { method: 'POST', body: payout });
@@ -407,12 +407,12 @@ function profileView(profile, agent, status = '') {
     });
     if (!saved) {
       saveButton.disabled = false;
-      saveButton.textContent = '저장';
+      saveButton.textContent = 'Save';
       return;
     }
     const focused = document.activeElement?.id;
     const y = scrollY;
-    profileView(saved.profile, saved.agent, rules || payout ? '저장했어요. 방마다 다르게 정한 비서 규칙은 그대로예요.' : '프로필을 저장했어요.');
+    profileView(saved.profile, saved.agent, rules || payout ? 'Saved. Room-specific agent rules are unchanged.' : 'Profile saved.');
     scrollTo({ top: y, behavior: 'instant' });
     if (focused) document.getElementById(focused)?.focus({ preventScroll: true });
   }
@@ -425,7 +425,7 @@ function profileView(profile, agent, status = '') {
     run(logout);
   };
   panel.querySelector('#delete').onclick = () => run(async () => {
-    if (!confirm('프로필·비서 설정·위치 요약을 지우고 탈퇴할까요? 함께 정산한 금액은 익명 기록으로 남고 되돌릴 수 없어요.')) return;
+    if (!confirm('Delete your account along with your profile, agent settings and location summaries? Settled amounts remain as anonymous records. This cannot be undone.')) return;
     await api('/api/me/delete', { method: 'POST' });
     settings = null;
     await logout(DELETED);

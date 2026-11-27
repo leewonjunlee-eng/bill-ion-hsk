@@ -94,6 +94,6 @@ test('체험 데모: ‘샘플 계좌·한도로 채우기’ 한 번이면 계�
 
 test('체험 데모 체크리스트: ‘보여 주기’가 샘플 채우기 버튼과 정산 완료 카드의 나가기 버튼을 짚는다', () => {
   const guide = readFileSync(new URL('../public/demo/guide.js', import.meta.url), 'utf8');
-  assert.match(guide, /‘샘플 계좌·한도로 채우기’[^\n]*show: '\[data-action="agent-sample"\]'/);
-  assert.match(guide, /정산 완료 카드의 ‘이 방에서 나가기’[^\n]*show: '\.next\.done \[data-action="open-leave"\]'/);
+  assert.match(guide, /“Fill sample account and limit”[^\n]*show: '\[data-action="agent-sample"\]'/);
+  assert.match(guide, /“Leave this room” on that card[^\n]*show: '\.next\.done \[data-action="open-leave"\]'/);
 });

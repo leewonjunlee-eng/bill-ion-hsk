@@ -96,7 +96,7 @@ test('내 계정은 첫 화면을 그리기 전에 뼈대를 거두고, 처음�
   const account = read('account.js');
   assert.match(account, /startSkeleton\(panel, onProfile\(\) \? settingsSkeleton\(\) : roomsSkeleton\(\)\)/);
   assert.ok((account.match(/await settle\(\);/g) ?? []).length >= 3, '로그인·탈퇴 마무리·내 방/내 계정 화면 앞');
-  assert.doesNotMatch(read('account.html'), /연결을 확인하는 중이에요/, '0.1초 안에 끝나도 글자가 깜빡이지 않게');
+  assert.doesNotMatch(read('account.html'), /연결을 확인하는 중이에요|checking (the )?connection|>\s*Connecting/i, '0.1초 안에 끝나도 글자가 깜빡이지 않게');
 });
 
 test('체험 데모에서 느린 연결을 흉내 낼 수 있다(?slow=밀리초, ?slow=0이면 끈다)', () => {
