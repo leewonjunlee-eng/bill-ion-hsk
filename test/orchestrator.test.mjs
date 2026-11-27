@@ -54,14 +54,14 @@ test('version이 바뀌면 다시 평가하고 이전 청구서를 superseded로
   assert.ok(invoices.every((i) => i.id.includes(':v2:')));
   const old = (await store.list('invoices', { roomId: 'demo-t' })).filter((i) => i.version === 1);
   assert.deepEqual(old.map((i) => i.status).sort(), ['disputed', 'superseded', 'superseded', 'superseded']);
-  assert.ok((await store.listEvents('demo-t')).some((e) => e.text === '지출이 바뀌어 다시 보내요'));
+  assert.ok((await store.listEvents('demo-t')).some((e) => e.text === 'The expenses changed, so the invoices are being sent again'));
 });
 
 test('확인 필요 줄이 있으면 409', async () => {
   const { store, orch } = await setup();
   const izakaya = await store.get('expenses', 'demo-t-izakaya');
   await store.put('expenses', { ...izakaya, alloc: { ochazuke: { consumers: ['cs'], confidence: 0.3, reason: '' } } });
-  await assert.rejects(orch.sendInvoices('demo-t', 'me'), (e) => e.status === 409 && e.message === '확인이 필요한 줄이 있어요');
+  await assert.rejects(orch.sendInvoices('demo-t', 'me'), (e) => e.status === 409 && e.message === 'Some lines still need to be checked');
 });
 
 test('한도를 넘으면 주인에게 묻고, 본인만 답할 수 있다', async () => {

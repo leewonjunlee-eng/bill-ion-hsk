@@ -15,7 +15,7 @@ export async function resolveModel(key, preferred) {
       .sort((a, b) => Number(b.m[1]) - Number(a.m[1]) || (a.m[2] ? 1 : 0) - (b.m[2] ? 1 : 0));
     if (flash.length) return flash[0].n;
   } catch (e) {
-    console.warn('모델 목록 조회 실패, 기본 모델 사용:', e.message);
+    console.warn('Could not list models, using the default model:', e.message);
   }
   return 'gemini-flash-latest';
 }
@@ -73,7 +73,7 @@ export function withMonthlyBudget(gemini, { maxCalls = 0, now = () => new Date()
         month = key;
         count = 0;
       }
-      if (count >= maxCalls) throw new Error(`이번 달 Gemini 호출 한도(${maxCalls}회)를 넘었어요`);
+      if (count >= maxCalls) throw new Error(`Over this month's Gemini call limit (${maxCalls} calls)`);
       count++;
       return gemini.generate(args);
     },

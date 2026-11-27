@@ -4,7 +4,7 @@ export function firebaseConfig(env) {
 }
 export async function firebaseAuth(env) {
   if (!firebaseConfig(env)) return null;
-  if (env.NODE_ENV === 'production' && env.FIREBASE_AUTH_EMULATOR_HOST) throw new Error('운영에서는 Auth Emulator를 사용할 수 없어요');
+  if (env.NODE_ENV === 'production' && env.FIREBASE_AUTH_EMULATOR_HOST) throw new Error('The Auth Emulator cannot be used in production');
   const { initializeApp, applicationDefault } = await import('firebase-admin/app');
   const { getAuth } = await import('firebase-admin/auth');
   const app = initializeApp({ projectId: env.FIREBASE_PROJECT_ID, ...(env.FIREBASE_AUTH_EMULATOR_HOST ? {} : { credential: applicationDefault() }) });

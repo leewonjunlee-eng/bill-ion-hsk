@@ -12,7 +12,7 @@ test('토큰을 발급하면 그 토큰으로 원래 링크가 나온다', () =>
 test('토큰 자체에 링크가 들어있지 않다(디코딩해도 계좌가 안 보여야 한다)', () => {
   const token = signQrToken('supertoss://send?bank=토스뱅크&accountNo=1&amount=1');
   assert.ok(!token.includes('accountNo'));
-  assert.doesNotMatch(Buffer.from(token, 'base64url').toString('utf8'), /accountNo|토스뱅크/);
+  assert.doesNotMatch(Buffer.from(token, 'base64url').toString('utf8'), /accountNo|토스뱅크|Toss ?Bank/);
 });
 
 test('유효기간이 지나면 null', () => {

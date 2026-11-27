@@ -84,11 +84,11 @@ export function registerDemoSeqRoutes(routes, { store, clock }) {
     res.end(svg);
   });
   routes.post('/api/demo/seq', async ({ req }) => {
-    if (overLimit(clientIp(req))) throw new HttpError(429, '잠시 뒤에 다시 보내 주세요');
+    if (overLimit(clientIp(req))) throw new HttpError(429, 'Please send it again in a moment');
     const { sid, task, score } = await readJson(req, { limit: 1_000 });
-    if (typeof sid !== 'string' || !SID.test(sid)) throw new HttpError(400, '체험 id가 올바르지 않아요');
-    if (!SEQ_TASKS.includes(task)) throw new HttpError(400, '모르는 task예요');
-    if (!Number.isInteger(score) || score < 1 || score > 7) throw new HttpError(400, '점수는 1~7 사이의 정수예요');
+    if (typeof sid !== 'string' || !SID.test(sid)) throw new HttpError(400, 'Invalid demo session id');
+    if (!SEQ_TASKS.includes(task)) throw new HttpError(400, 'Unknown task');
+    if (!Number.isInteger(score) || score < 1 || score > 7) throw new HttpError(400, 'The score must be a whole number from 1 to 7');
     await store.put(COL, { id: `${sid}_${task}`, sid, task, score, at: clock().toISOString() });
     return seqSummary(await store.list(COL));
   });

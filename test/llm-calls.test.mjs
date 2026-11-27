@@ -30,7 +30,7 @@ test('줄이 하나면 Gemini 없이 함께 있던 사람이 똑같이 나누고
   assert.equal(out.how, 'obvious');
   assert.deepEqual(out.alloc.t.consumers, ['a', 'b', 'c']);
   assert.ok(out.alloc.t.confidence >= 0.7);
-  assert.equal(out.why, '줄이 하나라 함께 있던 3명이 똑같이 나눴어요.');
+  assert.equal(out.why, 'There was only one line, so it was split equally among the 3 people who were there.');
 });
 
 test('함께 있던 사람이 한 명이면 모든 줄이 그 사람 몫이고 묻지 않는다', async () => {
@@ -99,7 +99,7 @@ test('방의 메뉴 배분: 같은 내용이면 Gemini를 한 번만 부르고 h
     assert.equal((await (await allocate(second)).json()).how, 'cache');
     assert.equal(g.calls, 1);
     const metas = (await store.listEvents(second)).filter((e) => e.kind === 'allocated').map((e) => e.meta);
-    assert.match(metas.at(-1), /이전 답 재사용/);
+    assert.match(metas.at(-1), /reused an earlier answer/);
   } finally {
     server.close();
   }

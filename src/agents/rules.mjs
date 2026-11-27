@@ -5,10 +5,10 @@ import { MANUAL_WAIT_DAYS, sendWhenOf } from '../../public/agent-rules.js';
 // 이유는 청구서와 비서 기록에 남아 방 사람 모두가 보므로 한도 금액은 넣지 않는다. 금액은 본인의 '내 비서'에만 있다(#5)
 export function evaluateInvoice({ invoice, settings, evidence = [] }) {
   const { autoAccept, onDispute } = settings.rules;
-  if (invoice.net >= 0) return { decision: 'accept', reasons: [invoice.net > 0 ? '받을 돈이 있어요' : '정산할 금액이 없어요'] };
+  if (invoice.net >= 0) return { decision: 'accept', reasons: [invoice.net > 0 ? 'There is money to receive' : 'Nothing to settle'] };
   if (evidence.length && onDispute === 'evidence') return { decision: 'dispute', reasons: evidence.map((e) => e.summary) };
-  if (-invoice.net <= autoAccept) return { decision: 'accept', reasons: ['자동 수락 한도 안이에요'] };
-  return { decision: 'ask', reasons: ['자동 수락 한도를 넘어서 주인에게 물어요'] };
+  if (-invoice.net <= autoAccept) return { decision: 'accept', reasons: ['Within the auto-accept limit'] };
+  return { decision: 'ask', reasons: ['Over the auto-accept limit, so asking the owner'] };
 }
 
 const KST = 9 * 3600_000;

@@ -41,7 +41,7 @@ export async function readBody(req, { limit = 20_000 } = {}) {
   let body = '';
   for await (const chunk of req) {
     body += chunk;
-    if (body.length > limit) throw new HttpError(413, '요청이 너무 커요');
+    if (body.length > limit) throw new HttpError(413, 'The request is too large');
   }
   req.rawBody = body;
   return body;
@@ -49,12 +49,12 @@ export async function readBody(req, { limit = 20_000 } = {}) {
 
 export async function readJson(req, { limit = 20_000 } = {}) {
   const body = await readBody(req, { limit });
-  if (body.length > limit) throw new HttpError(413, '요청이 너무 커요'); // 미리 받을 때는 더 큰 한도로 받았을 수 있다
+  if (body.length > limit) throw new HttpError(413, 'The request is too large'); // 미리 받을 때는 더 큰 한도로 받았을 수 있다
   if (!body) return {};
   try {
     return JSON.parse(body);
   } catch {
-    throw new HttpError(400, 'JSON 형식이 아니에요');
+    throw new HttpError(400, 'Invalid JSON');
   }
 }
 

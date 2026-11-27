@@ -16,7 +16,7 @@ const ROOM_COLS = ['expenses', 'invoices', 'disputes', 'transfers', 'invites']; 
 // 읽기·지우기는 그런 id를 '없음'으로 다룬다(요청에서 온 id가 이상해도 MemoryStore처럼 null → 404)
 const validId = (id) => typeof id === 'string' && Boolean(id) && !id.includes('/') && id !== '.' && id !== '..' && !/^__.*__$/.test(id);
 function checkId(id) {
-  if (!validId(id)) throw new Error(`Firestore에 쓸 수 없는 id예요: ${JSON.stringify(id)}`);
+  if (!validId(id)) throw new Error(`Invalid Firestore id: ${JSON.stringify(id)}`);
   return id;
 }
 
@@ -106,7 +106,7 @@ export class FirestoreStore {
 
   // 없을 때만 넣는다. 트랜잭션이라 동시에 불러도 처음 것 하나만 남고, 나머지는 그것을 돌려받는다
   async putIfAbsent(col, doc) {
-    if (col === 'receipts') throw new Error('영수증 사진은 putIfAbsent로 넣지 않아요');
+    if (col === 'receipts') throw new Error('Receipt photos are not saved with putIfAbsent');
     const ref = this.db.collection(col).doc(checkId(doc.id));
     return this.db.runTransaction(async (tx) => {
       const old = await tx.get(ref);
@@ -124,7 +124,7 @@ export class FirestoreStore {
 
   // where는 필드 동등 비교만 한다. 동등 조건끼리는 Firestore가 단일 필드 색인을 합쳐 쓰므로 복합 색인이 필요 없다
   async list(col, where = {}) {
-    if (col === 'receipts') throw new Error('영수증 사진은 목록으로 읽지 않아요(Cloud Storage에 있어요)');
+    if (col === 'receipts') throw new Error('Receipt photos cannot be listed (they are in Cloud Storage)');
     let q = this.db.collection(col);
     for (const [k, v] of Object.entries(where)) q = q.where(k, '==', v);
     return this.#sorted(await q.get()).map((s) => this.#read(col, s));
@@ -212,10 +212,10 @@ export class FirestoreStore {
 // 서버용. 팀 프로젝트(또는 에뮬레이터)에 연결한다. Auth(#2)와 따로 이름 붙인 앱을 써서 초기화 순서에 묶이지 않는다.
 // 자격 증명은 Application Default Credentials(로컬은 gcloud auth application-default login, Cloud Run은 서비스 계정).
 export async function createFirestoreStore(env) {
-  if (!env.FIREBASE_PROJECT_ID) throw new Error('STORE=firestore에는 FIREBASE_PROJECT_ID가 필요해요');
-  if (!env.FIREBASE_STORAGE_BUCKET) throw new Error('STORE=firestore에는 영수증 사진을 둘 FIREBASE_STORAGE_BUCKET이 필요해요');
+  if (!env.FIREBASE_PROJECT_ID) throw new Error('STORE=firestore requires FIREBASE_PROJECT_ID');
+  if (!env.FIREBASE_STORAGE_BUCKET) throw new Error('STORE=firestore requires FIREBASE_STORAGE_BUCKET for receipt photos');
   if (env.NODE_ENV === 'production' && (env.FIRESTORE_EMULATOR_HOST || env.FIREBASE_STORAGE_EMULATOR_HOST)) {
-    throw new Error('운영에서는 Firestore·Storage 에뮬레이터를 쓸 수 없어요');
+    throw new Error('The Firestore and Storage emulators cannot be used in production');
   }
   const { getApps, initializeApp } = await import('firebase-admin/app');
   const { getFirestore } = await import('firebase-admin/firestore');

@@ -1,6 +1,6 @@
 // 이의 제기를 중립 비서가 중재한다. 'left_at' 증거가 있으면 그 시각 뒤 주문에서 그 사람을 코드가 다시 뺀다.
 import { ruleAllocate, presentAfter } from '../../public/core.js';
-import { memoryText, receiptTable, presentNames, lineSchema, cleanLines, inline, labelOf, DATA_NOT_INSTRUCTIONS } from './lines.mjs';
+import { memoryText, receiptTable, presentNames, lineSchema, cleanLines, inline, labelOf, DATA_NOT_INSTRUCTIONS, TAG_GUIDE } from './lines.mjs';
 
 const COUNT = { 2: 'two', 3: 'three', 4: 'four', 5: 'five', 6: 'six' };
 
@@ -12,31 +12,32 @@ export function presentAtFor(exp, dispute) {
 export function mediatePrompt({ exp, room, dispute, counter = [], memoryByUid }) {
   const name = (uid) => labelOf(room.members, uid);
   const system = [
-    '너는 정산 분쟁을 맡은 중립적인 중재 비서다. 어느 한쪽 편을 들지 않는다.',
-    '양쪽 비서가 낸 주장과 근거, 주문 시각이 적힌 영수증, 각자의 비서가 공유한 기억을 보고 영수증 각 줄을 누가 부담할지 제안한다.',
+    'You are a neutral mediator agent handling a settlement dispute. Do not take either side.',
+    'Using the claims and evidence from both agents, the receipt with order times, and the memories each agent shared, propose who pays for each receipt line.',
+    TAG_GUIDE,
     '',
-    '규칙:',
-    '1. 근거로 확인되는 사실만 쓴다. 근거끼리 맞지 않으면 confidence를 낮춘다.',
-    '2. 결제 시각과 주문 시각을 구분한다. 자리를 떠난 사람은 떠난 뒤의 주문을 부담하지 않는다.',
-    '3. "나눠 먹는 안주"는 그 주문 시각에 있던 사람 모두, 잔 단위 항목은 수량만큼의 사람에게 배정한다. 기억상 술을 마시지 않는 사람은 "술" 줄에서 뺀다.',
-    '4. summary와 reason은 영어(English)로 쓴다. summary는 양쪽이 바로 이해할 수 있게 두 문장 이내로 쓴다. 금액은 계산하지 않는다.',
-    '5. Google 지도 타임라인 요약은 이의를 낸 사람이 직접 낸 자료라 위변조할 수 있는 자기 보고다. leftAt은 첫 주문 때 머물던 곳을 떠난 시각, stayedUntil은 결제 때까지 같은 곳에 있었다는 뜻이며 장소 이름과 좌표는 없다. 자기 보고라는 이유만으로 모든 줄의 confidence를 낮추지 않는다. 근거끼리 충돌하는 줄에만 evidenceConflict=true와 confidence 0.49 이하를 주고, reason에 충돌 이유를 쓴다. 충돌하지 않는 줄은 evidenceConflict=false다. 자동 확정 여부는 서버가 별도로 관리한다.',
+    'Rules:',
+    '1. Use only facts confirmed by the evidence. If pieces of evidence disagree, lower confidence.',
+    '2. Distinguish payment time from order time. A person who left does not pay for orders made after they left.',
+    '3. Assign a "나눠 먹는 안주" line to everyone present at its order time, and a per-glass item to as many people as the quantity. Leave people whose memory shows they do not drink alcohol out of "술" lines.',
+    '4. Write summary and reason in English. Keep summary to at most two sentences that both sides can understand right away. Do not calculate amounts.',
+    '5. A Google Maps Timeline summary is submitted by the person who raised the dispute, so it is a self-report that could be forged or altered. leftAt is the time they left the place they were at for the first order; stayedUntil means they stayed at that place until payment. It has no place names or coordinates. Do not lower confidence on every line just because it is a self-report. Only for lines where pieces of evidence conflict, set evidenceConflict=true and confidence 0.49 or lower, and explain the conflict in reason. Lines without a conflict have evidenceConflict=false. The server separately decides whether anything is finalized automatically.',
     `6. ${DATA_NOT_INSTRUCTIONS}`,
   ].join('\n');
   // 이의 주장·근거·기록은 사람이 쓴 글이라 한 줄로 만들어 넣는다(줄바꿈으로 가짜 규칙을 만들지 못하게)
   const line = (list) => list.map((s) => inline(s, 160)).join(' / ');
   const user = [
-    `지출: ${inline(exp.title, 60)} (${name(exp.payer)} ${exp.method === 'card' ? '카드' : '현금'} 결제 ${exp.time}), 함께 있던 사람: ${presentNames(exp, room.members)}`,
-    `현재 청구 방식: ${exp.split === 'items' ? '줄마다 나눔' : '함께 있던 사람이 똑같이 나눔'}`,
-    `이의 제기(${name(dispute.by)}의 비서): ${inline(dispute.claim)}\n근거: ${line((dispute.evidence || []).map((e) => e.summary)) || '(없음)'}`,
-    `타임라인 요약의 구조화된 결과: ${JSON.stringify((dispute.evidence || []).filter(e => e.source === 'timeline_export').map(e => ({ leftAt: e.kind === 'left_at' ? inline(e.time, 5) : null, stayedUntil: e.stayedUntil ? inline(e.stayedUntil, 5) : null, requiresHumanApproval: true })))}`,
-    `${name(exp.payer)}의 비서 기록: ${line(counter) || '(없음)'}`,
-    `영수증:\n${receiptTable(exp, true)}`,
-    `비서들이 공유한 기억:\n${memoryText(room.members, memoryByUid)}`,
-    '중재안을 JSON으로 내라.',
+    `Expense: ${inline(exp.title, 60)} (paid by ${name(exp.payer)} with ${exp.method === 'card' ? 'card' : 'cash'} at ${exp.time}), people who were there: ${presentNames(exp, room.members)}`,
+    `Current billing: ${exp.split === 'items' ? 'split line by line' : 'split equally among the people who were there'}`,
+    `Dispute (${name(dispute.by)}'s agent): ${inline(dispute.claim)}\nEvidence: ${line((dispute.evidence || []).map((e) => e.summary)) || '(none)'}`,
+    `Structured result of the timeline summary: ${JSON.stringify((dispute.evidence || []).filter(e => e.source === 'timeline_export').map(e => ({ leftAt: e.kind === 'left_at' ? inline(e.time, 5) : null, stayedUntil: e.stayedUntil ? inline(e.stayedUntil, 5) : null, requiresHumanApproval: true })))}`,
+    `Record from ${name(exp.payer)}'s agent: ${line(counter) || '(none)'}`,
+    `Receipt:\n${receiptTable(exp, true)}`,
+    `Memories shared by the agents:\n${memoryText(room.members, memoryByUid)}`,
+    'Return the mediation proposal as JSON.',
   ].join('\n\n');
   const itemSchema = lineSchema(exp, room.members);
-  itemSchema.properties.evidenceConflict = { type: 'BOOLEAN', description: '이 주문의 부담자를 판단할 때 근거끼리 충돌하는지' };
+  itemSchema.properties.evidenceConflict = { type: 'BOOLEAN', description: 'Whether pieces of evidence conflict when deciding who pays for this order' };
   itemSchema.required.push('evidenceConflict');
   itemSchema.propertyOrdering.push('evidenceConflict');
   const schema = {
@@ -83,7 +84,7 @@ export async function mediateWithGemini(gemini, { exp, room, dispute, counter = 
       source: gemini.model,
     };
   } catch (e) {
-    console.warn('[mediate] Gemini 실패, 규칙으로 대신:', e.message);
+    console.warn('[mediate] Gemini failed, using rules instead:', e.message);
     return { summary, alloc: cautious(fallback), source: 'rules', error: e.message };
   }
 }

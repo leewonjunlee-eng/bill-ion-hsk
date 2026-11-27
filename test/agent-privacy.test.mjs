@@ -57,8 +57,8 @@ test('자동 수락 한도 금액은 본인만 본다: 다른 사람의 방 화�
     for (const uid of ['me', 'yh', 'cs']) assert.ok(!(await seenBy(req, 'r', uid)).includes('₩3,333'), `${uid}에게 민수의 한도 금액이 보이지 않는다`);
     // 한도 안에서 받았다는 사실과 넘어서 물었다는 사실은 남는다
     const all = (await store.listEvents('r')).map((e) => `${e.text} ${e.meta ?? ''}`).join('\n');
-    assert.match(all, /자동 수락 한도 안이에요/);
-    assert.match(all, /자동 수락 한도를 넘어서/);
+    assert.match(all, /Within the auto-accept limit/);
+    assert.match(all, /Over the auto-accept limit/);
 
     // 본인은 내 비서 설정과 방의 내 요약에서 본다
     assert.equal((await req('/api/me/agent', 'cs')).json.rules.autoAccept, 187_654);

@@ -140,8 +140,8 @@ test('편할 때 보내기: 바로 알리지 않고, 다음 날 09:00(KST)까지
   assert.equal((await ctx.store.get('transfers', t.id)).status, 'due');
   const due = await dueFor(ctx, t);
   assert.equal(due.length, 1, '한 번만 알린다');
-  assert.match(due[0].text, /받았다는 확인이 없어요/);
-  assert.equal(due[0].meta, '정해 둔 규칙: Send whenever convenient');
+  assert.match(due[0].text, /is not confirmed yet/);
+  assert.equal(due[0].meta, 'Rule: Send whenever convenient');
   assert.equal(await asksToSend(ctx, t), true);
   assert.equal((await ctx.orch.approveTransfer(ROOM, t.id, 'cs')).status, 'opened');
   assert.equal((await ctx.orch.markSent(ROOM, t.id, 'cs')).status, 'sent');
@@ -209,33 +209,33 @@ test('규칙 적용 근거가 비서 기록에 남는다: 자동 수락, 묻기,
   await ctx.settings.updateRules('cs', { autoAccept: 200_000, sendWhen: { payday: 25 } });
   await ctx.settings.updateRules('ms', { autoAccept: 0 });
   await ctx.orch.sendInvoices(ROOM, 'me');
-  assert.ok((await ctx.metas('invoice_accepted')).includes('정해 둔 규칙: 자동 수락 한도 안이에요'), '한도 금액은 방 사람에게 보이지 않는다');
-  assert.deepEqual(await ctx.metas('invoice_asked'), ['정해 둔 규칙: 자동 수락 한도 초과']);
+  assert.ok((await ctx.metas('invoice_accepted')).includes('Rule: Within the auto-accept limit'), '한도 금액은 방 사람에게 보이지 않는다');
+  assert.deepEqual(await ctx.metas('invoice_asked'), ['Rule: over the auto-accept limit']);
   await ctx.orch.answerInvoice(ROOM, (await ctx.invoiceOf('ms')).id, 'ms', { decision: 'accept' });
   const scheduled = await ctx.metas('transfer_scheduled');
-  assert.ok(scheduled.includes('정해 둔 규칙: Send on day 25 of each month'));
-  assert.ok(scheduled.includes('정해 둔 규칙: Send whenever convenient'));
+  assert.ok(scheduled.includes('Rule: Send on day 25 of each month'));
+  assert.ok(scheduled.includes('Rule: Send whenever convenient'));
 });
 
 test('규칙 적용 근거: 편할 때 보내기, 이의 처리(근거 이의·중재 맡기기·묻기)', async () => {
   const manual = await setup();
   await manual.settings.updateRules('cs', { sendWhen: 'manual' });
   await manual.orch.sendInvoices(ROOM, 'me');
-  assert.ok((await manual.metas('transfer_scheduled')).includes('정해 둔 규칙: Send whenever convenient'));
+  assert.ok((await manual.metas('transfer_scheduled')).includes('Rule: Send whenever convenient'));
 
   const med = await setup({ evidence: true });
   await med.settings.updateRules('ms', { onDispute: 'evidence' });
   await med.settings.updateRules('me', { onDispute: 'mediator' });
   await med.orch.sendInvoices(ROOM, 'me');
   const applied = await med.metas('rule_applied');
-  assert.ok(applied.includes('정해 둔 규칙: Dispute when there is evidence'));
-  assert.ok(applied.includes('정해 둔 규칙: Leave it to the mediator agent'));
+  assert.ok(applied.includes('Rule: Dispute when there is evidence'));
+  assert.ok(applied.includes('Rule: Leave it to the mediator agent'));
 
   const ask = await setup({ evidence: true });
   await ask.settings.updateRules('ms', { onDispute: 'evidence' });
   await ask.orch.sendInvoices(ROOM, 'me');
   const [e] = (await ask.store.listEvents(ROOM)).filter((x) => x.kind === 'dispute_asked');
-  assert.equal(e.meta, '정해 둔 규칙: 이의가 오면 주인에게 묻기');
+  assert.equal(e.meta, 'Rule: ask the owner when a dispute comes in');
   assert.deepEqual([e.action.type, e.action.for], ['agree_dispute', 'me']);
 });
 
@@ -253,7 +253,7 @@ test('기억: 더하기·고치기·지우기, 공백 정리', async () => {
 test('기억: 무료 요금제 5개 한도, 중복, 빈 글, 60자 초과는 막는다', async () => {
   const { settings, store } = await setup();
   for (let i = 1; i <= 5; i++) await settings.addMemory('new', `기억 ${i}`);
-  await assert.rejects(settings.addMemory('new', '여섯 번째'), (e) => e.status === 409 && /5개까지/.test(e.message));
+  await assert.rejects(settings.addMemory('new', '여섯 번째'), (e) => e.status === 409 && /up to 5 memories/.test(e.message));
   await assert.rejects(settings.editMemory('new', '기억 1', '기억 2'), (e) => e.status === 409);
   await assert.rejects(settings.editMemory('new', '없는 기억', '다른 글'), (e) => e.status === 404);
   await assert.rejects(settings.deleteMemory('new', '없는 기억'), (e) => e.status === 404);
@@ -358,7 +358,7 @@ test('계좌를 바꾸면 그 사람이 받을 모든 방의 대기 중 송금 �
     const t = pair(await list(id), 'ms', 'me');
     assert.match(t.link, /accountNo=123456789012/, id);
     assert.equal(t.fallback.bank, 'KB Kookmin Bank');
-    assert.ok((await ctx.store.listEvents(id)).some((e) => e.kind === 'payout_set' && /바꿨어요/.test(e.text)));
+    assert.ok((await ctx.store.listEvents(id)).some((e) => e.kind === 'payout_set' && /Changed the receiving account/.test(e.text)));
   }
   // 이미 보냈다고 한 송금은 옛 계좌 그대로(새 계좌로 또 보내지 않게), 남이 받는 송금도 그대로
   assert.deepEqual((await ctx.store.get('transfers', sent.id)).link, sent.link);
@@ -498,7 +498,7 @@ test('처음 설정: 기본값으로 시작을 다시 고르면 규칙이 기본
 test('설정 응답(규칙·기억 변경 포함)에는 계좌번호 전체가 없다', async () => {
   const { settings } = await setup();
   for (const v of [await settings.get('cs'), await settings.updateRules('cs', { autoAccept: 1 }), await settings.addMemory('cs', '새 기억')]) {
-    assert.deepEqual(v.payout, { bank: '토스뱅크', holder: '철수', last4: '0002' });
+    assert.deepEqual(v.payout, { bank: 'Toss Bank', holder: '철수', last4: '0002' });
     assert.ok(!JSON.stringify(v).includes('100000000002'));
   }
   assert.equal((await settings.get('nobody')).payout, null);

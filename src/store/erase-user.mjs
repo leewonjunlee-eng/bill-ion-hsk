@@ -22,7 +22,7 @@ export function eraseUserSnapshot(cols, events, uid, now = new Date()) {
       return value;
     };
     const savedRoom = reference(room);
-    savedRoom.members = savedRoom.members.map(m => m.uid === anonymous ? { uid: anonymous, name: '탈퇴한 사용자', deleted: true } : m);
+    savedRoom.members = savedRoom.members.map(m => m.uid === anonymous ? { uid: anonymous, name: 'Deleted user', deleted: true } : m);
     next.get('rooms').set(roomId, savedRoom);
     for (const col of ['expenses', 'invoices', 'disputes', 'transfers', 'receipts', 'invites']) { // invites: 링크를 만든 사람(createdBy)만 끊고 링크는 남긴다
       for (const [id, original] of [...next.get(col) || []]) {
@@ -32,15 +32,15 @@ export function eraseUserSnapshot(cols, events, uid, now = new Date()) {
           if (original.createdBy === uid || original.payer === uid) {
             next.get('receipts')?.delete(original.id);
             saved.hasReceipt = false;
-            saved.title = '탈퇴한 사용자의 지출';
-            if (saved.items) saved.items = saved.items.map(it => ({ ...it, name: '주문 항목' }));
+            saved.title = 'Expense from a deleted user';
+            if (saved.items) saved.items = saved.items.map(it => ({ ...it, name: 'Order item' }));
           }
           // Allocation explanations can quote private agent memories.
-          for (const line of Object.values(saved.alloc || {})) line.reason = '공유 정산 기록';
+          for (const line of Object.values(saved.alloc || {})) line.reason = 'Shared settlement record';
         }
-        if (col === 'invoices') saved.reasons = ['공유 정산 기록'];
+        if (col === 'invoices') saved.reasons = ['Shared settlement record'];
         if (col === 'disputes') {
-          saved.claim = '개인정보 삭제 후 남긴 정산 이의';
+          saved.claim = 'Settlement dispute kept after personal data was deleted';
           saved.evidence = [];
           if (saved.status !== 'resolved') { saved.status = 'open'; saved.agreedBy = []; }
           delete saved.proposal;
@@ -61,10 +61,10 @@ export function eraseUserSnapshot(cols, events, uid, now = new Date()) {
     logs.set(roomId, (logs.get(roomId) || []).map(ev => {
       const out = reference(ev);
       return { seq: out.seq, roomId, at: out.at, from: out.from, to: out.to,
-        kind: out.kind, text: '개인정보 삭제 후 남긴 정산 기록', ...(out.action ? { action: out.action } : {}) };
+        kind: out.kind, text: 'Settlement record kept after personal data was deleted', ...(out.action ? { action: out.action } : {}) };
     }));
     const roomLog = logs.get(roomId);
-    roomLog.push({ seq: (roomLog.at(-1)?.seq || 0) + 1, roomId, at: now.toISOString(), from: 'system', to: 'all', kind: 'account_erased', text: '탈퇴한 참여자의 개인정보를 삭제하고 정산 기록을 익명 처리했어요.' });
+    roomLog.push({ seq: (roomLog.at(-1)?.seq || 0) + 1, roomId, at: now.toISOString(), from: 'system', to: 'all', kind: 'account_erased', text: 'A former member’s personal data was deleted and the settlement records were anonymized.' });
   }
   return { cols: next, events: logs, removedLinks };
 }

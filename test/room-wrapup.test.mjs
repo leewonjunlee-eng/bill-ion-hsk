@@ -63,7 +63,7 @@ test('원화 방은 환율 정책을 받지 않고(409), 정책 동의 없이 �
   const preview = (await get(`/api/invites/${token}`)).json.room;
   assert.ok(!('policy' in preview) && !('currency' in preview), '참가 화면에도 정책이 없다');
   const joined = (await store.listEvents(roomId)).find((e) => e.kind === 'member_joined');
-  assert.ok(!joined.text.includes('환율'), joined.text);
+  assert.ok(!/환율|exchange rate/i.test(joined.text), joined.text);
   await spend(roomId, 'me', ['me', 'cs']);
   assert.equal((await post(`/api/rooms/${roomId}/invoices/send`, 'me')).status, 200);
   assert.equal((await room(roomId)).status, 'settling');
@@ -87,7 +87,7 @@ test('외화 방은 여전히 전원이 정책에 동의해야 정산을 시작�
   const { json: inv } = await post(`/api/rooms/${json.room.id}/invite`, 'me');
   await post(`/api/invites/${inv.token}/join`, 'cs', { agree: true });
   const joined = (await store.listEvents(json.room.id)).find((e) => e.kind === 'member_joined');
-  assert.match(joined.text, /환율 정책 ‘실제 낸 원화’/);
+  assert.match(joined.text, /exchange rate policy ‘실제 낸 원화’/);
   const blocked = await post(`/api/rooms/${json.room.id}/invoices/send`, 'me');
   assert.equal(blocked.status, 409);
   assert.match(blocked.json.error, /철수/);
@@ -187,7 +187,7 @@ test('내보내기: 방을 만든 사람만, 낀 돈이 없는 사람만 내보�
   assert.equal((await get(`/api/rooms/${roomId}`, 'yh')).status, 403);
   const ev = (await store.listEvents(roomId)).at(-1);
   assert.equal(ev.kind, 'member_removed');
-  assert.match(ev.text, /재윤이 영희를 방에서 내보냈어요/);
+  assert.match(ev.text, /재윤 removed 영희 from the room/);
 });
 
 test('나갔던 사람이 링크로 다시 들어오면 예전 칸이 되살아난다(한 칸, 동의는 다시)', async () => {
@@ -240,7 +240,7 @@ test('나간 뒤에 탈퇴하면 나간 방의 기록도 익명으로 바뀐다'
   await store.eraseUser('ms');
   const saved = await room(roomId);
   assert.ok(!saved.members.some((m) => m.uid === 'ms' || m.name === '민수'));
-  assert.ok(saved.members.some((m) => m.deleted && m.name === '탈퇴한 사용자'));
+  assert.ok(saved.members.some((m) => m.deleted && m.name === 'Deleted user'));
 });
 
 // ---------------------------------------------------------------- 짐작한 대로 한꺼번에 확인
@@ -265,7 +265,7 @@ test('지출 하나의 확인할 줄을 짐작한 대로 한 번에 확정하고
   assert.deepEqual(saved.alloc.l1.consumers, exp.alloc.l1.consumers, '짐작 그대로');
   assert.deepEqual(saved.alloc.l2.consumers, ['me'], '고친 줄은 고친 대로');
   assert.equal((await room(roomId)).version, before + 1);
-  assert.match((await store.listEvents(roomId)).at(-1).text, /‘저녁’의 3줄을 비서가 짐작한 대로 확인했어요/);
+  assert.match((await store.listEvents(roomId)).at(-1).text, /Confirmed the agent’s guesses for ‘저녁’ \(lines: 3\)/);
   assert.equal((await post(`/api/rooms/${roomId}/expenses/${exp.id}/confirm-guesses`, 'cs', {})).json.confirmed, 0, '두 번 눌러도 다시 바꾸지 않는다');
   assert.equal((await post(`/api/rooms/${roomId}/expenses/${exp.id}/confirm-guesses`, 'cs', { edits: { l1: ['stranger'] } })).status, 200, '확인할 줄이 없으면 고친 값도 보지 않는다');
 });
@@ -278,7 +278,7 @@ test('방의 모든 지출에서 확인할 줄을 한꺼번에 확정하면 청�
   const { json } = await post(`/api/rooms/${roomId}/confirm-guesses`, 'me');
   assert.equal(json.confirmed, 4);
   assert.equal(json.expenses.length, 2);
-  assert.match((await store.listEvents(roomId)).at(-1).text, /지출 2건의 4줄을 비서가 짐작한 대로 확인했어요/);
+  assert.match((await store.listEvents(roomId)).at(-1).text, /Confirmed the agent’s guesses for 2 expenses \(lines: 4\)/);
   assert.equal((await post(`/api/rooms/${roomId}/invoices/send`, 'me')).status, 200);
 });
 

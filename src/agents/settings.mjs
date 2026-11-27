@@ -12,10 +12,10 @@ const validAutoAccept = (v) => Number.isSafeInteger(v) && v >= 0 && v <= AUTO_AC
 const validSendWhen = (v) => v === 'now' || v === 'manual' || (Number.isInteger(v?.payday) && v.payday >= 1 && v.payday <= 31);
 const cleanValue = (field, v) => (field === 'sendWhen' ? (v.payday ? { payday: v.payday } : sendWhenOf(v)) : v);
 const CHECKS = {
-  autoAccept: [validAutoAccept, `자동 수락 한도는 0원에서 ${AUTO_ACCEPT_MAX.toLocaleString('ko-KR')}원 사이의 정수로 정해 주세요`],
-  sendWhen: [validSendWhen, '보낼 시기는 편할 때나 매달 1~31일 중에서 골라 주세요'],
-  onDispute: [(v) => Object.hasOwn(ON_DISPUTE, v), '이의 처리 방법을 골라 주세요'],
-  notify: [(v) => Object.hasOwn(NOTIFY, v), '알림 수준을 골라 주세요'],
+  autoAccept: [validAutoAccept, `Set the auto-accept limit to a whole number from ₩0 to ₩${AUTO_ACCEPT_MAX.toLocaleString('en-US')}`],
+  sendWhen: [validSendWhen, 'Choose send timing: whenever convenient, or a day from 1 to 31 of each month'],
+  onDispute: [(v) => Object.hasOwn(ON_DISPUTE, v), 'Choose how to handle disputes'],
+  notify: [(v) => Object.hasOwn(NOTIFY, v), 'Choose a notification level'],
 };
 
 // 저장된 값이 망가졌으면 비서가 더 조심하는 쪽(기본값)으로 읽는다. 한도가 이상하면 0이라 모든 청구서를 묻는다
@@ -55,11 +55,11 @@ export function rulesIn(settings, roomId) {
 export const memoryLimit = (doc) => MEMORY_LIMITS[doc.plan] ?? MEMORY_LIMITS.free;
 
 function cleanText(text) {
-  if (typeof text !== 'string') throw new HttpError(400, '기억을 적어 주세요');
+  if (typeof text !== 'string') throw new HttpError(400, 'Write a memory');
   // eslint-disable-next-line no-control-regex
   const s = text.replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim();
-  if (!s) throw new HttpError(400, '기억을 적어 주세요');
-  if (s.length > MEMORY_MAX_CHARS) throw new HttpError(400, `기억은 ${MEMORY_MAX_CHARS}자까지 쓸 수 있어요`);
+  if (!s) throw new HttpError(400, 'Write a memory');
+  if (s.length > MEMORY_MAX_CHARS) throw new HttpError(400, `A memory can be up to ${MEMORY_MAX_CHARS} characters`);
   return s;
 }
 
@@ -93,16 +93,16 @@ export function createAgentSettings({ store, clock = () => new Date() }) {
 
   function withMemory(doc, text) {
     const s = cleanText(text);
-    if (doc.memory.includes(s)) throw new HttpError(409, '이미 있는 기억이에요');
+    if (doc.memory.includes(s)) throw new HttpError(409, 'That memory already exists');
     const limit = memoryLimit(doc);
-    if (doc.memory.length >= limit) throw new HttpError(409, `무료 요금제는 기억을 ${limit}개까지 둘 수 있어요. 하나를 지우고 더해 주세요`);
+    if (doc.memory.length >= limit) throw new HttpError(409, `The free plan keeps up to ${limit} memories. Delete one before adding another`);
     return { ...doc, memory: [...doc.memory, s] };
   }
 
   // 기억은 글자로 가리킨다. 방별 공유 선택도 같은 글자를 보므로, 고칠 때 함께 바꾸고 지울 때 함께 지운다
   const eachRoom = (hidden, fn) => Object.fromEntries(Object.entries(hidden).map(([roomId, list]) => [roomId, fn(list)]));
   const mustHave = (doc, text) => {
-    if (!doc.memory.includes(text)) throw new HttpError(404, '그 기억을 찾을 수 없어요');
+    if (!doc.memory.includes(text)) throw new HttpError(404, 'Memory not found');
   };
 
   return {
@@ -135,7 +135,7 @@ export function createAgentSettings({ store, clock = () => new Date() }) {
       mustHave(doc, from);
       const s = cleanText(to);
       if (s === from) return view(doc);
-      if (doc.memory.includes(s)) throw new HttpError(409, '이미 있는 기억이에요');
+      if (doc.memory.includes(s)) throw new HttpError(409, 'That memory already exists');
       return saved({
         ...doc,
         memory: doc.memory.map((m) => (m === from ? s : m)),
@@ -157,7 +157,7 @@ export function createAgentSettings({ store, clock = () => new Date() }) {
     // 다 비우면 그 방의 흔적을 지운다. 기본 설정(rules)은 건드리지 않는다
     async setRoomRules(uid, roomId, input) {
       const fields = Object.keys(input ?? {});
-      if (fields.some((f) => !ROOM_RULES.includes(f))) throw new HttpError(400, '방마다 정할 수 있는 규칙은 자동 수락 한도, 보낼 시기, 이의 처리예요');
+      if (fields.some((f) => !ROOM_RULES.includes(f))) throw new HttpError(400, 'Only the auto-accept limit, send timing and disputes can be set per room');
       const doc = await read(uid);
       const own = { ...(doc.roomRules[roomId] ?? {}) };
       for (const f of fields) {

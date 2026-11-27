@@ -8,13 +8,13 @@ const settings = (autoAccept, onDispute = 'ask') => ({ rules: { autoAccept, send
 const leftAt = [{ kind: 'left_at', time: '22:55', summary: '22:55 단톡방 메시지 “먼저 들어갈게”' }];
 
 test('받을 돈이 있거나 0원이면 수락', () => {
-  assert.deepEqual(evaluateInvoice({ invoice: { net: 1200 }, settings: settings(0), evidence: [] }), { decision: 'accept', reasons: ['받을 돈이 있어요'] });
-  assert.deepEqual(evaluateInvoice({ invoice: { net: 0 }, settings: settings(0), evidence: [] }), { decision: 'accept', reasons: ['정산할 금액이 없어요'] });
+  assert.deepEqual(evaluateInvoice({ invoice: { net: 1200 }, settings: settings(0), evidence: [] }), { decision: 'accept', reasons: ['There is money to receive'] });
+  assert.deepEqual(evaluateInvoice({ invoice: { net: 0 }, settings: settings(0), evidence: [] }), { decision: 'accept', reasons: ['Nothing to settle'] });
 });
 
 test('자동 수락 한도 안이면 수락, 넘으면 주인에게 묻는다', () => {
-  assert.deepEqual(evaluateInvoice({ invoice: { net: -150000 }, settings: settings(150000), evidence: [] }), { decision: 'accept', reasons: ['자동 수락 한도 안이에요'] });
-  assert.deepEqual(evaluateInvoice({ invoice: { net: -50001 }, settings: settings(50000), evidence: [] }), { decision: 'ask', reasons: ['자동 수락 한도를 넘어서 주인에게 물어요'] });
+  assert.deepEqual(evaluateInvoice({ invoice: { net: -150000 }, settings: settings(150000), evidence: [] }), { decision: 'accept', reasons: ['Within the auto-accept limit'] });
+  assert.deepEqual(evaluateInvoice({ invoice: { net: -50001 }, settings: settings(50000), evidence: [] }), { decision: 'ask', reasons: ['Over the auto-accept limit, so asking the owner'] });
 });
 
 test('근거가 있고 규칙이 evidence면 이의를 낸다', () => {

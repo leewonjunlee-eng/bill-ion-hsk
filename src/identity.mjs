@@ -34,7 +34,7 @@ export function createIdentity({ auth = null, dev = false, now = Date.now } = {}
         const claims = await auth.verifyIdToken(match[1], !recent);
         if (!claims.uid) return null;
         if (!recent) checked.set(claims.uid, now());
-        who = { uid: claims.uid, name: claims.name || '사용자', authTime: claims.auth_time };
+        who = { uid: claims.uid, name: claims.name || 'User', authTime: claims.auth_time };
       } catch { return null; }
     } else if (dev) {
       const uid = String(req.headers['x-demo-user'] || '').trim();

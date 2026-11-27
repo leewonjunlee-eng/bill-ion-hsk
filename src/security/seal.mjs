@@ -14,7 +14,7 @@ export const isSealed = (v) => typeof v === 'string' && v.startsWith(PREFIX);
 // value는 일반 JSON 값이어야 한다(객체·배열·문자열·숫자·불리언·null). undefined·함수는 잠글 수 없다
 export function seal(value, key, label) {
   const json = JSON.stringify(value);
-  if (typeof json !== 'string') throw new Error(`잠글 수 없는 값이에요: ${label}`);
+  if (typeof json !== 'string') throw new Error(`Value cannot be sealed: ${label}`);
   const iv = crypto.randomBytes(IV_LEN);
   const cipher = crypto.createCipheriv(ALGO, key, iv, { authTagLength: TAG_LEN });
   cipher.setAAD(Buffer.from(label, 'utf8'));
@@ -23,9 +23,9 @@ export function seal(value, key, label) {
 }
 
 export function unseal(text, key, label) {
-  if (!isSealed(text)) throw new Error(`잠기지 않은 값이에요: ${label}`);
+  if (!isSealed(text)) throw new Error(`Value is not sealed: ${label}`);
   const raw = Buffer.from(text.slice(PREFIX.length), 'base64url');
-  if (raw.length <= IV_LEN + TAG_LEN) throw new Error(`잠긴 값이 망가졌어요: ${label}`);
+  if (raw.length <= IV_LEN + TAG_LEN) throw new Error(`Sealed value is corrupted: ${label}`);
   try {
     const decipher = crypto.createDecipheriv(ALGO, key, raw.subarray(0, IV_LEN), { authTagLength: TAG_LEN });
     decipher.setAAD(Buffer.from(label, 'utf8'));
@@ -34,7 +34,7 @@ export function unseal(text, key, label) {
     return JSON.parse(plain.toString('utf8'));
   } catch (cause) {
     // 원래 에러를 cause로 남긴다(열쇠 길이 실수 같은 코드 버그를 변조와 구분할 수 있게). 계좌 내용은 들어 있지 않다
-    throw new Error(`잠긴 값을 풀 수 없어요(열쇠가 다르거나 값이 바뀌었어요): ${label}`, { cause });
+    throw new Error(`Cannot open the sealed value (different key or changed value): ${label}`, { cause });
   }
 }
 
@@ -48,10 +48,10 @@ export function resolvePayoutKey(env = {}, { warn = console.warn } = {}) {
   const raw = String(env.PAYOUT_ENC_KEY ?? '').trim();
   if (raw) {
     const key = Buffer.from(raw, 'base64');
-    if (key.length !== 32) throw new Error('PAYOUT_ENC_KEY는 base64로 32바이트여야 해요');
+    if (key.length !== 32) throw new Error('PAYOUT_ENC_KEY must be 32 bytes in base64');
     return key;
   }
-  if (env.NODE_ENV === 'production') throw new Error('PAYOUT_ENC_KEY가 없어요. 배포에서는 Secret Manager로 넣어 주세요');
-  warn('[payout] PAYOUT_ENC_KEY가 없어 개발용 열쇠로 계좌·위치 요약을 잠가요. 배포에서는 꼭 설정해야 해요');
+  if (env.NODE_ENV === 'production') throw new Error('PAYOUT_ENC_KEY is missing. In deployment, provide it through Secret Manager');
+  warn('[payout] PAYOUT_ENC_KEY is missing, so accounts and location summaries are sealed with the development key. It must be set in deployment');
   return Buffer.from(DEV_KEY);
 }

@@ -20,15 +20,15 @@ const ok = {
 test('줄도 합계도 없으면 ok=false', async () => {
   const d = await extractReceipt(fake({ ...ok, items: [], total: 0 }), { image, room: DEMO_ROOM });
   assert.equal(d.ok, false);
-  assert.equal(d.reason, '영수증을 읽지 못했어요');
+  assert.equal(d.reason, 'Could not read the receipt');
 });
 
 test('차액이 있으면 adjustment 줄을 붙인다(합계 7860, 줄 합 7500 → unit 360)', async () => {
   const d = await extractReceipt(fake({ ...ok, items: [ok.items[0], ok.items[1], { ...ok.items[2], unit: 4920 }] }), { image, room: DEMO_ROOM });
   assert.equal(d.ok, true);
   const adj = d.items.at(-1);
-  assert.deepEqual([adj.id, adj.name, adj.qty, adj.unit, adj.tags], ['adj', '차액 조정', 1, 360, ['기타']]);
-  assert.ok(d.warnings.some((w) => w.includes('차액 조정')));
+  assert.deepEqual([adj.id, adj.name, adj.qty, adj.unit, adj.tags], ['adj', 'Difference adjustment', 1, 360, ['기타']]);
+  assert.ok(d.warnings.some((w) => w.includes('difference adjustment')));
 });
 
 test("모르는 태그는 '기타'로", async () => {
@@ -43,14 +43,14 @@ test('합계만 읽히고 줄이 없으면 합계 한 줄로 초안을 만들고
   const d = await extractReceipt(fake({ ...ok, merchant: '편의점', total: 1500, items: [] }), { image, room: DEMO_ROOM });
   assert.equal(d.ok, true);
   assert.deepEqual(d.items.map((i) => [i.name, i.qty, i.unit]), [['편의점', 1, 1500]]);
-  assert.ok(d.warnings.some((w) => w.includes('메뉴 줄을 읽지 못해')));
+  assert.ok(d.warnings.some((w) => w.includes('Could not read the menu lines')));
 });
 
 test('영수증에 합계가 없으면 줄의 합을 합계로 쓰고 경고한다', async () => {
   const d = await extractReceipt(fake({ ...ok, total: 0 }), { image, room: DEMO_ROOM });
   assert.equal(d.ok, true);
   assert.equal(d.total, 7860);
-  assert.ok(d.warnings.some((w) => w.includes('합계가 적혀 있지 않아')));
+  assert.ok(d.warnings.some((w) => w.includes('shows no total')));
 });
 
 test('모델이 알린 애매한 점(notes)은 경고로 보여 준다', async () => {
@@ -69,7 +69,7 @@ test('처음에 못 읽으면 한 번 더 읽는다', async () => {
 test('gemini가 null이면 ok=false', async () => {
   const d = await extractReceipt(null, { image, room: DEMO_ROOM });
   assert.equal(d.ok, false);
-  assert.equal(d.reason, '사진 읽기는 AI 서버가 필요해요');
+  assert.equal(d.reason, 'Reading photos needs the AI server');
 });
 
 test('방에서 쓰지 않는 통화의 영수증이면 ok=false', async () => {
@@ -119,7 +119,7 @@ test('달러 방(#55): 센트까지 읽고, 엔·원은 정수로 맞춘다', as
 test('손글씨 전표의 正자 획 수량(一·丅·下·正)을 숫자로 세라고 모델에 알린다', async () => {
   let system = '';
   await extractReceipt({ model: 'fake', generate: async (p) => { system = p.system; return ok; } }, { image, room: DEMO_ROOM });
-  assert.match(system, /正자 획으로 적혀 있으면 획 수를 qty로/);
-  assert.match(system, /一=1, 丅\(T 모양\)=2, 下=3/);
-  assert.match(system, /취소선으로 지운 줄도 넣지 않는다/);
+  assert.match(system, /tally strokes of the character 正, record the stroke count as qty/);
+  assert.match(system, /一=1, 丅 \(T shape\)=2, 下=3/);
+  assert.match(system, /Do not include lines that are struck through/);
 });

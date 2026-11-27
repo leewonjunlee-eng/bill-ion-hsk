@@ -5,7 +5,6 @@ import { randomUUID, randomBytes } from 'node:crypto';
 import { readJson, send, HttpError } from '../http.mjs';
 import { profileOf } from '../accounts.mjs';
 import { POLICIES } from '../../public/data.js';
-import { subj, obj } from '../../public/ui.js';
 import { active, isForeign } from '../../public/core.js';
 import { currencyOf, CARD_FEE } from '../../public/currencies.js';
 import { hasStarted, isDone, leaveBlock } from './policy.mjs';
@@ -13,7 +12,7 @@ import { hasStarted, isDone, leaveBlock } from './policy.mjs';
 const POLICY_IDS = POLICIES.map((p) => p.id); // 'actual' | 'payday' | 'settle'
 const policyLabel = (id) => POLICIES.find((p) => p.id === id)?.label ?? id;
 export const INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 초대 링크는 7일 뒤 만료
-const startedText = (room, what) => (isDone(room) ? `정산이 끝난 방에는 ${what}` : `정산을 시작한 방에는 ${what}`);
+const startedText = (room, what) => (isDone(room) ? `This room is Settled, so ${what}` : `Settlement has started in this room, so ${what}`);
 
 // 방에 보일 이름·색은 따로 받지 않고 내 프로필(#2, users 문서)을 쓴다. 프로필을 바꾸면 모든 방의 멤버가 함께 바뀐다(POST /api/me)
 const memberOf = async (store, who) => {
@@ -48,13 +47,13 @@ export function registerRoomRoutes(routes, { store, clock, member, authenticate 
 
     const body = await readJson(req);
     const name = String(body.name ?? '').replace(/\s+/g, ' ').trim();
-    if (!name) throw new HttpError(400, '방 이름을 적어 주세요');
-    if (name.length > 40) throw new HttpError(400, '방 이름은 40자까지예요');
+    if (!name) throw new HttpError(400, 'Enter a room name');
+    if (name.length > 40) throw new HttpError(400, 'A room name can be up to 40 characters');
     const currency = String(body.currency ?? 'KRW');
     const foreign = currency !== 'KRW';
-    if (foreign && !currencyOf(currency)) throw new HttpError(400, '외화를 다시 골라 주세요');
+    if (foreign && !currencyOf(currency)) throw new HttpError(400, 'Choose the foreign currency again');
     const policy = foreign ? body.policy ?? 'actual' : null;
-    if (foreign && !POLICY_IDS.includes(policy)) throw new HttpError(400, '환율 정책을 다시 골라 주세요');
+    if (foreign && !POLICY_IDS.includes(policy)) throw new HttpError(400, 'Choose the exchange rate policy again');
     const me = await memberOf(store, who);
 
     const room = {
@@ -72,14 +71,14 @@ export function registerRoomRoutes(routes, { store, clock, member, authenticate 
       createdBy: who.uid,
     };
     await store.put('rooms', room);
-    await store.appendEvent(room.id, { from: 'system', to: 'all', kind: 'room_created', text: `${subj(me.name)} 방을 만들었어요` });
+    await store.appendEvent(room.id, { from: 'system', to: 'all', kind: 'room_created', text: `${me.name} created the room` });
     send(res, 201, { room });
   });
 
   // 초대 링크 만들기·다시 만들기(멤버 누구나). 이전 링크는 무효가 된다
   routes.post('/api/rooms/:id/invite', async ({ req, params }) => {
     const { room, me } = await member(req, params.id);
-    if (hasStarted(room)) throw new HttpError(409, startedText(room, '더 초대할 수 없어요'));
+    if (hasStarted(room)) throw new HttpError(409, startedText(room, 'you cannot invite more people'));
     const token = randomBytes(18).toString('base64url');
     const expiresAt = new Date(clock().getTime() + INVITE_TTL_MS).toISOString();
     await store.put('invites', { id: room.id, roomId: room.id, token, expiresAt, createdBy: me.uid });
@@ -97,7 +96,7 @@ export function registerRoomRoutes(routes, { store, clock, member, authenticate 
   // 참가 화면: 링크만 있으면 볼 수 있다(토큰이 곧 열쇠). 신원이 있으면 이미 멤버인지도 알려 준다
   routes.get('/api/invites/:token', async ({ req, params }) => {
     const found = await findInvite(store, params.token, clock());
-    if (!found) throw new HttpError(404, '만료되었거나 잘못된 초대 링크예요');
+    if (!found) throw new HttpError(404, 'This invite link has expired or is invalid');
     const who = await authenticate(req).catch(() => null); // 링크만 보고 들어온 사람은 아직 로그인 전일 수 있다
     const alreadyMember = !!who && found.room.members.some((m) => m.uid === who.uid && active(m));
     return { room: preview(found.room), expiresAt: found.inv.expiresAt, alreadyMember, settling: hasStarted(found.room), done: isDone(found.room) };
@@ -107,12 +106,12 @@ export function registerRoomRoutes(routes, { store, clock, member, authenticate 
   routes.post('/api/invites/:token/join', async ({ req, params }) => {
     const who = await authenticate(req);
     const found = await findInvite(store, params.token, clock());
-    if (!found) throw new HttpError(404, '만료되었거나 잘못된 초대 링크예요');
+    if (!found) throw new HttpError(404, 'This invite link has expired or is invalid');
     const { room } = found;
     if (room.members.some((m) => m.uid === who.uid && active(m))) return { roomId: room.id };
     const body = await readJson(req);
-    if (body.agree !== true) throw new HttpError(400, '참가에 동의해 주세요');
-    if (hasStarted(room)) throw new HttpError(409, isDone(room) ? '이미 정산이 끝난 방이에요' : '이미 정산을 시작한 방이에요');
+    if (body.agree !== true) throw new HttpError(400, 'Agree to join');
+    if (hasStarted(room)) throw new HttpError(409, isDone(room) ? 'This room is already Settled' : 'Settlement has already started in this room');
 
     const joined = await memberOf(store, who);
     const { name } = joined;
@@ -123,7 +122,7 @@ export function registerRoomRoutes(routes, { store, clock, member, authenticate 
       from: 'system',
       to: 'all',
       kind: 'member_joined',
-      text: isForeign(room) ? `${subj(name)} 방에 들어왔어요. 환율 정책 ‘${policyLabel(room.policy)}’에 동의하면 정산을 시작할 수 있어요` : `${subj(name)} 방에 들어왔어요`,
+      text: isForeign(room) ? `${name} joined the room. Agreement to the exchange rate policy ‘${policyLabel(room.policy)}’ is needed before settlement can start` : `${name} joined the room`,
     });
     return { roomId: room.id };
   });
@@ -131,10 +130,10 @@ export function registerRoomRoutes(routes, { store, clock, member, authenticate 
   // 환율 정책 바꾸기(외화 방만). 바꾸면 동의를 처음부터 다시 받는다(바꾼 사람만 동의한 상태)
   routes.post('/api/rooms/:id/policy', async ({ req, params }) => {
     const { room, me } = await member(req, params.id);
-    if (!isForeign(room)) throw new HttpError(409, '원화 방에는 환율 정책이 없어요');
+    if (!isForeign(room)) throw new HttpError(409, 'A KRW room has no exchange rate policy');
     const { policy } = await readJson(req);
-    if (!POLICY_IDS.includes(policy)) throw new HttpError(400, '환율 정책을 다시 골라 주세요');
-    if (hasStarted(room)) throw new HttpError(409, '정산을 시작한 뒤에는 환율 정책을 바꿀 수 없어요');
+    if (!POLICY_IDS.includes(policy)) throw new HttpError(400, 'Choose the exchange rate policy again');
+    if (hasStarted(room)) throw new HttpError(409, 'The exchange rate policy cannot be changed after settlement has started');
     if (policy === room.policy) return { room };
     const next = { ...room, policy, policyAgreedBy: [me.uid] };
     await store.put('rooms', next);
@@ -142,7 +141,7 @@ export function registerRoomRoutes(routes, { store, clock, member, authenticate 
       from: 'system',
       to: 'all',
       kind: 'policy_changed',
-      text: `${subj(me.name)} 환율 정책을 ‘${policyLabel(policy)}’로 바꿨어요. 모두 다시 동의해 주세요`,
+      text: `${me.name} changed the exchange rate policy to ‘${policyLabel(policy)}’. Everyone needs to agree again`,
     });
     return { room: next };
   });
@@ -150,11 +149,11 @@ export function registerRoomRoutes(routes, { store, clock, member, authenticate 
   // 지금 정책에 동의하기(외화 방만). 두 번 눌러도 한 번만 들어간다
   routes.post('/api/rooms/:id/policy/agree', async ({ req, params }) => {
     const { room, me } = await member(req, params.id);
-    if (!isForeign(room)) throw new HttpError(409, '원화 방에는 환율 정책이 없어요');
+    if (!isForeign(room)) throw new HttpError(409, 'A KRW room has no exchange rate policy');
     if (room.policyAgreedBy.includes(me.uid)) return { room };
     const next = { ...room, policyAgreedBy: [...room.policyAgreedBy, me.uid] };
     await store.put('rooms', next);
-    await store.appendEvent(room.id, { from: 'system', to: 'all', kind: 'policy_agreed', text: `${subj(me.name)} 환율 정책 ‘${policyLabel(room.policy)}’에 동의했어요` });
+    await store.appendEvent(room.id, { from: 'system', to: 'all', kind: 'policy_agreed', text: `${me.name} agreed to the exchange rate policy ‘${policyLabel(room.policy)}’` });
     return { room: next };
   });
 
@@ -172,7 +171,7 @@ export function registerRoomRoutes(routes, { store, clock, member, authenticate 
       from: 'system',
       to: 'all',
       kind: self ? 'member_left' : 'member_removed',
-      text: self ? `${subj(name)} 방에서 나갔어요` : `${subj(by.name)} ${obj(name)} 방에서 내보냈어요`,
+      text: self ? `${name} left the room` : `${by.name} removed ${name} from the room`,
     });
     return next;
   }
@@ -187,9 +186,9 @@ export function registerRoomRoutes(routes, { store, clock, member, authenticate 
   // 내보내기: 방을 만든 사람만, 잘못 들어온 사람을. 자기 자신은 나가기로 나간다
   routes.post('/api/rooms/:id/members/:uid/remove', async ({ req, params }) => {
     const { room, me } = await member(req, params.id);
-    if (room.createdBy !== me.uid) throw new HttpError(403, '방을 만든 사람만 내보낼 수 있어요');
-    if (params.uid === me.uid) throw new HttpError(400, '나는 나가기로 방을 나가요');
-    if (!room.members.some((m) => m.uid === params.uid && active(m))) throw new HttpError(404, '이 방에 없는 사람이에요');
+    if (room.createdBy !== me.uid) throw new HttpError(403, 'Only the person who created the room can remove people');
+    if (params.uid === me.uid) throw new HttpError(400, 'To leave yourself, use Leave room');
+    if (!room.members.some((m) => m.uid === params.uid && active(m))) throw new HttpError(404, 'That person is not in this room');
     return { room: await removeMember(room, params.uid, { self: false, by: me }) };
   });
 }

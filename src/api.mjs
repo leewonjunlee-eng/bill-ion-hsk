@@ -30,10 +30,10 @@ export const redactTransfer = (t, uid) => (t.from === uid || t.to === uid ? t : 
 // 사실만 남기고, 요약이 옮겨 적혔을 수 있는 중재안 요약과 줄별 이유도 가린다. 저장본은 그대로다
 export function redactDispute(d, uid, payer) {
   if (!(d.evidence ?? []).some((e) => e.locationId) || uid === d.by || uid === payer) return d;
-  const evidence = d.evidence.map((e) => (e.locationId ? { kind: 'text', summary: '위치 요약 첨부 · 이의 당사자만 볼 수 있어요' } : e));
+  const evidence = d.evidence.map((e) => (e.locationId ? { kind: 'text', summary: 'Location summary attached · only the people in this dispute can see it' } : e));
   if (!d.proposal) return { ...d, evidence };
-  const alloc = Object.fromEntries(Object.entries(d.proposal.alloc ?? {}).map(([id, a]) => [id, { ...a, reason: '위치 요약을 참고한 배분' }]));
-  return { ...d, evidence, proposal: { ...d.proposal, summary: '위치 요약을 참고한 중재안이에요. 당사자가 확인해 주세요.', alloc } };
+  const alloc = Object.fromEntries(Object.entries(d.proposal.alloc ?? {}).map(([id, a]) => [id, { ...a, reason: 'Split informed by a location summary' }]));
+  return { ...d, evidence, proposal: { ...d.proposal, summary: 'This mediation proposal used a location summary. The people in the dispute should review it.', alloc } };
 }
 
 // → { match(method, pathname), run(hit, { req, res, url }), tick(), dev }. run은 서버와 같은 줄(상태 잠금) 안에서 라우트를 부른다
@@ -56,7 +56,7 @@ export function createApi({ store, gemini = null, clock = () => new Date(), evid
     ...(env.STORE === 'firestore' && auth ? { realtime: { firestore: true, emulator: env.NODE_ENV !== 'production' ? env.FIRESTORE_EMULATOR_HOST || null : null } } : {}) }));
   async function authenticate(req, { allowDeleting = false } = {}) {
     const who = await identify(req, store);
-    if (!who || (!allowDeleting && await store.get('deletedUsers', who.uid))) throw new HttpError(401, '로그인이 필요해요');
+    if (!who || (!allowDeleting && await store.get('deletedUsers', who.uid))) throw new HttpError(401, 'Please sign in');
     return who;
   }
   registerAccountRoutes(routes, { store, authenticate, auth, clock, onErased: () => allocCache.clear() });
@@ -75,7 +75,7 @@ export function createApi({ store, gemini = null, clock = () => new Date(), evid
   // 데스크톱 QR이 가리키는 곳. 계좌·금액이 든 진짜 링크는 여기서만 풀린다(QR 이미지 서비스는 이 토큰만 본다)
   routes.get('/api/qr/:token', async ({ res, params }) => {
     const link = verifyQrToken(params.token);
-    if (!link) throw new HttpError(404, '만료되었거나 잘못된 QR이에요');
+    if (!link) throw new HttpError(404, 'This QR code has expired or is invalid');
     res.writeHead(302, { Location: link });
     res.end();
   });
@@ -92,9 +92,9 @@ export function createApi({ store, gemini = null, clock = () => new Date(), evid
     const who = await authenticate(req);
     await expireLocations(req, roomId);
     const room = await store.get('rooms', roomId);
-    if (!room) throw new HttpError(404, '방을 찾을 수 없어요');
+    if (!room) throw new HttpError(404, 'Room not found');
     const me = room.members.find((m) => m.uid === who.uid);
-    if (!me || !active(me)) throw new HttpError(403, '이 방의 멤버가 아니에요'); // 탈퇴했거나 방에서 나간 사람(#55)은 읽지 못한다
+    if (!me || !active(me)) throw new HttpError(403, 'You are not a member of this room'); // 탈퇴했거나 방에서 나간 사람(#55)은 읽지 못한다
     return { room, me: { uid: me.uid, name: me.name } };
   }
 

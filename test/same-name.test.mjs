@@ -48,9 +48,9 @@ test('cleanLines: 같은 이름의 첫 번째 사람을 고르면 마지막 사�
 
 test('배분 프롬프트의 함께 있던 사람·기억 줄은 선택지와 같은 표시로 사람을 구분한다', () => {
   const { user } = allocatePrompt(exp, room, memory);
-  assert.match(user, /함께 있던 사람: 김민수\(1\), 김민수\(2\), 이영희/);
-  assert.match(user, /- 김민수\(1\)의 비서: “맥주를 마셨어요”/);
-  assert.match(user, /- 김민수\(2\)의 비서: “술을 안 마셔요”/);
+  assert.match(user, /People who were there: 김민수\(1\), 김민수\(2\), 이영희/);
+  assert.match(user, /- 김민수\(1\)'s agent: “맥주를 마셨어요”/);
+  assert.match(user, /- 김민수\(2\)'s agent: “술을 안 마셔요”/);
 });
 
 test('allocateWithGemini: 모델이 선택지에서 고른 사람에게 배정한다', async () => {
@@ -67,8 +67,8 @@ test('allocateWithGemini: 모델이 선택지에서 고른 사람에게 배정�
 test('중재 프롬프트는 이의를 낸 사람을 같은 표시로 부른다', () => {
   const dispute = { by: 'u-b', claim: '맥주는 안 마셨어요', evidence: [] };
   const { user } = mediatePrompt({ exp, room, dispute, memoryByUid: memory });
-  assert.match(user, /이의 제기\(김민수\(2\)의 비서\)/);
-  assert.match(user, /- 김민수\(1\)의 비서: “맥주를 마셨어요”/);
+  assert.match(user, /Dispute \(김민수\(2\)'s agent\)/);
+  assert.match(user, /- 김민수\(1\)'s agent: “맥주를 마셨어요”/);
 });
 
 test('mediateWithGemini: 같은 이름 중 모델이 고른 사람에게 다시 나눈다', async () => {

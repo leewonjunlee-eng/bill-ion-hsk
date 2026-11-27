@@ -59,11 +59,11 @@ test('수출입은행은 주말·공휴일에 빈 목록을 주므로 그 전 �
 
 test('인증키가 없거나 틀리면 실패하고, 오류에 인증키가 드러나지 않는다', async () => {
   const down = { 'frankfurter.dev': json({}, 522) };
-  await assert.rejects(createFxRates({ fetch: fakeFetch(down).fetch, clock }).rateOn('JPY', '2026-11-02'), /Frankfurter 응답 522/);
+  await assert.rejects(createFxRates({ fetch: fakeFetch(down).fetch, clock }).rateOn('JPY', '2026-11-02'), /Frankfurter responded 522/);
   const bad = fakeFetch({ ...down, koreaexim: json([{ result: 3, cur_unit: null, deal_bas_r: null }]) });
-  await assert.rejects(createFxRates({ fetch: bad.fetch, clock, eximKey: SECRET }).rateOn('JPY', '2026-11-02'), (e) => /결과 코드 3/.test(e.message) && !e.message.includes(SECRET));
+  await assert.rejects(createFxRates({ fetch: bad.fetch, clock, eximKey: SECRET }).rateOn('JPY', '2026-11-02'), (e) => /result code 3/.test(e.message) && !e.message.includes(SECRET));
   const php = fakeFetch({ ...down, koreaexim: json([row('USD', '1,344.5')]) });
-  await assert.rejects(createFxRates({ fetch: php.fetch, clock, eximKey: SECRET }).rateOn('PHP', '2026-11-02'), /고시하지 않는 통화/);
+  await assert.rejects(createFxRates({ fetch: php.fetch, clock, eximKey: SECRET }).rateOn('PHP', '2026-11-02'), /does not publish this currency/);
 });
 
 test('실패한 결과는 기억하지 않아 다음에 다시 묻는다', async () => {

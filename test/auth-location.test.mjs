@@ -176,7 +176,7 @@ test('a record without a leaving time still reaches the counterparty and revocat
   const seen = async uid => (await (await request('/api/rooms/room-one', { uid })).json()).disputes.find(x => x.id === d.id);
   assert.equal((await seen(exp.payer)).evidence[0].summary, d.evidence[0].summary);
   const outsider = (await store.get('rooms', 'room-one')).members.find(m => !['me', exp.payer].includes(m.uid));
-  assert.doesNotMatch(JSON.stringify(await seen(outsider.uid)), /머물|타임라인|결제/);
+  assert.doesNotMatch(JSON.stringify(await seen(outsider.uid)), /머물|타임라인|결제|stayed|same place|timeline|first.order|payment/i);
   assert.equal((await request('/api/rooms/room-one/location/revoke', { body: {} })).status, 200);
   assert.deepEqual((await seen(exp.payer)).evidence, []);
 });
@@ -191,7 +191,7 @@ test('an invoice keeps its own reason and only flags that a location summary is 
   const mine = invoices.find(i => i.to === 'me');
   assert.equal(mine.hasLocationSummary, true);
   assert.ok(mine.reasons.length);
-  assert.doesNotMatch(JSON.stringify(invoices), /위치 요약을 확인해 주세요/);
+  assert.doesNotMatch(JSON.stringify(invoices), /위치 요약을 확인해 주세요|left at|first.order|self-submitted|Timeline/i);
   assert.ok(!JSON.stringify(invoices).includes(summary));
   assert.ok(invoices.filter(i => i.to !== 'me').every(i => !i.hasLocationSummary));
   await request('/api/rooms/room-one/location/revoke', { body: {} });
@@ -217,6 +217,7 @@ test('revocation removes attached summaries and reopens an unconfirmed proposal'
   assert.equal(after.status, 'open');
   assert.deepEqual(after.agreedBy, []);
   assert.ok(!(JSON.stringify(await store.listEvents('room-one'))).includes('본인 제출'));
+  assert.doesNotMatch(JSON.stringify(await store.listEvents('room-one')), /self-submitted|Left the first-order|Google Maps/);
   assert.equal((await store.listEvents('room-one')).at(-1).kind, 'location_removed');
 });
 

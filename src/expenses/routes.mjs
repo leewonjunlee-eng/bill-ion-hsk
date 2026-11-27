@@ -2,7 +2,6 @@
 import { randomUUID } from 'node:crypto';
 import { readJson, send, HttpError } from '../http.mjs';
 import { toKrw, won } from '../../public/core.js';
-import { subj, topic, obj, whose } from '../../public/ui.js';
 import { MAX_RECEIPT } from '../http.mjs';
 import { allocateWithGemini, publicReason } from '../agents/allocate.mjs';
 import { roomMemory, memoryKey } from '../agents/memory.mjs';
@@ -17,7 +16,7 @@ const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 // 정산이 끝난 방은 닫힌다(#55). 지출을 바꾸면 이미 '받았어요'로 끝난 돈을 다시 나눠 또 보내게 된다
 function open(room) {
-  if (isDone(room)) throw new HttpError(409, '정산이 끝난 방이라 지출을 더 남기거나 고칠 수 없어요');
+  if (isDone(room)) throw new HttpError(409, 'This room is Settled, so expenses can no longer be added or edited');
 }
 
 export function registerExpenseRoutes(routes, { store, gemini, member, overLimit, allocCache, fx }) {
@@ -38,7 +37,7 @@ export function registerExpenseRoutes(routes, { store, gemini, member, overLimit
       from: 'system',
       to: 'all',
       kind: 'expense_added',
-      text: `${subj(me.name)} ${expense.title} ${won(toKrw(expense, room, room.policy).krw)}을 남겼어요`,
+      text: `${me.name} added ‘${expense.title}’ · ${won(toKrw(expense, room, room.policy).krw)}`,
     });
     send(res, 201, { expense });
   });
@@ -46,9 +45,9 @@ export function registerExpenseRoutes(routes, { store, gemini, member, overLimit
   // 영수증 사진 → 초안. 저장하지 않는다. 화면은 긴 변 1600px JPEG로 줄여서 보낸다(본문 2 MB 한도)
   routes.post('/api/rooms/:id/receipts/extract', async ({ req, params }) => {
     const { room, me } = await member(req, params.id);
-    if (overLimit(`uid:${me.uid}`)) throw new HttpError(429, '요청이 너무 많아요. 10분 뒤에 다시 시도해 주세요.');
+    if (overLimit(`uid:${me.uid}`)) throw new HttpError(429, 'Too many requests. Try again in 10 minutes.');
     const { image } = await readJson(req, { limit: MAX_RECEIPT });
-    if (!IMAGE_TYPES.includes(image?.mimeType) || typeof image?.data !== 'string' || !image.data) throw new HttpError(400, '사진 파일이 아니에요');
+    if (!IMAGE_TYPES.includes(image?.mimeType) || typeof image?.data !== 'string' || !image.data) throw new HttpError(400, 'That is not a photo file');
     const started = Date.now();
     const draft = await extractReceipt(gemini, { image: { mimeType: image.mimeType, data: image.data }, room });
     console.log(`[receipts/extract] ${draft.source} ok=${draft.ok} ${Date.now() - started}ms`);
@@ -59,7 +58,7 @@ export function registerExpenseRoutes(routes, { store, gemini, member, overLimit
     const { room, me } = await member(req, roomId);
     if (!read) open(room);
     const exp = await store.get('expenses', eid);
-    if (!exp || exp.roomId !== room.id) throw new HttpError(404, '지출을 찾을 수 없어요');
+    if (!exp || exp.roomId !== room.id) throw new HttpError(404, 'Expense not found');
     return { room, me, exp };
   }
 
@@ -76,7 +75,7 @@ export function registerExpenseRoutes(routes, { store, gemini, member, overLimit
     const saved = { ...next, id: exp.id, roomId: room.id, createdBy: exp.createdBy, ...(exp.hasReceipt ? { hasReceipt: true } : {}), ...(keepAlloc ? { alloc: exp.alloc, allocMemory: exp.allocMemory } : {}) };
     await store.put('expenses', saved);
     await store.put('rooms', { ...room, version: room.version + 1 });
-    await store.appendEvent(room.id, { from: 'system', to: 'all', kind: 'expense_edited', text: `${subj(me.name)} ${obj(`‘${saved.title}’`)} 고쳤어요` });
+    await store.appendEvent(room.id, { from: 'system', to: 'all', kind: 'expense_edited', text: `${me.name} edited ‘${saved.title}’` });
     await supersedeDisputes(store, room.id, exp, saved);
     return { expense: saved };
   });
@@ -87,7 +86,7 @@ export function registerExpenseRoutes(routes, { store, gemini, member, overLimit
     await store.delete('expenses', exp.id);
     await store.delete('receipts', exp.id);
     await store.put('rooms', { ...room, version: room.version + 1 });
-    await store.appendEvent(room.id, { from: 'system', to: 'all', kind: 'expense_deleted', text: `${subj(me.name)} ${obj(`‘${exp.title}’`)} 지웠어요` });
+    await store.appendEvent(room.id, { from: 'system', to: 'all', kind: 'expense_deleted', text: `${me.name} deleted ‘${exp.title}’` });
     await supersedeDisputes(store, room.id, exp);
     return { deleted: exp.id };
   });
@@ -96,19 +95,19 @@ export function registerExpenseRoutes(routes, { store, gemini, member, overLimit
   routes.get('/api/rooms/:id/expenses/:eid/receipt', async ({ req, params }) => {
     const { exp } = await roomExpense(req, params.id, params.eid, { read: true });
     const photo = await store.get('receipts', exp.id);
-    if (!photo) throw new HttpError(404, '저장된 영수증 사진이 없어요');
+    if (!photo) throw new HttpError(404, 'No receipt photo is saved');
     return { mimeType: photo.mimeType, data: photo.data };
   });
 
   // 비서들이 공유한 기억(#5의 agents 문서)으로 영수증 줄을 나눈다. 근거 없는 줄은 지출을 남긴 사람에게 묻는다.
   routes.post('/api/rooms/:id/expenses/:eid/allocate', async ({ req, params }) => {
     const { room, me, exp } = await roomExpense(req, params.id, params.eid);
-    if (!exp.items?.length) throw new HttpError(400, '영수증 줄이 있는 지출만 나눌 수 있어요');
+    if (!exp.items?.length) throw new HttpError(400, 'Only an expense with receipt lines can be split by line');
     const memory = await roomMemory(store, room);
     // 이미 나눴고 그때와 기억이 같으면 같은 답이 나올 뿐이다. 다시 나누면 확인한 줄이 지워지고 버전이 올라
     // 보낸 청구서까지 밀려나니, 아무것도 바꾸지 않는다(화면은 allocFresh로 버튼을 미리 막는다)
-    if (exp.alloc && exp.allocMemory === memoryKey(memory)) throw new HttpError(409, '바뀐 것이 없어 다시 나누지 않았어요. 지출을 고치거나 비서의 기억이 바뀌면 다시 나눌 수 있어요');
-    if (overLimit(`uid:${me.uid}`)) throw new HttpError(429, '요청이 너무 많아요. 10분 뒤에 다시 시도해 주세요.');
+    if (exp.alloc && exp.allocMemory === memoryKey(memory)) throw new HttpError(409, 'Nothing changed, so it was not split again. You can split it again after editing the expense or when agent memories change');
+    if (overLimit(`uid:${me.uid}`)) throw new HttpError(429, 'Too many requests. Try again in 10 minutes.');
     const started = Date.now();
     const out = await allocateWithGemini(gemini, exp, room, memory, { cache: allocCache });
     const latencyMs = Date.now() - started;
@@ -119,18 +118,18 @@ export function registerExpenseRoutes(routes, { store, gemini, member, overLimit
     await store.put('expenses', saved);
     await store.put('rooms', { ...room, version: room.version + 1 });
     const used = Object.values(memory).reduce((n, list) => n + list.length, 0);
-    const label = out.source === 'rules' ? '규칙' : out.source;
+    const label = out.source === 'rules' ? 'rules' : out.source;
     await store.appendEvent(room.id, {
       from: exp.createdBy, to: 'all', kind: 'allocated',
-      text: out.how === 'obvious' ? `${topic(`‘${exp.title}’`)} ${out.why}` : `${exp.title} 영수증 ${exp.items.length}줄을 비서들이 공유한 기억 ${used}개로 나눴어요.`,
-      meta: out.how === 'obvious' ? '나눈 방법: AI 없이 규칙으로'
-        : out.how === 'cache' ? `나눈 방법: ${label} · 이전 답 재사용`
-        : `나눈 방법: ${label} · ${(latencyMs / 1000).toFixed(1)}초 걸렸어요`,
+      text: out.how === 'obvious' ? `‘${exp.title}’: ${out.why}` : `Split the ${exp.title} receipt by line (lines: ${exp.items.length}, memories shared by the agents: ${used}).`,
+      meta: out.how === 'obvious' ? 'How it was split: by rules, without AI'
+        : out.how === 'cache' ? `How it was split: ${label} · reused an earlier answer`
+        : `How it was split: ${label} · took ${(latencyMs / 1000).toFixed(1)}s`,
     });
     for (const it of exp.items.filter((x) => isFlagged(alloc[x.id]))) {
       await store.appendEvent(room.id, {
         from: exp.createdBy, to: exp.createdBy, kind: 'confirm_line',
-        text: `${topic(`‘${it.name}’`)} 어떻게 나눌지 비서들의 기억에 근거가 없어요. 짐작하지 않고 물어볼게요.`,
+        text: `Agent memories give no evidence for how to split ‘${it.name}’. I will ask instead of guessing.`,
         action: { type: 'confirm_line', ref: `${exp.id}:${it.id}`, for: exp.createdBy },
       });
     }
@@ -147,8 +146,8 @@ export function registerExpenseRoutes(routes, { store, gemini, member, overLimit
     const alloc = { ...exp.alloc };
     for (const it of lines) {
       const picked = Array.isArray(edits[it.id]) && edits[it.id].length ? exp.present.filter((u) => edits[it.id].includes(u)) : null;
-      if (picked && !picked.length) throw new HttpError(400, '함께 있지 않았던 사람은 고를 수 없어요');
-      alloc[it.id] = { ...alloc[it.id], ...(picked ? { consumers: picked, reason: '직접 고쳤어요' } : {}), confirmed: true, confirmedBy: uid };
+      if (picked && !picked.length) throw new HttpError(400, 'You cannot choose someone who was not there');
+      alloc[it.id] = { ...alloc[it.id], ...(picked ? { consumers: picked, reason: 'Edited by hand' } : {}), confirmed: true, confirmedBy: uid };
     }
     return { before: exp, saved: { ...exp, split: 'items', alloc }, count: lines.length };
   }
@@ -158,8 +157,8 @@ export function registerExpenseRoutes(routes, { store, gemini, member, overLimit
     for (const { saved } of done) await store.put('expenses', saved);
     await store.put('rooms', { ...room, version: room.version + 1 });
     const count = done.reduce((n, d) => n + d.count, 0);
-    const what = done.length === 1 ? `‘${done[0].saved.title}’의 ${count}줄을` : `지출 ${done.length}건의 ${count}줄을`;
-    await store.appendEvent(room.id, { from: me.uid, to: 'all', kind: 'lines_confirmed', text: `${what} 비서가 짐작한 대로 확인했어요` });
+    const what = done.length === 1 ? `‘${done[0].saved.title}’ (lines: ${count})` : `${done.length} expenses (lines: ${count})`;
+    await store.appendEvent(room.id, { from: me.uid, to: 'all', kind: 'lines_confirmed', text: `Confirmed the agent’s guesses for ${what}` });
     for (const { before, saved } of done) await supersedeDisputes(store, room.id, before, saved);
     return { expenses: done.map((d) => d.saved), confirmed: count };
   }
@@ -184,20 +183,20 @@ export function registerExpenseRoutes(routes, { store, gemini, member, overLimit
   routes.post('/api/rooms/:id/expenses/:eid/lines/:itemId', async ({ req, params }) => {
     const { room, me, exp } = await roomExpense(req, params.id, params.eid);
     const item = exp.items?.find((it) => it.id === params.itemId);
-    if (!item) throw new HttpError(404, '영수증 줄을 찾을 수 없어요');
+    if (!item) throw new HttpError(404, 'Receipt line not found');
     const picked = (await readJson(req)).consumers;
-    if (!Array.isArray(picked) || !picked.length) throw new HttpError(400, '적어도 한 명은 골라 주세요');
-    if (picked.some((u) => !exp.present.includes(u))) throw new HttpError(400, '함께 있지 않았던 사람은 고를 수 없어요');
+    if (!Array.isArray(picked) || !picked.length) throw new HttpError(400, 'Choose at least one person');
+    if (picked.some((u) => !exp.present.includes(u))) throw new HttpError(400, 'You cannot choose someone who was not there');
     const consumers = exp.present.filter((u) => picked.includes(u));
     const prev = exp.alloc?.[item.id] ?? { confidence: 1, reason: '' };
     // 비서가 짐작한 그대로 확인했으면 그 이유를 남기고, 사람이 바꿨으면 바꿨다고 남긴다
     const same = prev.consumers && prev.consumers.length === consumers.length && prev.consumers.every((u) => consumers.includes(u));
-    const reason = same ? prev.reason : '직접 고쳤어요';
+    const reason = same ? prev.reason : 'Edited by hand';
     const saved = { ...exp, split: 'items', alloc: { ...exp.alloc, [item.id]: { ...prev, consumers, reason, confirmed: true, confirmedBy: me.uid } } };
     await store.put('expenses', saved);
     await store.put('rooms', { ...room, version: room.version + 1 });
     const names = consumers.map((u) => room.members.find((m) => m.uid === u)?.name ?? u).join('·');
-    await store.appendEvent(room.id, { from: me.uid, to: 'all', kind: 'line_confirmed', text: `${topic(`‘${item.name}’`)} ${whose(names)} 몫으로 확인했어요` });
+    await store.appendEvent(room.id, { from: me.uid, to: 'all', kind: 'line_confirmed', text: `Confirmed who shares ‘${item.name}’: ${names}` });
     await supersedeDisputes(store, room.id, exp, saved);
     return { expense: saved };
   });

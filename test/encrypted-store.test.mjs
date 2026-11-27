@@ -62,7 +62,7 @@ test('locationEvidence: 시각·요약 5칸은 잠기고, 찾는 데 쓰는 칸�
   for (const f of ['summary', 'leftAt', 'nextAt', 'nextHome']) assert.ok(isSealed(raw[f]), `${f}가 잠기지 않음`);
   assert.ok(isSealed((await inner.get('locationEvidence', 'loc-2')).stayedUntil));
   assert.deepEqual([raw.uid, raw.roomId, raw.expenseId, raw.source], ['me', 'r1', 'e1', 'timeline_export']);
-  assert.doesNotMatch(JSON.stringify(await inner.list('locationEvidence')), /20:15|20:28|20:45|떠났어요|있었어요/);
+  assert.doesNotMatch(JSON.stringify(await inner.list('locationEvidence')), /20:15|20:28|20:45|떠났어요|있었어요|Left the first-order|Stayed in the same place|self-submitted/);
   assert.deepEqual(await store.list('locationEvidence', { uid: 'me', roomId: 'r1' }), [LEFT, stay]);
 });
 
@@ -78,7 +78,7 @@ test('locationEvidence: 도착 시각이 없으면 null 그대로, false도 잠�
 
 test('locationEvidence: 잠긴 시각으로는 찾을 수 없다', async () => {
   const { store } = make();
-  await assert.rejects(store.list('locationEvidence', { leftAt: '20:15' }), /잠긴 칸/);
+  await assert.rejects(store.list('locationEvidence', { leftAt: '20:15' }), /sealed field/);
 });
 
 // 이의(#7, #10): 위치 요약을 베낀 근거와, 그것을 보고 쓴 중재안
@@ -99,7 +99,7 @@ test('disputes.evidence·proposal: 잠그고, get·list 모두 원래 모양으�
   const raw = await inner.get('disputes', DISPUTE.id);
   assert.ok(isSealed(raw.evidence) && isSealed(raw.proposal));
   assert.equal(raw.claim, DISPUTE.claim); // 위치 근거로 낸 이의의 claim은 일반 문장이라 잠그지 않는다
-  assert.doesNotMatch(JSON.stringify(raw), /20:15|떠났어요|타임라인/);
+  assert.doesNotMatch(JSON.stringify(raw), /20:15|떠났어요|타임라인|Left the first-order|Timeline|self-submitted/);
   assert.deepEqual(await store.get('disputes', DISPUTE.id), DISPUTE);
   assert.deepEqual(await store.list('disputes', { roomId: 'r1' }), [DISPUTE]);
 });
@@ -116,7 +116,7 @@ test('빈 목록은 null처럼 잠그지 않는다(넣을 때도, 진짜 저장�
   assert.deepEqual((await store.get('disputes', 'r1:d-3')).evidence, []);
   // 비어 있지 않은 평문은 지금처럼 에러
   await inner.put('disputes', { ...empty, id: 'r1:d-4', evidence: [{ kind: 'text', summary: '가짜 근거' }] });
-  await assert.rejects(store.get('disputes', 'r1:d-4'), /잠기지 않은 값/);
+  await assert.rejects(store.get('disputes', 'r1:d-4'), /is not sealed/);
 });
 
 test('null·없는 칸은 잠그지 않고 그대로', async () => {
@@ -150,9 +150,9 @@ test('없는 문서는 null, 다른 컬렉션은 손대지 않는다', async () 
 test('진짜 저장소에 평문 계좌를 몰래 넣으면 꺼낼 때 에러', async () => {
   const { inner, store } = make();
   await inner.put('agents', { id: 'cs', uid: 'cs', payout: { bank: '나쁜은행', accountNo: '999999999999', holder: '?' } });
-  await assert.rejects(store.get('agents', 'cs'), /잠기지 않은 값/);
+  await assert.rejects(store.get('agents', 'cs'), /is not sealed/);
   await inner.put('transfers', { id: 't3', roomId: 'r1', link: 'supertoss://send?accountNo=999999999999', fallback: null });
-  await assert.rejects(store.list('transfers', { roomId: 'r1' }), /잠기지 않은 값/);
+  await assert.rejects(store.list('transfers', { roomId: 'r1' }), /is not sealed/);
 });
 
 test('다른 문서의 잠긴 값을 복사해 붙이면 풀리지 않는다', async () => {
@@ -161,13 +161,13 @@ test('다른 문서의 잠긴 값을 복사해 붙이면 풀리지 않는다', a
   await store.put('agents', { id: 'cs', uid: 'cs', payout: PAYOUT });
   const stolen = (await inner.get('agents', 'ms')).payout;
   await inner.put('agents', { ...(await inner.get('agents', 'cs')), payout: stolen });
-  await assert.rejects(store.get('agents', 'cs'), /풀 수 없어요/);
+  await assert.rejects(store.get('agents', 'cs'), /Cannot open the sealed value/);
 });
 
 test('잠긴 칸으로는 list 검색을 할 수 없다', async () => {
   const { store } = make();
-  await assert.rejects(store.list('transfers', { link: LINK }), /잠긴 칸/);
-  await assert.rejects(store.list('agents', { payout: null }), /잠긴 칸/);
+  await assert.rejects(store.list('transfers', { link: LINK }), /sealed field/);
+  await assert.rejects(store.list('agents', { payout: null }), /sealed field/);
 });
 
 test('delete와 비서 기록(appendEvent·listEvents)은 그대로 위임', async () => {
@@ -232,9 +232,9 @@ test('진짜 저장소의 메서드를 래퍼도 모두 갖는다(새 메서드�
 });
 
 test('32바이트가 아닌 열쇠, id가 없는 문서는 바로 거부한다', async () => {
-  assert.throws(() => encryptedStore(new MemoryStore(), Buffer.alloc(16)), /32바이트/);
+  assert.throws(() => encryptedStore(new MemoryStore(), Buffer.alloc(16)), /32 bytes/);
   const { store } = make();
-  await assert.rejects(store.put('agents', { uid: 'cs', payout: PAYOUT }), /id가 없는 문서/);
+  await assert.rejects(store.put('agents', { uid: 'cs', payout: PAYOUT }), /without an id/);
 });
 
 // ---------------------------------------------------------------- 통합: 데모 방 전체 흐름
@@ -264,7 +264,7 @@ test('통합: 청구→송금까지 돌려도 저장소에는 계좌번호가 �
 
   const dump = await rawDump(inner);
   for (const n of DEMO_ACCOUNTS) assert.ok(!dump.includes(n), `저장소에 ${n}이 평문으로 남음`);
-  assert.ok(!dump.includes('토스뱅크') && !dump.includes(encodeURIComponent('토스뱅크')));
+  for (const bank of ['토스뱅크', 'Toss Bank']) assert.ok(!dump.includes(bank) && !dump.includes(encodeURIComponent(bank)), bank);
 
   const server = createApp({ store, gemini: null, env: { DEV_SEED: '1' } }); // #2 이후 x-demo-user 헤더는 개발 모드에서만 받는다
   await new Promise((r) => server.listen(0, r));
@@ -272,7 +272,7 @@ test('통합: 청구→송금까지 돌려도 저장소에는 계좌번호가 �
     const res = await fetch(`http://localhost:${server.address().port}/api/rooms/demo-e`, { headers: { 'x-demo-user': 'cs' } });
     assert.equal(res.status, 200);
     const t = (await res.json()).transfers.find((x) => x.from === 'cs' && x.to === 'yh');
-    assert.deepEqual(t.fallback, { bank: '토스뱅크', accountNo: '100000000003', amount: 41155 });
+    assert.deepEqual(t.fallback, { bank: 'Toss Bank', accountNo: '100000000003', amount: 41155 });
     assert.match(t.link, /accountNo=100000000003/);
   } finally {
     server.close();
@@ -284,7 +284,7 @@ test('통합: 받을 계좌를 새로 정해도 저장소에는 잠긴 글자만
   await orch.setPayout('demo-e', 'yh', { bank: '국민은행', accountNo: '123-456-789012', holder: '영희' });
   const dump = await rawDump(inner);
   assert.ok(!dump.includes('123456789012') && !dump.includes('123-456-789012'));
-  assert.ok(!dump.includes('국민') && !dump.includes(encodeURIComponent('국민'))); // 'KB국민은행'(저장 표기)·'국민'(토스 표기)
+  for (const bank of ['국민', 'Kookmin']) assert.ok(!dump.includes(bank) && !dump.includes(encodeURIComponent(bank)), bank); // 'KB Kookmin Bank'(저장 표기)·'국민'(토스 표기)
   assert.equal((await store.get('agents', 'yh')).payout.accountNo, '123-456-789012');
   const t = (await store.list('transfers', { roomId: 'demo-e' })).find((x) => x.to === 'yh');
   assert.equal(t.fallback.accountNo, '123456789012');

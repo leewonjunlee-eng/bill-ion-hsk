@@ -29,7 +29,7 @@ test('금액을 고치면 덮어쓰고 version이 오르며 기록이 남는다'
   assert.equal((await store.get('rooms', roomId)).version, 2);
   const last = (await store.listEvents(roomId)).at(-1);
   assert.equal(last.kind, 'expense_edited');
-  assert.equal(last.text, '철수가 ‘난바 호텔 2박(할인)’을 고쳤어요');
+  assert.equal(last.text, '철수 edited ‘난바 호텔 2박(할인)’');
 });
 
 test('잘못된 값이면 400이고 저장본은 그대로', async () => {
@@ -74,7 +74,7 @@ test('배분에 닿는 값(줄)을 고치면 그 지출의 이의가 닫히고, 
   assert.equal((await store.get('disputes', dispute.id)).status, 'superseded');
   const ev = (await store.listEvents(roomId)).filter((e) => e.kind === 'dispute_superseded');
   assert.equal(ev.length, 1);
-  assert.equal(ev[0].text, '지출이 바뀌어 ‘2차 바’ 이의를 닫았어요');
+  assert.equal(ev[0].text, 'Closed the dispute on ‘2차 바’ because the expense was changed');
   assert.ok(!(await room(roomId)).actions.some((a) => a.type === 'agree_dispute'));
   // 다시 보내도 같은 근거로 이의를 되살리지 않는다(사람이 지출을 직접 고쳤으니 매듭지은 것으로 본다)
   await call(`/api/rooms/${roomId}/invoices/send`, 'me', {});
@@ -94,7 +94,7 @@ test('지출을 지우면 이의도 닫히고, 닫힌 이의에 동의해도 500
   assert.equal((await call(`/api/rooms/${roomId}/expenses/${eid}/delete`, 'me', {})).status, 200);
   assert.equal((await store.get('disputes', dispute.id)).status, 'superseded');
   const [ev] = (await store.listEvents(roomId)).filter((e) => e.kind === 'dispute_superseded');
-  assert.equal(ev.text, '지출이 지워져 ‘2차 바’ 이의를 닫았어요');
+  assert.equal(ev.text, 'Closed the dispute on ‘2차 바’ because the expense was deleted');
   const path = `/api/rooms/${roomId}/disputes/${encodeURIComponent(dispute.id)}`;
   assert.equal((await call(`${path}/agree`, 'me', {})).status, 409);
   assert.equal((await call(`${path}/reject`, 'me', {})).status, 409);

@@ -6,14 +6,14 @@ import { withSettleRate } from '../rooms/fx.mjs';
 
 export function registerAgentRoutes(routes, { orchestrator, member, store, overLimit = () => false, authenticate, fx, clock = () => new Date() }) {
   const limited = (uid) => {
-    if (overLimit(`uid:${uid}`)) throw new HttpError(429, '요청이 너무 많아요. 10분 뒤에 다시 시도해 주세요.');
+    if (overLimit(`uid:${uid}`)) throw new HttpError(429, 'Too many requests. Try again in 10 minutes.');
   };
 
   routes.post('/api/rooms/:id/invoices/send', async ({ req, params }) => {
     const { room, me } = await member(req, params.id);
     // 외화 방의 정산 시작은 전원이 지금 환율 정책에 동의해야 열린다(#4). 원화 방은 정책이 없어 늘 비어 있다(#55)
     const waiting = notAgreed(room);
-    if (waiting.length) throw new HttpError(409, `아직 환율 정책에 동의하지 않은 사람이 있어요: ${waiting.map((m) => m.name).join(', ')}`);
+    if (waiting.length) throw new HttpError(409, `Some people have not agreed to the exchange rate policy yet: ${waiting.map((m) => m.name).join(', ')}`);
     limited(me.uid);
     // '정산일 기준율' 방은 처음 보낼 때 그날 환율을 정해 둔다. 받지 못하면 보내지 않는다(503)
     const priced = await withSettleRate(fx, room, clock());
@@ -29,7 +29,7 @@ export function registerAgentRoutes(routes, { orchestrator, member, store, overL
 
   routes.post('/api/rooms/:id/disputes', async ({ req, params }) => {
     const { room, me } = await member(req, params.id);
-    if (isDone(room)) throw new HttpError(409, '정산이 끝난 방이라 이의를 낼 수 없어요');
+    if (isDone(room)) throw new HttpError(409, 'This room is Settled, so disputes can no longer be raised');
     limited(me.uid);
     const { expenseId, claim } = await readJson(req);
     return orchestrator.raiseDispute(params.id, { by: me.uid, expenseId, claim, evidence: [] });

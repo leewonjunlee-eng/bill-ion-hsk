@@ -56,14 +56,14 @@ const app = createApp({
 setInterval(async () => {
   try {
     const { due, reminded } = await app.tick();
-    if (due || reminded) console.log(`[tick] 송금 알림 ${due}건, 받았나요 ${reminded}건`);
+    if (due || reminded) console.log(`[tick] transfer reminders: ${due}, receipt checks: ${reminded}`);
   } catch (e) {
-    console.warn('[tick] 실패:', e.message);
+    console.warn('[tick] failed:', e.message);
   }
 }, 30_000).unref();
 
 const listenOptions = process.env.BILLION_HSP_DEMO === '1' ? { port: PORT, host: '127.0.0.1' } : { port: PORT };
 app.listen(listenOptions, () => {
   console.log(`Bill:ION — http://localhost:${PORT}`);
-  console.log(KEY ? `Gemini 모드 — 모델 ${MODEL}` : '규칙 모드 — GEMINI_API_KEY가 없어 규칙으로 배분·중재합니다');
+  console.log(KEY ? `Gemini mode — model ${MODEL}` : 'Rule mode — no GEMINI_API_KEY, so splitting and mediation use rules');
 });

@@ -43,7 +43,7 @@ test('only conflicting rows lose confidence; a self-report does not penalize unr
   assert.ok(Object.values(result.alloc).every(a => a.confirmed === false));
   const prompt = mediatePrompt(context);
   assert.match(prompt.user, /"leftAt":"22:55"/);
-  assert.match(prompt.system, /타임라인/);
+  assert.match(prompt.system, /Google Maps Timeline summary/);
   assert.ok(prompt.schema.properties.lines.items.required.includes('evidenceConflict'));
 });
 

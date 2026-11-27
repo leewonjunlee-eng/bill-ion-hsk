@@ -34,7 +34,7 @@ export function createLocationService({ store, clock }) {
     }
     await store.appendEvent(roomId, {
       at: clock().toISOString(), from: 'system', to: 'all', kind: 'location_removed',
-      text: '보관 기간이 끝났거나 동의를 철회해 위치 요약을 지웠어요. 열린 이의를 다시 확인해 주세요.',
+      text: 'A location summary was removed because its retention period ended or consent was withdrawn. Please review open disputes again.',
     });
     // 위치에서 나온 행동은 이벤트에 일반 문구로만 남겨, 철회 뒤 지울 수 없는 기록에 요약이 남지 않게 한다
   }
@@ -74,14 +74,14 @@ export function createLocationService({ store, clock }) {
   function checkResult(input, exp) {
     const { from, until } = expenseWindow(exp);
     if (input.stayedUntil !== undefined) {
-      if (input.leftAt !== undefined || input.stayedUntil !== kstTime(until)) throw new HttpError(400, '결제 시각까지 머문 기록만 보낼 수 있어요');
+      if (input.leftAt !== undefined || input.stayedUntil !== kstTime(until)) throw new HttpError(400, 'Only a record of staying until the payment time can be sent');
       return { stayedUntil: input.stayedUntil };
     }
-    if (!HHMM.test(input.leftAt ?? '')) throw new HttpError(400, '떠난 시각을 확인해 주세요');
+    if (!HHMM.test(input.leftAt ?? '')) throw new HttpError(400, 'Check the time you left');
     // 자정을 넘긴 지출이면 떠난 시각이 결제일의 전날일 수 있다
     const left = [0, -DAY].map(d => Date.parse(`${exp.date}T${input.leftAt}:00+09:00`) + d).find(ms => ms > from && ms < until);
-    if (left === undefined) throw new HttpError(400, '떠난 시각이 그 지출의 첫 주문과 결제 사이가 아니에요');
-    if (input.nextAt != null && !HHMM.test(input.nextAt)) throw new HttpError(400, '도착 시각을 확인해 주세요');
+    if (left === undefined) throw new HttpError(400, 'The time you left is not between the first order and the payment for that expense');
+    if (input.nextAt != null && !HHMM.test(input.nextAt)) throw new HttpError(400, 'Check the arrival time');
     return { leftAt: input.leftAt, nextAt: input.nextAt ?? null, nextHome: input.nextHome === true };
   }
 
@@ -101,14 +101,14 @@ export function createLocationService({ store, clock }) {
     routes.post('/api/rooms/:id/location/timeline', async ({ req, params }) => {
       const { room, me } = await member(req, params.id);
       const input = await readJson(req);
-      if (input?.agree !== true) throw new HttpError(400, '위치 요약을 보내는 데 동의해 주세요');
-      if (Object.keys(input).some(k => !FIELDS.includes(k))) throw new HttpError(400, '타임라인에서 찾은 시각만 보낼 수 있어요');
+      if (input?.agree !== true) throw new HttpError(400, 'Agree to send the location summary');
+      if (Object.keys(input).some(k => !FIELDS.includes(k))) throw new HttpError(400, 'Only the times found in your timeline can be sent');
       const exp = await store.get('expenses', input.expenseId);
-      if (!exp || exp.roomId !== room.id || !exp.present.includes(me.uid)) throw new HttpError(400, '내가 함께 있던 지출을 골라 주세요');
+      if (!exp || exp.roomId !== room.id || !exp.present.includes(me.uid)) throw new HttpError(400, 'Choose an expense you were part of');
       const result = checkResult(input, exp);
       await active(me.uid, room.id); // 기한이 지난 요약을 먼저 지워, 그 지출에 다시 붙일 수 있게 한다
       const mine = await store.list('locationEvidence', { uid: me.uid, roomId: room.id });
-      if (mine.some(e => e.expenseId === exp.id)) throw new HttpError(409, '이 지출에는 이미 위치 요약을 붙였어요. 지우고 다시 붙여 주세요');
+      if (mine.some(e => e.expenseId === exp.id)) throw new HttpError(409, 'This expense already has a location summary. Delete it, then attach it again');
       // 요약마다 자기 기한(붙인 뒤 7일)을 갖는다. 동의는 가장 늦게 붙인 요약이 끝날 때까지 이어지고,
       // 먼저 붙인 요약은 동의가 이어져도 자기 기한에 지워진다(active)
       const now = clock();

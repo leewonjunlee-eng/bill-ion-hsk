@@ -13,7 +13,7 @@ const base = { title: '편의점', amount: 12000, currency: 'KRW', payer: 'me', 
 test('validateExpense: 음수 금액 → errors에 금액', () => {
   const r = validateExpense({ ...base, amount: -1 }, room);
   assert.equal(r.ok, false);
-  assert.ok(r.errors.some((e) => e.includes('금액')));
+  assert.ok(r.errors.some((e) => /amount/i.test(e)));
 });
 
 test('validateExpense: 정상 입력은 정리된 지출을 돌려준다', () => {
@@ -52,7 +52,7 @@ test('validateExpense: 줄이 있으면 split은 items, 줄 합이 1 이상이�
   assert.equal(r.expense.split, 'items');
   assert.deepEqual(r.expense.items[1].tags, ['기타']);
   const bad = validateExpense({ ...base, amount: undefined, items: [{ id: 'a', name: '할인', qty: 1, unit: -100, tags: [] }] }, room);
-  assert.ok(bad.errors.some((e) => e.includes('금액')));
+  assert.ok(bad.errors.some((e) => /amount/i.test(e)));
 });
 
 const store = new MemoryStore();
@@ -75,7 +75,7 @@ test('멤버 아닌 payer → 400', async () => {
   const roomId = await seed();
   const res = await postExpense(roomId, { ...base, payer: 'stranger', present: ['me'] });
   assert.equal(res.status, 400);
-  assert.match((await res.json()).error, /낸 사람/);
+  assert.match((await res.json()).error, /payer/);
 });
 
 test('환율 표에 없는 날짜의 외화는 그날 환율을 받아 방 표에 넣고 남긴다(#55)', async () => {
@@ -92,7 +92,7 @@ test('환율을 받지 못하면 503이고 지출도 방도 그대로다', async
   const before = await store.get('rooms', roomId);
   const res = await postExpense(roomId, { ...base, currency: 'JPY', amount: 1000, date: '2026-12-31', present: ['me', 'cs'] });
   assert.equal(res.status, 503);
-  assert.match((await res.json()).error, /환율/);
+  assert.match((await res.json()).error, /exchange rate/);
   assert.deepEqual(await store.get('rooms', roomId), before);
 });
 
@@ -110,6 +110,6 @@ test('정상 → 201이고 room.version 1 증가, 이벤트 1개', async () => {
   const events = await store.listEvents(roomId, eventsBefore);
   assert.equal(events.length, 1);
   assert.equal(events[0].kind, 'expense_added');
-  assert.equal(events[0].text, '철수가 편의점 ₩12,000을 남겼어요');
+  assert.equal(events[0].text, '철수 added ‘편의점’ · ₩12,000');
   assert.equal((await store.list('expenses', { roomId })).length, 8);
 });

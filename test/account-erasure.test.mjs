@@ -27,7 +27,7 @@ test('eraseUser preserves shared amounts, unlinks identity per room and removes 
   const room = await store.get('rooms', 'one');
   const deleted = room.members.find(m => m.deleted);
   assert.ok(deleted.uid.startsWith('deleted-'));
-  assert.equal(deleted.name, '탈퇴한 사용자');
+  assert.equal(deleted.name, 'Deleted user');
   assert.notEqual(deleted.uid, (await store.get('rooms', 'two')).members.find(m => m.deleted).uid);
   assert.deepEqual(ledger(room, await store.list('expenses', { roomId: 'one' }), 'actual')[deleted.uid], before.me);
   for (const uid of ['cs', 'yh', 'ms']) assert.deepEqual(ledger(room, await store.list('expenses', { roomId: 'one' }), 'actual')[uid], before[uid]);
@@ -103,5 +103,5 @@ test('encrypted store: erasing a user empties dispute evidence and proposals wit
   }
   assert.deepEqual(await store.list('locationEvidence'), []);
   const raw = JSON.stringify([...inner.cols].map(([name, docs]) => [name, [...docs.values()]]));
-  assert.ok(!raw.includes('떠났어요') && !raw.includes('이전 주문은'));
+  for (const s of ['떠났어요', '이전 주문은', 'Left the first-order', 'self-submitted', 'Orders before']) assert.ok(!raw.includes(s), s);
 });

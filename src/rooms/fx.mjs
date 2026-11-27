@@ -21,9 +21,9 @@ export function createFxRates({ fetch = globalThis.fetch, clock = () => new Date
 
   async function fromEcb(currency, ask) {
     const res = await fetch(`${ECB}/${ask}?base=${encodeURIComponent(currency)}&symbols=KRW`, { signal: AbortSignal.timeout(4000) });
-    if (!res.ok) throw new Error(`Frankfurter 응답 ${res.status}`);
+    if (!res.ok) throw new Error(`Frankfurter responded ${res.status}`);
     const krw = Number((await res.json())?.rates?.KRW);
-    if (!(krw > 0)) throw new Error('Frankfurter 응답에 원화 값이 없어요');
+    if (!(krw > 0)) throw new Error('Frankfurter response has no KRW value');
     return per100(krw);
   }
 
@@ -33,15 +33,15 @@ export function createFxRates({ fetch = globalThis.fetch, clock = () => new Date
     let day = date;
     for (let i = 0; i < 7; i++, day = dayBefore(day)) {
       const res = await fetch(`${EXIM}?authkey=${encodeURIComponent(eximKey)}&searchdate=${day.replaceAll('-', '')}&data=AP01`, { signal: AbortSignal.timeout(5000) });
-      if (!res.ok) throw new Error(`수출입은행 응답 ${res.status}`);
+      if (!res.ok) throw new Error(`Korea Eximbank responded ${res.status}`);
       const rows = await res.json();
       const failed = rows.find((r) => r.result && r.result !== 1); // 2: 데이터 코드, 3: 인증키, 4: 하루 요청 한도
-      if (failed) throw new Error(`수출입은행 결과 코드 ${failed.result}`);
+      if (failed) throw new Error(`Korea Eximbank result code ${failed.result}`);
       const row = rows.find((r) => String(r.cur_unit).replace(/\(\d+\)$/, '') === code);
       if (row) return per100(Number(String(row.deal_bas_r).replaceAll(',', '')) / Number(/\((\d+)\)$/.exec(row.cur_unit)?.[1] ?? 1)); // JPY(100)은 100엔당
-      if (rows.length) throw new Error(`수출입은행이 고시하지 않는 통화예요: ${currency}`);
+      if (rows.length) throw new Error(`Korea Eximbank does not publish this currency: ${currency}`);
     }
-    throw new Error('수출입은행에 7일 안의 고시가 없어요');
+    throw new Error('Korea Eximbank has no rate within the last 7 days');
   }
 
   async function load(currency, date, today) {
@@ -51,10 +51,10 @@ export function createFxRates({ fetch = globalThis.fetch, clock = () => new Date
       } catch (e) {
         if (!eximKey) throw e;
         ecbPausedUntil = Date.now() + ECB_PAUSE_MS;
-        console.warn('[fx] Frankfurter 실패, 수출입은행으로 대신해요:', e.message);
+        console.warn('[fx] Frankfurter failed, using Korea Eximbank instead:', e.message);
       }
     }
-    if (!eximKey) throw new Error('Frankfurter를 잠시 쉬는 중이고 수출입은행 인증키가 없어요');
+    if (!eximKey) throw new Error('Frankfurter is paused for now and there is no Korea Eximbank API key');
     return fromExim(currency, date > today ? today : date);
   }
 
@@ -70,7 +70,7 @@ export function createFxRates({ fetch = globalThis.fetch, clock = () => new Date
 
 const unavailable = (e) => {
   console.error('[fx]', e.message);
-  return new HttpError(503, '환율을 받아 오지 못했어요. 잠시 뒤에 다시 시도해 주세요');
+  return new HttpError(503, 'Could not get the exchange rate. Try again in a moment');
 };
 
 // 외화 지출의 결제일 환율이 방 표에 없으면 받아 넣은 방을 돌려준다. 저장은 부르는 쪽이 방 version을 올리며 함께 한다

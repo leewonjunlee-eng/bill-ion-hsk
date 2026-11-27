@@ -16,7 +16,7 @@ export const SEALED_FIELDS = {
 };
 
 export function encryptedStore(inner, key) {
-  if (!Buffer.isBuffer(key) || key.length !== 32) throw new Error('암호화 열쇠는 32바이트여야 해요');
+  if (!Buffer.isBuffer(key) || key.length !== 32) throw new Error('The encryption key must be 32 bytes');
   const fieldsOf = (col) => SEALED_FIELDS[col] ?? [];
   const label = (col, id, field) => `${col}/${id}/${field}`;
 
@@ -29,7 +29,7 @@ export function encryptedStore(inner, key) {
     const out = { ...doc };
     for (const f of fieldsOf(col)) {
       if (empty(out[f])) continue;
-      if (doc.id == null) throw new Error(`id가 없는 문서는 잠글 수 없어요: ${col}.${f}`);
+      if (doc.id == null) throw new Error(`A document without an id cannot be sealed: ${col}.${f}`);
       out[f] = seal(out[f], key, label(col, doc.id, f));
     }
     return out;
@@ -63,7 +63,7 @@ export function encryptedStore(inner, key) {
     // 잠긴 글자로는 같은 값을 찾을 수 없으니, 잠긴 칸으로 거르는 건 막는다
     async list(col, where = {}) {
       const sealedKey = fieldsOf(col).find((f) => f in where);
-      if (sealedKey) throw new Error(`잠긴 칸(${col}.${sealedKey})으로는 찾을 수 없어요`);
+      if (sealedKey) throw new Error(`Cannot search by a sealed field (${col}.${sealedKey})`);
       return (await inner.list(col, where)).map((doc) => open(col, doc));
     },
     // 비서 기록 문장에는 계좌번호·위치 요약이 들어가지 않는다(위치 근거면 orchestrator·location이 일반 문구만 쓴다)

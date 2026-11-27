@@ -26,6 +26,6 @@ export async function supersedeDisputes(store, roomId, before, after = null) {
   const live = (await store.list('disputes', { roomId })).filter((d) => d.expenseId === before.id && OPEN.includes(d.status));
   if (!live.length) return [];
   for (const d of live) await store.put('disputes', { ...d, status: 'superseded' });
-  await store.appendEvent(roomId, { from: 'system', to: 'all', kind: 'dispute_superseded', text: `${after ? '지출이 바뀌어' : '지출이 지워져'} ‘${before.title}’ 이의를 닫았어요` });
+  await store.appendEvent(roomId, { from: 'system', to: 'all', kind: 'dispute_superseded', text: `Closed the dispute on ‘${before.title}’ because the expense was ${after ? 'changed' : 'deleted'}` });
   return live;
 }

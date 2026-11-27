@@ -209,7 +209,7 @@ test('원화만 쓰는 방: 친구들의 지출도, 샘플 영수증도 원화�
   assert.equal(draft.ok, true, draft.reason);
   assert.equal(draft.currency, 'KRW');
   assert.ok(draft.items.every((it) => Number.isInteger(it.unit) && it.unit > 0));
-  assert.ok(!draft.items.some((it) => it.name === '차액 조정'), '줄의 합과 합계가 같다');
+  assert.ok(!draft.items.some((it) => ['차액 조정', 'Difference adjustment'].includes(it.name)), '줄의 합과 합계가 같다');
   const { expense } = await ok('POST', `${base(room.id)}/expenses`, { expense: {
     title: draft.merchant, kind: 'food', date: draft.date, time: draft.time, payer: 'me', method: 'card', currency: draft.currency,
     items: draft.items, present: ['me', 'cs', 'yh', 'ms'], source: 'receipt',

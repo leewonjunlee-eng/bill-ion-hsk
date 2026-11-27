@@ -111,7 +111,7 @@ test('지출을 낸 사람이 거부하면 이의가 끝나고(기각) 배분은
   assert.ok(transfers.length > 0 && transfers.every((t) => t.version === 1));
   const [ev] = await eventsOf(store, 'dispute_dismissed');
   assert.equal(ev.from, 'me');
-  assert.match(ev.text, /거부/);
+  assert.match(ev.text, /Rejected/);
   assert.match(ev.meta, /술은 같이 마셨어요/); // 사유가 양쪽 비서끼리 기록에 남는다
   assert.deepEqual((await actionsFor(store, 'me')).filter((a) => a.type === 'agree_dispute'), []);
 });
@@ -211,19 +211,19 @@ test('고치면 고친 사람만 동의한 새 안이 되고, 상대에게 다�
   assert.deepEqual(out.agreedBy, ['me']); // 먼저 해 둔 동의는 고친 안에 대한 동의가 아니다
   assert.deepEqual([out.proposal.source, out.proposal.revisedBy, out.proposal.rev], ['human', 'me', 1]);
   assert.deepEqual(out.proposal.alloc['b-whisky'].consumers, bar.present.filter((u) => ['me', 'cs', 'yh', 'ms'].includes(u))); // 함께 있던 사람 순서로
-  assert.match(out.proposal.alloc['b-whisky'].reason, /고친 줄/);
+  assert.match(out.proposal.alloc['b-whisky'].reason, /Line edited by/);
   assert.deepEqual(out.proposal.alloc['b-nuts'], dispute.proposal.alloc['b-nuts']); // 고치지 않은 줄은 중재 비서의 안 그대로
   assert.deepEqual(await store.get('disputes', dispute.id), out);
   assert.equal(bar.split, 'equal');
   assert.equal((await store.get('rooms', 'demo-t')).version, 1);
   const forMs = await actionsFor(store, 'ms');
   assert.deepEqual(forMs.map((a) => [a.type, a.ref]), [['agree_dispute', dispute.id]]);
-  assert.match(forMs[0].text, /중재안을 고쳤어요/);
+  assert.match(forMs[0].text, /revised the mediation proposal/);
   assert.deepEqual(await actionsFor(store, 'me'), []);
   const [ev] = await eventsOf(store, 'dispute_revised');
   assert.deepEqual([ev.from, ev.to, ev.action], ['me', 'ms', { type: 'agree_dispute', ref: dispute.id, for: 'ms' }]);
-  assert.equal(ev.text, '‘2차 바’ 중재안을 고쳐 다시 제안했어요');
-  assert.match(ev.meta, /당사자가 고친 배분/); // 비서 기록에서 중재 비서의 안과 구분된다
+  assert.equal(ev.text, 'Revised the mediation proposal for ‘2차 바’ and proposed it again');
+  assert.match(ev.meta, /Split edited by a person in the dispute/); // 비서 기록에서 중재 비서의 안과 구분된다
   assert.match(ev.meta, /위스키/);
 });
 
@@ -239,7 +239,7 @@ test('상대가 고친 안에 동의하면 그 배분으로 다시 나누고 청
   assert.equal((await store.get('rooms', 'demo-t')).version, 2);
   assert.ok(await store.get('invoices', 'demo-t:v2:ms'));
   const [ev] = await eventsOf(store, 'dispute_resolved');
-  assert.match(ev.text, /고친 배분대로/);
+  assert.match(ev.text, /using the revised split/);
 });
 
 test('상대도 다시 고칠 수 있다. 그러면 처음 고친 사람에게 다시 묻는다', async () => {
@@ -294,7 +294,7 @@ test('위치 요약이 붙은 이의는 고친 안도 같은 규칙으로 가린
   await store.put('disputes', { ...dispute, evidence: [{ kind: 'left_at', time: '22:55', summary: '난바역 근처 22:55', locationId: 'loc-1' }] });
   const out = await orch.revise('demo-t', dispute.id, 'me', { alloc: withWhisky(dispute) });
   const seen = redactDispute(out, 'yh', 'me');
-  assert.ok(Object.values(seen.proposal.alloc).every((a) => a.reason === '위치 요약을 참고한 배분'));
+  assert.ok(Object.values(seen.proposal.alloc).every((a) => a.reason === 'Split informed by a location summary'));
   assert.ok(!JSON.stringify(seen).includes('난바역'));
   assert.deepEqual(allocOf(seen), allocOf(out)); // 누구 몫인지는 그대로 보인다
   assert.deepEqual(redactDispute(out, 'ms', 'me'), out);
@@ -319,7 +319,7 @@ test('라우트: 고치기는 당사자만, 고친 뒤 상대의 할 일과 동�
     assert.equal(ok.status, 200);
     assert.equal((await ok.json()).proposal.revisedBy, 'me');
     const ms = await view(roomId, 'ms');
-    assert.deepEqual(ms.actions.filter((a) => a.type === 'agree_dispute').map((a) => a.text), ['내가 ‘2차 바’ 중재안을 고쳤어요. 동의할까요?']); // 데모 방에서 me의 이름이 '나'다
+    assert.deepEqual(ms.actions.filter((a) => a.type === 'agree_dispute').map((a) => a.text), ['나 revised the mediation proposal for ‘2차 바’. Do you agree?']); // 데모 방에서 me의 이름이 '나'다
     assert.equal((await call(`${base}/agree`, 'ms', { rev: 0 })).status, 409);
     assert.equal((await call(`${base}/agree`, 'ms', { rev: 1 })).status, 200);
     assert.equal((await view(roomId, 'ms')).disputes[0].status, 'resolved');

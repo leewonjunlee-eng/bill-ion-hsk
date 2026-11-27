@@ -36,7 +36,7 @@ test('목록 순서는 처음 넣은 순서(덮어써도 유지), 숨은 칸은 
   await store.put('rooms', { id: 'r1', members: [{ uid: 'a' }, { uid: 'gone', deleted: true }] });
   assert.deepEqual(await store.get('rooms', 'r1'), { id: 'r1', members: [{ uid: 'a' }, { uid: 'gone', deleted: true }] });
   assert.deepEqual((await store.db.collection('rooms').doc('r1').get()).get('_memberUids'), ['a']);
-  await assert.rejects(store.put('rooms', { id: 'a/b' }), /쓸 수 없는 id/);
+  await assert.rejects(store.put('rooms', { id: 'a/b' }), /Invalid Firestore id/);
 });
 
 // #55 방에서 나간 사람: 멤버 색인(_memberUids)에서 빠져 규칙상 못 읽고 내 방 목록에도 없지만,
@@ -54,7 +54,7 @@ test('나간 사람은 멤버 색인에서 빠지고, 탈퇴하면 나간 방도
   await store.eraseUser('leaver');
   const room = await store.get('rooms', 'left-room');
   assert.ok(!JSON.stringify(room).includes('leaver') && !JSON.stringify(room).includes('나간 사람'));
-  assert.equal((await store.get('expenses', 'left-room-e')).title, '탈퇴한 사용자의 지출');
+  assert.equal((await store.get('expenses', 'left-room-e')).title, 'Expense from a deleted user');
 });
 
 test('영수증 사진은 문서 한도(1MiB)보다 커도 Cloud Storage에 저장·조회·삭제된다', { skip }, async () => {
