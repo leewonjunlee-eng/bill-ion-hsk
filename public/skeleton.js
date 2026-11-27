@@ -48,9 +48,9 @@ export function startSkeleton(el, html, { clock = systemClock } = {}) {
 
 // 뼈대는 실제 화면과 같은 자리·크기(hero·next·group·row)를 써서, 화면이 오면 그 자리에서 내용만 채워지는 것처럼 보이게 한다
 const bar = (cls = '', width = '') => `<span class="sk-bar${cls ? ` ${cls}` : ''}"${width ? ` style="width:${width}"` : ''}></span>`;
-const STATUS = '<p class="sr-only" role="status">불러오는 중이에요</p>';
+const STATUS = '<p class="sr-only" role="status">Loading</p>';
 const SLOW = `<div class="sk-slow"><div class="sk-progress" aria-hidden="true"><i></i></div>
-  <p>평소보다 오래 걸리고 있어요. 보통 10초 안에 끝나요.</p><button type="button" class="btn sm secondary" data-action="sk-retry">다시 시도</button></div>`;
+  <p>This is taking longer than usual. It normally finishes within 10 seconds.</p><button type="button" class="btn sm secondary" data-action="sk-retry">Try again</button></div>`;
 const row = () => `<div class="row"><span class="sk-tile"></span><span class="grow">${bar('', '52%')}${bar('meta', '34%')}</span>${bar('amt')}</div>`;
 const plainRow = (w) => `<div class="row"><span class="grow">${bar('', w)}</span>${bar('amt')}</div>`;
 const page = (body) => `<div class="sk">${STATUS}${body}${SLOW}</div>`;

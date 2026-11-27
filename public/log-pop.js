@@ -9,7 +9,7 @@ const $ = (s) => document.querySelector(s);
 // itemHtml(e, { unread, extraHtml })은 기록 한 줄, timeOf(e)는 묶음 안의 시각, todosHtml()은 맨 위 할 일 카드를 그린다.
 // seen.get/set은 마지막으로 본 seq를 읽고 쓴다.
 // counts(e)는 종 배지에 셀 기록이다(실제 방은 주인의 알림 수준을 따른다, #5). 기록 목록에는 모두 보인다.
-export function createLogPop({ itemHtml, timeOf, todosHtml = () => '', seen, emptyText = '아직 기록이 없어요.', counts = () => true }) {
+export function createLogPop({ itemHtml, timeOf, todosHtml = () => '', seen, emptyText = 'No activity yet.', counts = () => true }) {
   const root = $('#log-pop-root');
   const pop = $('#log-pop');
   const bell = $('#nav-bell');
@@ -23,14 +23,14 @@ export function createLogPop({ itemHtml, timeOf, todosHtml = () => '', seen, emp
     const n = isOpen ? 0 : events.filter((e) => e.seq > seen.get() && counts(e)).length;
     badge.hidden = !n;
     badge.textContent = n > 99 ? '99+' : String(n);
-    bell.setAttribute('aria-label', n ? `비서끼리 기록, 새 기록 ${n}개` : '비서끼리 기록');
+    bell.setAttribute('aria-label', n ? `Agent log, ${n} new` : 'Agent log');
     bell.setAttribute('aria-expanded', String(isOpen));
   }
 
   const runHtml = ([e, ...rest], unread) => itemHtml(e, {
     unread,
     extraHtml: rest.length
-      ? `<details class="more"><summary>비슷한 기록 ${rest.length}개 더 보기</summary>
+      ? `<details class="more"><summary>Show ${rest.length} similar entries</summary>
         <ol>${rest.map((x) => `<li><span>${esc(x.text)}</span><time>${esc(timeOf(x))}</time></li>`).join('')}</ol></details>`
       : '',
   });
@@ -41,10 +41,10 @@ export function createLogPop({ itemHtml, timeOf, todosHtml = () => '', seen, emp
     const fresh = newest.filter((e) => e.seq > seenAtOpen);
     const old = newest.filter((e) => e.seq <= seenAtOpen);
     const list = (items, unread) => (items.length ? `<ol class="log">${groupRuns(items).map((run) => runHtml(run, unread)).join('')}</ol>` : '');
-    pop.innerHTML = `<div class="pop-head"><h2>비서끼리</h2><span>${fresh.length ? `새 기록 ${fresh.length}개` : '새 기록 없음'}</span></div>
+    pop.innerHTML = `<div class="pop-head"><h2>Agents</h2><span>${fresh.length ? `${fresh.length} new` : 'Nothing new'}</span></div>
       ${todosHtml()}
       ${events.length
-        ? `${list(fresh, true)}${fresh.length && old.length ? '<p class="divider">이전 기록</p>' : ''}${list(old, false)}`
+        ? `${list(fresh, true)}${fresh.length && old.length ? '<p class="divider">Earlier</p>' : ''}${list(old, false)}`
         : `<p class="empty">${esc(emptyText)}</p>`}`;
     pop.scrollTop = top;
   }

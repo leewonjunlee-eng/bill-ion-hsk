@@ -16,23 +16,23 @@ export const MANUAL_WAIT_DAYS = 1;
 // 예전의 '바로 보내기'('now')는 '편할 때'로 읽는다. 사용자 테스트(11/5)에서 둘의 차이를 느끼지 못했다(둘 다 방에서 바로 보내러 가고 알림 때만 달랐다)
 export const sendWhenOf = (v) => (v === 'now' ? 'manual' : v);
 // 알림 때를 사람 말로: 1일이면 '다음 날', 그보다 길면 'N일 뒤'
-export const manualRemindText = MANUAL_WAIT_DAYS === 1 ? '다음 날 오전 9시' : `${MANUAL_WAIT_DAYS}일 뒤 오전 9시`;
+export const manualRemindText = MANUAL_WAIT_DAYS === 1 ? '9 AM the next day' : `9 AM after ${MANUAL_WAIT_DAYS} days`;
 
 export const ON_DISPUTE = {
-  ask: '나에게 묻기',
-  evidence: '근거가 있으면 이의 제기',
-  mediator: '중재 비서에게 맡기기',
+  ask: 'Ask me',
+  evidence: 'Dispute when there is evidence',
+  mediator: 'Leave it to the mediator agent',
 };
-export const NOTIFY = { actions: '확인할 일만', all: '모든 진행 상황' };
+export const NOTIFY = { actions: 'Action items only', all: 'All updates' };
 
-export const sendWhenLabel = (sendWhen) => (sendWhen?.payday ? `매달 ${sendWhen.payday}일에 보내기` : '편할 때 보내기');
-export const autoAcceptLabel = (n) => (n > 0 ? `${won(n)}까지 자동 수락` : '항상 나에게 묻기');
+export const sendWhenLabel = (sendWhen) => (sendWhen?.payday ? `Send on day ${sendWhen.payday} of each month` : 'Send whenever convenient');
+export const autoAcceptLabel = (n) => (n > 0 ? `Auto-accept up to ${won(n)}` : 'Always ask me');
 
 const FIELDS = {
-  autoAccept: ['자동 수락 한도', (v) => won(v)],
-  sendWhen: ['보낼 시기', sendWhenLabel],
-  onDispute: ['이의 처리', (v) => ON_DISPUTE[v] ?? v],
-  notify: ['알림', (v) => NOTIFY[v] ?? v],
+  autoAccept: ['Auto-accept limit', (v) => won(v)],
+  sendWhen: ['Send timing', sendWhenLabel],
+  onDispute: ['Disputes', (v) => ON_DISPUTE[v] ?? v],
+  notify: ['Notifications', (v) => NOTIFY[v] ?? v],
 };
 export const RULE_FIELDS = Object.keys(FIELDS);
 

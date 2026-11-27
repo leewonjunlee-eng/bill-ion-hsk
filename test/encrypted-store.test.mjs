@@ -319,13 +319,13 @@ test('통합: 위치 요약을 붙여 이의·중재까지 가도 저장소에�
   // 위치 기록과 이의 문서 어디에도 시각·요약·중재안 문장이 평문으로 없다
   const rawOf = (col) => JSON.stringify([...(inner.cols.get(col)?.values() ?? [])]);
   const docs = rawOf('locationEvidence') + rawOf('disputes');
-  for (const s of ['20:15', '20:28', '떠났어요', '본인 제출', '이전 주문은', 'Orders before']) assert.ok(!docs.includes(s), `저장소에 '${s}'가 평문으로 남음`);
+  for (const s of ['20:15', '20:28', '떠났어요', '본인 제출', 'Left the first-order', 'self-submitted', '이전 주문은', 'Orders before']) assert.ok(!docs.includes(s), `저장소에 '${s}'가 평문으로 남음`);
   // 비서 기록·청구서까지 포함한 저장소 전체에도 요약 문장은 없다
   const dump = await rawDump(inner);
-  for (const s of ['떠났어요', '본인 제출', '이전 주문은', 'Orders before']) assert.ok(!dump.includes(s), `저장소 어딘가에 '${s}'`);
+  for (const s of ['떠났어요', '본인 제출', 'Left the first-order', 'self-submitted', '이전 주문은', 'Orders before']) assert.ok(!dump.includes(s), `저장소 어딘가에 '${s}'`);
 
   // 이의를 낸 당사자 화면에는 평문
   const view = (await call('/api/rooms/room-one', 'me')).disputes.find((d) => d.id === raised.id);
-  assert.match(view.evidence[0].summary, /20:15에 떠났어요/);
+  assert.match(view.evidence[0].summary, /at 20:15/);
   assert.match(view.proposal.summary, /Orders before 20:15/);
 });

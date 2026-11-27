@@ -22,10 +22,10 @@ test('초대 링크가 아니면 null: 방 주소·다른 사이트·짧은 글�
 test('접힌 줄: 무엇을 하는 줄인지 알리고, 누르면 그 자리에 입력칸이 펼쳐진다', () => {
   const html = joinLinkHtml();
   assert.match(html, /id="join-toggle"[^>]*aria-expanded="false"[^>]*aria-controls="join-link"/);
-  assert.match(html, /초대 링크로 참가하기/);
+  assert.match(html, /Join with an invite link/);
   assert.match(html, /<form[^>]*id="join-link"[^>]*hidden/, '처음엔 입력칸을 숨긴다');
-  assert.match(html, /<input[^>]*id="join-input"[^>]*aria-label="받은 초대 링크"/);
-  assert.match(html, /<button[^>]*type="submit"[^>]*>참가 화면 열기</);
+  assert.match(html, /<input[^>]*id="join-input"[^>]*aria-label="Invite link"/);
+  assert.match(html, /<button[^>]*type="submit"[^>]*>Open join screen</);
   assert.match(html, /id="join-error"[^>]*role="alert"/, '알아볼 수 없을 때 입력칸 바로 아래에 알린다');
 });
 

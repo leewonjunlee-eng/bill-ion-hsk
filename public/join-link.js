@@ -14,15 +14,15 @@ export function inviteTokenFrom(text) {
 // 줄을 누르면 그 자리에 입력칸이 펼쳐진다(새 화면으로 가지 않는다). 알아볼 수 없으면 입력칸 바로 아래에 알린다
 export function joinLinkHtml() {
   return `<button type="button" class="row new-room" id="join-toggle" aria-expanded="false" aria-controls="join-link">
-      <span class="new-room-icon" aria-hidden="true">${ICON_LINK}</span><span class="grow"><span class="title">초대 링크로 참가하기</span>
-      <span class="meta" style="display:block">친구에게 받은 링크를 붙여 넣어요</span></span>${CHEVRON}</button>
+      <span class="new-room-icon" aria-hidden="true">${ICON_LINK}</span><span class="grow"><span class="title">Join with an invite link</span>
+      <span class="meta" style="display:block">Paste the link a friend sent you</span></span>${CHEVRON}</button>
     ${joinFormHtml()}`;
 }
 
 // 입력칸만. 넓은 '내 방' 화면은 접힌 줄 대신 머리말의 버튼(id="join-toggle")이 이 칸을 연다
 export function joinFormHtml() {
   return `<form class="row join-link" id="join-link" hidden novalidate>
-      <input id="join-input" type="text" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://…/room.html?invite=…" aria-label="받은 초대 링크" aria-describedby="join-error">
-      <button type="submit" class="btn sm">참가 화면 열기</button>
+      <input id="join-input" type="text" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://…/room.html?invite=…" aria-label="Invite link" aria-describedby="join-error">
+      <button type="submit" class="btn sm">Open join screen</button>
       <p class="join-error" id="join-error" role="alert"></p></form>`;
 }

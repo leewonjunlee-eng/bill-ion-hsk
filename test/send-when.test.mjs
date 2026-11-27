@@ -20,7 +20,7 @@ test("예전에 저장한 '바로'는 '편할 때'로 읽는다(기본 설정·�
   const s = normalizeSettings({ rules: { autoAccept: 0, sendWhen: 'now', onDispute: 'ask', notify: 'actions' }, roomRules: { r1: { sendWhen: 'now' } } }, 'u');
   assert.equal(s.rules.sendWhen, 'manual');
   assert.equal(rulesIn(s, 'r1').sendWhen, 'manual');
-  assert.equal(sendWhenLabel('now'), '편할 때 보내기');
+  assert.equal(sendWhenLabel('now'), 'Send whenever convenient');
   assert.equal(nextSendAt(new Date('2026-11-08T13:00:00Z'), 'now'), '2026-11-09T00:00:00.000Z');
   assert.equal(draftFromRules({ autoAccept: 0, sendWhen: 'now', onDispute: 'ask', notify: 'actions' }).mode, 'manual');
 });
@@ -36,7 +36,7 @@ test('보낼 시기 고르기에는 바로가 없고, 고른 것이 무슨 뜻�
   const manual = sendHtml(draftFromRules(DEFAULT_RULES));
   assert.doesNotMatch(manual, />바로</);
   assert.match(manual, /data-id="manual">편할 때</);
-  assert.match(manual, /다음 날 오전 9시/);
+  assert.match(manual, /9 AM the next day/);
   const payday = sendHtml({ ...draftFromRules(DEFAULT_RULES), mode: 'payday' });
   assert.match(payday, /매달 그날 오전 9시/);
 });

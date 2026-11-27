@@ -83,15 +83,15 @@ test('readVisits: 좌표와 장소 이름은 꺼내지 않는다', () => {
 });
 
 test('readVisits: 타임라인 파일이 아니면 알려 준다', () => {
-  assert.throws(() => readVisits({ foo: [] }), /타임라인 파일이 아니에요/);
-  assert.throws(() => readVisits(null), /타임라인 파일이 아니에요/);
+  assert.throws(() => readVisits({ foo: [] }), /not a Google Maps Timeline file/);
+  assert.throws(() => readVisits(null), /not a Google Maps Timeline file/);
 });
 
 test('timelineSummary: 첫 주문 때 머물던 곳 기준으로 한 줄을 만든다', () => {
-  assert.equal(timelineSummary({ leftAt: '22:55', nextAt: '23:08', nextHome: false }, bar), '첫 주문(22:30) 때 머물던 곳을 22:55에 떠났어요 · 23:08 다른 장소에 도착 · Google 지도 타임라인(본인 제출)');
-  assert.equal(timelineSummary({ leftAt: '22:55', nextAt: null, nextHome: false }, bar), '첫 주문(22:30) 때 머물던 곳을 22:55에 떠났어요 · Google 지도 타임라인(본인 제출)');
-  assert.equal(timelineSummary({ leftAt: '22:55', nextAt: '23:08', nextHome: true }, bar), '첫 주문(22:30) 때 머물던 곳을 22:55에 떠났어요 · 23:08 집에 도착 · Google 지도 타임라인(본인 제출)');
-  assert.equal(timelineSummary({ stayedUntil: '23:40' }, bar), '첫 주문(22:30)부터 결제(23:40)까지 같은 곳에 있었어요 · Google 지도 타임라인(본인 제출)');
+  assert.equal(timelineSummary({ leftAt: '22:55', nextAt: '23:08', nextHome: false }, bar), 'Left the first-order location (22:30) at 22:55 · arrived elsewhere at 23:08 · Google Maps Timeline (self-submitted)');
+  assert.equal(timelineSummary({ leftAt: '22:55', nextAt: null, nextHome: false }, bar), 'Left the first-order location (22:30) at 22:55 · Google Maps Timeline (self-submitted)');
+  assert.equal(timelineSummary({ leftAt: '22:55', nextAt: '23:08', nextHome: true }, bar), 'Left the first-order location (22:30) at 22:55 · arrived home at 23:08 · Google Maps Timeline (self-submitted)');
+  assert.equal(timelineSummary({ stayedUntil: '23:40' }, bar), 'Stayed in the same place from the first order (22:30) to payment (23:40) · Google Maps Timeline (self-submitted)');
 });
 
 // 정산당 한 번 올리기: 파일 전체가 아니라 이 정산의 지출 시간대 근처 방문만 이 기기에 남긴다

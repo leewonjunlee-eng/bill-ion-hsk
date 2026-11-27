@@ -20,8 +20,8 @@ test('은행 목록의 토스 표기는 모두 실기기에서 확인한 것이�
 });
 
 test('findBank: 흔히 쓰는 다른 표기와 띄어쓰기·대소문자를 같은 은행으로 알아본다', () => {
-  assert.equal(findBank('국민은행').label, 'KB국민은행');
-  assert.equal(findBank(' kb 국민은행 ').label, 'KB국민은행');
+  assert.equal(findBank('국민은행').label, 'KB Kookmin Bank');
+  assert.equal(findBank(' kb 국민은행 ').label, 'KB Kookmin Bank');
   assert.equal(findBank('농협은행').toss, '농협');
   assert.equal(findBank('K뱅크').toss, '케이뱅크');
   assert.equal(findBank('없는은행'), null);
@@ -50,8 +50,8 @@ test('받을 계좌를 "국민은행"으로 저장하면 이름은 KB국민은�
   const orch = createOrchestrator({ store, clock: () => new Date('2026-11-10T03:00:00Z') });
   await orch.sendInvoices('r', 'me');
   await orch.setPayout('r', 'me', { bank: '국민은행', accountNo: '123-456-789012', holder: '나' });
-  assert.equal((await store.get('agents', 'me')).payout.bank, 'KB국민은행');
+  assert.equal((await store.get('agents', 'me')).payout.bank, 'KB Kookmin Bank');
   const t = (await store.list('transfers', { roomId: 'r' })).find((x) => x.from === 'cs' && x.to === 'me');
   assert.match(t.link, /bank=%EA%B5%AD%EB%AF%BC&accountNo=123456789012&/);
-  assert.equal(t.fallback.bank, 'KB국민은행'); // 복사 화면에는 사람이 알아보는 이름
+  assert.equal(t.fallback.bank, 'KB Kookmin Bank'); // 복사 화면에는 사람이 알아보는 이름
 });

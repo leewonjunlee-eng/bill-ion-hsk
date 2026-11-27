@@ -14,11 +14,11 @@ const ui = (v, extra = {}) => ({ draft: draftFromRules(v.rules), payout: payoutD
 test('기본 설정 화면: 계좌·한도·보낼 시기·이의 처리·알림이 한 화면에 있고, 방마다 다르게 하는 길을 알린다', () => {
   const v = view();
   const html = defaultsHtml(v, ui(v));
-  for (const label of ['받을 계좌', '자동 수락 한도', '보낼 시기', '이의 처리', '알림']) assert.ok(html.includes(label), label);
+  for (const label of ['Payout account', 'Auto-accept limit', 'Send timing', 'Disputes', 'Notifications']) assert.ok(html.includes(label), label);
   assert.match(html, /data-ag="autoAccept"[^>]*value="30000"/);
   assert.match(html, /aria-checked="true"[^>]*data-field="mode"[^>]*data-id="payday"/);
   assert.match(html, /aria-checked="true"[^>]*data-field="onDispute"[^>]*data-id="mediator"/);
-  assert.match(html, /이 방에서만/, '방마다 다른 값은 그 방에서 정한다고 알린다');
+  assert.match(html, /This room only/, '방마다 다른 값은 그 방에서 정한다고 알린다');
 });
 
 test('계좌가 없으면 바로 입력칸을, 있으면 끝 4자리와 바꾸기를 보여 준다(계좌번호 전체는 다시 받지 않는다)', () => {
@@ -50,7 +50,7 @@ test('목차가 가리키는 칸: 내 비서 기본 설정(#agent) 아래에 받
   const html = defaultsHtml(v, ui(v));
   for (const id of ['agent', 'payout', 'rules', 'notify']) assert.match(html, new RegExp(`id="${id}"`), id);
   assert.ok(html.indexOf('id="payout"') < html.indexOf('id="rules"') && html.indexOf('id="rules"') < html.indexOf('id="notify"'));
-  assert.match(html, /<label class="set-name" for="set-auto-accept">자동 수락 한도<\/label>/, '한도 이름을 누르면 금액 칸으로 간다');
+  assert.match(html, /<label class="set-name" for="set-auto-accept">Auto-accept limit<\/label>/, '한도 이름을 누르면 금액 칸으로 간다');
 });
 
 // 화면 아래 '저장하지 않은 변경 N개'가 세는 것. 저장할 것(defaultsBody)과 같은 기준이라 세는 수와 저장하는 것이 어긋나지 않는다
@@ -73,14 +73,14 @@ test('계좌 입력칸은 방의 계좌 시트와 같은 모양이다: 은행 �
   assert.equal(p.other, true, '목록에 없는 은행이면 직접 쓰기');
   const html = payoutFieldsHtml(p);
   assert.match(html, /data-pf="bank"[^>]*value="경남은행"/);
-  assert.match(html, /지금은 •••• 1234/);
-  assert.deepEqual(payoutDraftFrom(null, '재윤'), { bank: '토스뱅크', accountNo: '', holder: '재윤', other: false });
+  assert.match(html, /Now •••• 1234/);
+  assert.deepEqual(payoutDraftFrom(null, '재윤'), { bank: 'Toss Bank', accountNo: '', holder: '재윤', other: false });
 });
 
 test('체험 데모: ‘샘플 계좌·한도로 채우기’ 한 번이면 계좌와 한도가 채워지고, 저장하면 처음 설정을 마친다', () => {
   const v = { rules: { autoAccept: 0, sendWhen: 'now', onDispute: 'ask', notify: 'actions' }, payout: null, ruleHistory: [] };
   assert.doesNotMatch(defaultsHtml(v, ui(v)), /data-action="agent-sample"/, '실제 계정에는 두지 않는다');
-  assert.match(defaultsHtml(v, ui(v), { demo: true }), /<button type="button" class="btn sm secondary" data-action="agent-sample">샘플 계좌·한도로 채우기<\/button>/);
+  assert.match(defaultsHtml(v, ui(v), { demo: true }), /<button type="button" class="btn sm secondary" data-action="agent-sample">Fill sample account and limit<\/button>/);
   const filled = sampleFill(ui(v), '나');
   assert.equal(filled.editPayout, true);
   assert.equal(filled.payout.holder, '나');

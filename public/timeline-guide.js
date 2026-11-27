@@ -16,14 +16,14 @@ export function guessOs(ua = '', touchPoints = 0) {
 // iPhone은 Google 지도 앱 설정에, Android는 지도 앱이 아니라 휴대폰 설정 앱에 내보내기가 있다
 const STEPS = {
   ios: [
-    '<b>Google 지도 앱</b>에서 프로필 사진을 누르고 <b>설정</b>으로 가요',
-    '<b>개인 콘텐츠</b>의 위치 설정에서 <b>타임라인 데이터 내보내기</b>를 눌러요',
-    '<b>파일에 저장</b>한 뒤, 여기서 <b class="file">location-history.json</b>을 골라요',
+    'In the <b>Google Maps app</b>, tap your profile photo and open <b>Settings</b>',
+    'Under <b>Personal content</b> location settings, tap <b>Export Timeline data</b>',
+    '<b>Save to Files</b>, then choose <b class="file">location-history.json</b> here',
   ],
   android: [
-    '휴대폰 <b>설정 앱</b>에서 <b>위치</b> › <b>위치 서비스</b> › <b>타임라인</b>으로 가요',
-    '<b>타임라인 데이터 내보내기</b> › <b>계속</b>을 누르고 저장할 곳을 골라요',
-    '<b>내보내기 완료</b>가 뜨면, 여기서 그 파일을 골라요',
+    'In the phone <b>Settings app</b>, go to <b>Location</b> › <b>Location services</b> › <b>Timeline</b>',
+    'Tap <b>Export Timeline data</b> › <b>Continue</b> and choose where to save',
+    'When <b>Export complete</b> appears, choose that file here',
   ],
 };
 
@@ -31,13 +31,13 @@ const STEPS = {
 // sample: 체험 데모처럼 내 기록 대신 샘플 타임라인을 쓰게 할지(그때는 샘플이 주 버튼이다)
 export function guideHtml({ os = 'ios', phone = true, sample = false } = {}) {
   const tab = os === 'android' ? 'android' : 'ios';
-  const seg = `<div class="seg" role="radiogroup" aria-label="내 휴대폰" data-seg="tl-os"><span class="seg-thumb"></span>
+  const seg = `<div class="seg" role="radiogroup" aria-label="My phone" data-seg="tl-os"><span class="seg-thumb"></span>
     ${[['ios', 'iPhone'], ['android', 'Android']].map(([id, label]) => `<button type="button" role="radio" aria-checked="${id === tab}" data-action="tl-os" data-id="${id}">${label}</button>`).join('')}</div>`;
-  const open = phone ? `<a class="btn secondary" href="${TIMELINE_URL}" target="_blank" rel="noopener">Google 지도 열기${ICON_EXTERNAL}</a>` : '';
-  return `<p class="guide-lead">휴대폰 Google 지도에 남은 기록을 파일로 내보내서 골라요. 파일은 이 기기에서만 읽어요.</p>
+  const open = phone ? `<a class="btn secondary" href="${TIMELINE_URL}" target="_blank" rel="noopener">Open Google Maps${ICON_EXTERNAL}</a>` : '';
+  return `<p class="guide-lead">Export your Google Maps history from your phone and choose the file. It is read only on this device.</p>
     ${seg}
     <ol class="steps">${STEPS[tab].map((s) => `<li><span>${s}</span></li>`).join('')}</ol>
-    ${phone ? '' : '<p class="guide-note">타임라인은 휴대폰에만 있어요. 휴대폰에서 내보낸 파일을 이 컴퓨터로 옮긴 뒤 골라요.</p>'}
-    ${sample ? '<div class="guide-actions"><button type="button" class="btn" data-action="timeline-sample">샘플 타임라인으로 해 보기</button></div><p class="guide-note">체험 데모라 내 기록 대신, 2차 바에서 먼저 떠난 샘플 기록을 이 기기에서 읽어요.</p>' : ''}
-    <div class="guide-actions"><button type="button" class="btn${sample ? ' secondary' : ''}" data-action="timeline-file">내보낸 파일 고르기</button>${open}</div>`;
+    ${phone ? '' : '<p class="guide-note">Timeline data lives only on your phone. Move the exported file to this computer, then choose it.</p>'}
+    ${sample ? '<div class="guide-actions"><button type="button" class="btn" data-action="timeline-sample">Try with a sample timeline</button></div><p class="guide-note">This demo reads a sample history, in which you left the second-round bar early, instead of your own.</p>' : ''}
+    <div class="guide-actions"><button type="button" class="btn${sample ? ' secondary' : ''}" data-action="timeline-file">Choose exported file</button>${open}</div>`;
 }

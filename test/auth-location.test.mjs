@@ -161,7 +161,7 @@ test('a stay until payment is attached as plain text, not as a leaving time', as
   const [e] = (await store.list('disputes'))[0].evidence;
   assert.equal(e.kind, 'text');
   assert.equal(e.time, undefined);
-  assert.match(e.summary, /결제.*까지 같은 곳에 있었어요/);
+  assert.match(e.summary, /Stayed in the same place.*to payment/);
 });
 
 // 떠난 시각이 없는 기록(결제까지 머묾)도 빠지지 않고 상대에게 가고, 지우면 상대 화면에서도 사라진다
@@ -237,12 +237,12 @@ test('location summary is visible only to the dispute parties; other members see
   assert.ok(others.length);
   for (const uid of others) {
     const hidden = await seen(uid);
-    assert.doesNotMatch(JSON.stringify(hidden), /떠났어요|타임라인|첫 주문/);
+    assert.doesNotMatch(JSON.stringify(hidden), /떠났어요|타임라인|첫 주문|Left the first-order|Timeline|first order/);
     assert.equal(hidden.evidence.length, 1);
     assert.equal(hidden.evidence[0].locationId, undefined);
     assert.equal(hidden.evidence[0].time, undefined);
   }
-  assert.match((await store.get('disputes', d.id)).evidence[0].summary, /떠났어요/); // 저장본은 그대로
+  assert.match((await store.get('disputes', d.id)).evidence[0].summary, /Left the first-order location/); // 저장본은 그대로
 });
 
 test('self-reported timeline keeps confidence but cannot turn a model assertion into a confirmed allocation', async t => {

@@ -156,7 +156,7 @@ test('방 만들기: 외화도 있어요를 고르면 어느 외화인지와 환
   const html = createRoomHtml({ ...empty, foreign: true, fxCurrency: 'USD', policy: 'payday' }, { profile, dev: false });
   assert.match(html, /data-action="cf-foreign" data-id="yes">외화도 있어요/);
   assert.match(html, /aria-checked="true" data-action="cf-foreign" data-id="yes"/);
-  assert.match(html, /<select data-cf="fxCurrency">[\s\S]*<option value="USD" selected>미국 달러 \(USD\)/);
+  assert.match(html, /<select data-cf="fxCurrency">[\s\S]*<option value="USD" selected>US dollar \(USD\)/);
   assert.match(html, /role="radio" aria-checked="true" data-action="cf-policy" data-id="payday"/);
   assert.match(html, /유럽중앙은행\(ECB\) 기준 환율/, '환율을 어디서 언제 받는지 알린다');
 });
@@ -166,7 +166,7 @@ test('참가 화면·초대 미리보기: 원화 방은 환율 정책 칸이 없
   const krw = { room: { id: 'r-1', name: '회식', dates: '', members: [{ name: '재윤' }] }, alreadyMember: false, settling: false };
   assert.ok(!joinHtml(krw, {}, { profile }).includes('환율'));
   const jpy = { ...invite, room: { ...invite.room, currency: 'JPY', policy: 'actual' } };
-  assert.match(joinHtml(jpy, {}, { profile }), /이 방의 환율 정책[\s\S]*엔로 쓴 돈[\s\S]*실제 낸 원화/);
+  assert.match(joinHtml(jpy, {}, { profile }), /이 방의 환율 정책[\s\S]*JPY로 쓴 돈[\s\S]*실제 낸 원화/);
   assert.ok(!joinHtml(invite, {}, { profile }).includes('환율 정책'), '정책 값이 와도 통화가 없으면(원화 방) 보이지 않는다');
   assert.match(joinHtml({ ...krw, settling: true, done: true }, {}, { profile }), /이미 정산이 끝난 방이라 들어갈 수 없어요/);
 
@@ -234,12 +234,12 @@ test('내 방 목록: 끝난 방이 있을 때만 진행 중 | 끝남 탭으로 
   const first = roomTabs(rooms);
   assert.equal(first.tab, 'live');
   assert.deepEqual(first.rooms.map((r) => r.id), ['a', 'b']);
-  assert.match(first.html, /aria-checked="true" data-id="live">진행 중 2/);
-  assert.match(first.html, /aria-checked="false" data-id="done">끝남 1/);
+  assert.match(first.html, /aria-checked="true" data-id="live">Active 2/);
+  assert.match(first.html, /aria-checked="false" data-id="done">Done 1/);
   assert.deepEqual(roomTabs(rooms, 'done').rooms.map((r) => r.id), ['c']);
   assert.equal(roomTabs(live, 'done').tab, 'live', '끝난 방이 없어지면 진행 중으로 돌아온다');
-  assert.match(roomTabs([{ id: 'c', status: 'done' }]).empty.meta, /‘끝남’에서 볼 수 있어요/);
-  assert.equal(roomTabs([]).empty.title, '아직 참여한 방이 없어요');
+  assert.match(roomTabs([{ id: 'c', status: 'done' }]).empty.meta, /under “Done”/);
+  assert.equal(roomTabs([]).empty.title, 'You have not joined a room yet');
 });
 
 test('내 방 목록: 평소 줄은 방으로 가는 링크, 편집 중에는 들어가지 않고 줄마다 나가기', () => {
@@ -252,7 +252,7 @@ test('내 방 목록: 평소 줄은 방으로 가는 링크, 편집 중에는 �
   const editing = roomRowsHtml(rooms, { editing: true });
   assert.doesNotMatch(editing, /<a /, '편집 중에는 줄을 눌러도 방에 들어가지 않는다');
   assert.equal(editing.match(/data-leave="/g).length, 2);
-  assert.match(editing, /id="room-name-0">도쿄 &lt;5일&gt;<\/span>[^]*data-leave="r-1" aria-describedby="room-name-0">나가기/, '나가기는 어느 방인지 이름으로 읽힌다');
+  assert.match(editing, /id="room-name-0">도쿄 &lt;5일&gt;<\/span>[^]*data-leave="r-1" aria-describedby="room-name-0">Leave/, '나가기는 어느 방인지 이름으로 읽힌다');
 });
 
 test('위쪽 알림은 글이 길수록 오래 두되 2.5~8초 사이', () => {

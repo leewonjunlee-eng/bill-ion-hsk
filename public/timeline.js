@@ -37,7 +37,7 @@ export function readVisits(json) {
       .filter(valid)
       .sort((a, b) => a.start - b.start);
   }
-  throw new Error('Google 지도 타임라인 파일이 아니에요. 휴대폰 Google 지도에서 내보낸 타임라인 파일(.json)을 골라 주세요.');
+  throw new Error('This is not a Google Maps Timeline file. Choose the .json file exported from Google Maps on your phone.');
 }
 
 const atKst = (date, hhmm) => Date.parse(`${date}T${hhmm}:00+09:00`);
@@ -108,18 +108,18 @@ export function timelineClaim(result, expense) {
     return (at > until ? at - DAY : at) > left;
   });
   const names = [...new Set(after.map((it) => it.name))];
-  const list = names.length > 3 ? `${names.slice(0, 3).join('·')} 외 ${names.length - 3}개` : names.join('·');
+  const list = names.length > 3 ? `${names.slice(0, 3).join(', ')} and ${names.length - 3} more` : names.join(', ');
   const text = names.length
-    ? `제가 자리를 뜬 뒤에 시킨 것(${list})은 제 몫이 아니에요.`
-    : '결제 전에 자리를 떴어요. 끝까지 함께 있지 않았는데 똑같이 나누는 건 맞지 않아요.';
+    ? `Items ordered after I left (${list}) are not mine.`
+    : 'I left before payment. An equal split is unfair since I did not stay to the end.';
   return text.slice(0, 200);
 }
 
 /** 이의 상대와 중재 비서에게 보내는 한 줄. 화면 미리보기와 서버 저장이 같은 글을 쓴다 */
 export function timelineSummary(result, expense) {
   const { from, until } = expenseWindow(expense);
-  const source = 'Google 지도 타임라인(본인 제출)';
-  if (result.stayedUntil) return `첫 주문(${hhmm(from)})부터 결제(${hhmm(until)})까지 같은 곳에 있었어요 · ${source}`;
-  const arrived = result.nextAt ? ` · ${result.nextAt} ${result.nextHome ? '집' : '다른 장소'}에 도착` : '';
-  return `첫 주문(${hhmm(from)}) 때 머물던 곳을 ${result.leftAt}에 떠났어요${arrived} · ${source}`;
+  const source = 'Google Maps Timeline (self-submitted)';
+  if (result.stayedUntil) return `Stayed in the same place from the first order (${hhmm(from)}) to payment (${hhmm(until)}) · ${source}`;
+  const arrived = result.nextAt ? ` · arrived ${result.nextHome ? 'home' : 'elsewhere'} at ${result.nextAt}` : '';
+  return `Left the first-order location (${hhmm(from)}) at ${result.leftAt}${arrived} · ${source}`;
 }

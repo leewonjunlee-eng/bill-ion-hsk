@@ -53,7 +53,7 @@ test('보낼 시기의 세 번째 선택지는 \'편할 때\'이고, 요약과 �
   assert.match(html, /<button[^>]*role="radio"[^>]*aria-checked="true"[^>]*data-id="manual"[^>]*>편할 때</);
   assert.ok(!html.includes('직접'), '\'직접\'이라는 말은 쓰지 않는다');
   assert.ok(!html.includes('<select'), '날짜를 고르는 칸은 없다(지정일에만 있다)');
-  assert.equal(sendWhenLabel('manual'), '편할 때 보내기');
+  assert.equal(sendWhenLabel('manual'), 'Send whenever convenient');
 });
 
 test('보낼 시기를 한 방에서만 편할 때 보내기로 정한다', async () => {
@@ -103,7 +103,7 @@ test('API: 내 계정에서 방 없이 받을 계좌를 정하고, 끝 4자리�
   try {
     assert.equal((await post('/api/me/payout', 'cs', { bank: '토스뱅크', accountNo: '1000-2000-3000', holder: '철수' })).status, 200);
     const view = await (await fetch(`${url}/api/me/agent`, { headers: { 'x-demo-user': 'cs' } })).json();
-    assert.deepEqual(view.payout, { bank: '토스뱅크', holder: '철수', last4: '3000' });
+    assert.deepEqual(view.payout, { bank: 'Toss Bank', holder: '철수', last4: '3000' });
     assert.equal((await post('/api/me/payout', 'cs', { bank: '', accountNo: '12' })).status, 400);
   } finally {
     server.close();

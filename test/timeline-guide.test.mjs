@@ -22,11 +22,11 @@ test('iPhone: Google 지도 앱 설정에서 내보내는 단계와 파일 이�
   const html = guideHtml({ os: 'ios', phone: true });
   assert.match(html, /<button[^>]*role="radio"[^>]*aria-checked="true"[^>]*data-id="ios"/, 'iPhone 탭이 골라져 있다');
   assert.match(html, /<button[^>]*role="radio"[^>]*aria-checked="false"[^>]*data-id="android"/);
-  for (const step of ['Google 지도 앱', '설정', '개인 콘텐츠', '타임라인 데이터 내보내기', '파일에 저장', 'location-history.json']) assert.ok(html.includes(step), step);
+  for (const step of ['Google Maps app', 'Settings', 'Personal content', 'Export Timeline data', 'Save to Files', 'location-history.json']) assert.ok(html.includes(step), step);
   assert.equal((html.match(/<li/g) ?? []).length, 3, '단계는 셋');
   assert.ok(html.match(/<li>[\s\S]*?<\/li>/g).every((li) => /^<li><span>[\s\S]*<\/span><\/li>$/.test(li)), '단계 글은 한 덩어리(번호 원과 나란한 grid 칸 하나)');
-  assert.match(html, /<button[^>]*class="btn"[^>]*data-action="timeline-file"[^>]*>내보낸 파일 고르기</, '파일 고르기가 주 버튼');
-  const link = html.match(/<a [^>]*>[^<]*Google 지도 열기/)?.[0] ?? '';
+  assert.match(html, /<button[^>]*class="btn"[^>]*data-action="timeline-file"[^>]*>Choose exported file</, '파일 고르기가 주 버튼');
+  const link = html.match(/<a [^>]*>[^<]*Open Google Maps/)?.[0] ?? '';
   assert.ok(link.includes(`href="${TIMELINE_URL}"`) && link.includes('target="_blank"') && link.includes('rel="noopener"'), 'Google 지도는 새 창(앱)으로 연다');
   assert.match(link, /class="btn secondary"/);
 });
@@ -34,20 +34,20 @@ test('iPhone: Google 지도 앱 설정에서 내보내는 단계와 파일 이�
 test('Android: 지도 앱이 아니라 휴대폰 설정 앱의 위치 › 타임라인에서 내보낸다', () => {
   const html = guideHtml({ os: 'android', phone: true });
   assert.match(html, /aria-checked="true"[^>]*data-id="android"/);
-  for (const step of ['설정 앱', '위치', '위치 서비스', '타임라인 데이터 내보내기', '내보내기 완료']) assert.ok(html.includes(step), step);
-  assert.ok(!html.includes('개인 콘텐츠'));
-  assert.match(html, /Google 지도 열기/);
+  for (const step of ['Settings app', 'Location', 'Location services', 'Export Timeline data', 'Export complete']) assert.ok(html.includes(step), step);
+  assert.ok(!html.includes('Personal content'));
+  assert.match(html, /Open Google Maps/);
 });
 
 test('컴퓨터: 타임라인은 휴대폰에만 있어서 지도 링크 대신 파일을 옮겨 오라고 안내한다', () => {
   const html = guideHtml({ os: 'ios', phone: false });
-  assert.ok(!html.includes(TIMELINE_URL) && !html.includes('Google 지도 열기'), '컴퓨터에서는 타임라인이 열리지 않으니 링크를 두지 않는다');
-  assert.match(html, /휴대폰에만 있어요/);
+  assert.ok(!html.includes(TIMELINE_URL) && !html.includes('Open Google Maps'), '컴퓨터에서는 타임라인이 열리지 않으니 링크를 두지 않는다');
+  assert.match(html, /only on your phone/);
   assert.match(html, /data-action="timeline-file"/);
 });
 
 test('파일은 이 기기에서만 읽는다고 먼저 알린다', () => {
-  assert.match(guideHtml({ os: 'ios', phone: true }), /이 기기에서만 읽어요/);
+  assert.match(guideHtml({ os: 'ios', phone: true }), /read only on this device/);
 });
 
 test('안내 시트는 이의 시트 위에 한 겹 더 올라오고, 닫기는 안내만 닫는다', () => {

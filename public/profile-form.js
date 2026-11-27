@@ -11,14 +11,14 @@ const CHECK = '<svg class="check" viewBox="0 0 24 24" aria-hidden="true"><path d
 export function profileFormHtml(profile) {
   const now = profile.color.toLowerCase();
   // 견본에 없는 색(예전 색상 선택기로 고른 색)도 사용자가 고른 것이니 지우지 않고 맨 앞에 둔다
-  const colors = PROFILE_COLORS.some(([c]) => c === now) ? PROFILE_COLORS : [[now, '지금 색'], ...PROFILE_COLORS];
+  const colors = PROFILE_COLORS.some(([c]) => c === now) ? PROFILE_COLORS : [[now, 'Current color'], ...PROFILE_COLORS];
   const swatches = colors.map(([c, label]) => `<label class="swatch" style="--c:${c}">
       <input type="radio" name="color" value="${c}" aria-label="${label}"${c === now ? ' checked' : ''}>${CHECK}</label>`).join('');
   // 폼 id는 목차의 '프로필' 칸(#profile)과 겹치지 않게 따로 둔다
   return `<form id="profile-form">
-    <div class="profile-preview" aria-hidden="true">${avatarHtml(initial(profile.name), now, 'xl')}<span class="grow"><span class="title">${esc(profile.name)}</span><span class="meta">방 사람들에게 이렇게 보여요</span></span></div>
-    ${settingRow({ label: '표시 이름', forId: 'profile-name', control: `<input id="profile-name" name="name" maxlength="40" required autocomplete="nickname" value="${esc(profile.name)}">` })}
-    ${settingRow({ label: '프로필 색', desc: '내 이름 옆 동그라미 색이에요.', control: `<div class="swatches" role="radiogroup" aria-label="프로필 색">${swatches}</div>` })}
+    <div class="profile-preview" aria-hidden="true">${avatarHtml(initial(profile.name), now, 'xl')}<span class="grow"><span class="title">${esc(profile.name)}</span><span class="meta">This is how room members see you</span></span></div>
+    ${settingRow({ label: 'Display name', forId: 'profile-name', control: `<input id="profile-name" name="name" maxlength="40" required autocomplete="nickname" value="${esc(profile.name)}">` })}
+    ${settingRow({ label: 'Profile color', desc: 'The circle next to your name.', control: `<div class="swatches" role="radiogroup" aria-label="Profile color">${swatches}</div>` })}
   </form>`;
 }
 
@@ -37,7 +37,7 @@ export function mountProfileForm(form, { onSubmit } = {}) {
     const { name, color } = value();
     avatar.style.setProperty('--c', color);
     avatar.textContent = initial(name);
-    title.textContent = name.trim() || '이름 없음';
+    title.textContent = name.trim() || 'No name';
   };
   form.addEventListener('input', sync);
   form.addEventListener('change', sync);

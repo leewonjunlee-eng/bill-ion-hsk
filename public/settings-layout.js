@@ -4,20 +4,20 @@
 import { esc } from './ui.js';
 
 export const SETTINGS_TOC = [
-  { id: 'profile', label: '프로필' },
-  { id: 'agent', label: '내 비서 기본 설정', children: [
-    { id: 'payout', label: '받을 계좌' },
-    { id: 'rules', label: '비서 규칙' },
-    { id: 'notify', label: '알림' },
+  { id: 'profile', label: 'Profile' },
+  { id: 'agent', label: 'My agent defaults', children: [
+    { id: 'payout', label: 'Payout account' },
+    { id: 'rules', label: 'Agent rules' },
+    { id: 'notify', label: 'Notifications' },
   ] },
-  { id: 'account', label: '계정' },
+  { id: 'account', label: 'Account' },
 ];
 // 문서 순서 그대로. 목차의 지금 위치는 이 순서로 위에서부터 찾는다
 export const SETTINGS_IDS = SETTINGS_TOC.flatMap((s) => [s.id, ...(s.children ?? []).map((c) => c.id)]);
 
 export function tocHtml(toc = SETTINGS_TOC) {
   const item = ({ id, label, children }) => `<li><a href="#${id}" data-toc="${id}">${esc(label)}</a>${children ? `<ol>${children.map(item).join('')}</ol>` : ''}</li>`;
-  return `<nav class="settings-toc" aria-label="내 계정 목차"><ol>${toc.map(item).join('')}</ol></nav>`;
+  return `<nav class="settings-toc" aria-label="My account contents"><ol>${toc.map(item).join('')}</ol></nav>`;
 }
 
 // label·desc는 화면에 박힌 글이라 이스케이프하지 않는다(사용자 값은 부르는 쪽이 이스케이프해 넘긴다). 입력칸이 하나면 forId로 이름을 그 칸의 label로 잇는다.

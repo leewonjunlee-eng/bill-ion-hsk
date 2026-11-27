@@ -3,22 +3,22 @@
 // toss는 2026-11-02 Android 실기기에서 토스가 은행을 채워 준 표기만 쓴다(test/banks.test.mjs에 결과 기록).
 // '국민은행'·'농협은행'·'기업은행'·'K뱅크'처럼 흔히 쓰지만 토스가 에러를 내는 표기는 aliases로 받아 toss 표기로 바꾼다.
 export const BANKS = [
-  { label: '토스뱅크', toss: '토스뱅크', aliases: ['토스'] },
-  { label: 'KB국민은행', toss: '국민', aliases: ['국민은행', 'KB국민', 'KB'] },
-  { label: '신한은행', toss: '신한', aliases: [] },
-  { label: '우리은행', toss: '우리', aliases: [] },
-  { label: '하나은행', toss: '하나', aliases: ['KEB하나은행'] },
-  { label: 'NH농협은행', toss: '농협', aliases: ['농협은행', 'NH농협', 'NH'] },
-  { label: 'IBK기업은행', toss: '기업', aliases: ['기업은행', 'IBK기업', 'IBK'] },
-  { label: '카카오뱅크', toss: '카카오뱅크', aliases: ['카카오'] },
-  { label: '케이뱅크', toss: '케이뱅크', aliases: ['K뱅크', '케이'] },
-  { label: '새마을금고', toss: '새마을', aliases: ['MG새마을금고'] },
-  { label: '우체국', toss: '우체국', aliases: [] },
-  { label: 'SC제일은행', toss: 'SC제일', aliases: ['제일은행'] },
-  { label: '부산은행', toss: '부산', aliases: ['BNK부산은행'] },
-  { label: 'iM뱅크(대구)', toss: '대구', aliases: ['iM뱅크', '대구은행', 'DGB대구은행'] },
-  { label: '수협은행', toss: '수협', aliases: [] },
-  { label: '신협', toss: '신협', aliases: [] },
+  { label: 'Toss Bank', toss: '토스뱅크', aliases: ['토스뱅크', '토스'] },
+  { label: 'KB Kookmin Bank', toss: '국민', aliases: ['KB국민은행', '국민은행', 'KB국민', 'KB'] },
+  { label: 'Shinhan Bank', toss: '신한', aliases: ['신한은행'] },
+  { label: 'Woori Bank', toss: '우리', aliases: ['우리은행'] },
+  { label: 'Hana Bank', toss: '하나', aliases: ['하나은행', 'KEB하나은행'] },
+  { label: 'NH NongHyup Bank', toss: '농협', aliases: ['NH농협은행', '농협은행', 'NH농협', 'NH'] },
+  { label: 'IBK Industrial Bank', toss: '기업', aliases: ['IBK기업은행', '기업은행', 'IBK기업', 'IBK'] },
+  { label: 'KakaoBank', toss: '카카오뱅크', aliases: ['카카오뱅크', '카카오'] },
+  { label: 'K bank', toss: '케이뱅크', aliases: ['케이뱅크', 'K뱅크', '케이'] },
+  { label: 'MG Saemaul', toss: '새마을', aliases: ['새마을금고', 'MG새마을금고'] },
+  { label: 'Korea Post', toss: '우체국', aliases: ['우체국'] },
+  { label: 'SC First Bank', toss: 'SC제일', aliases: ['SC제일은행', '제일은행'] },
+  { label: 'Busan Bank', toss: '부산', aliases: ['부산은행', 'BNK부산은행'] },
+  { label: 'iM Bank (Daegu)', toss: '대구', aliases: ['iM뱅크(대구)', 'iM뱅크', '대구은행', 'DGB대구은행'] },
+  { label: 'Suhyup Bank', toss: '수협', aliases: ['수협은행'] },
+  { label: 'Shinhyup', toss: '신협', aliases: ['신협'] },
 ];
 
 const norm = (s) => String(s ?? '').replace(/\s+/g, '').toUpperCase();

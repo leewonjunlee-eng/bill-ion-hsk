@@ -26,22 +26,22 @@ test('결제 전에 자리를 떠난 지출만 찾고, 끝까지 있었거나 �
 // 미리 채우는 글에는 시각을 넣지 않는다(PRIVACY.md 제2조·제6조)
 test('맞지 않는 점: 떠난 뒤에 시킨 줄을 내 말로 채우되, 떠난 시각은 넣지 않는다', () => {
   const claim = timelineClaim({ leftAt: '19:05', nextAt: '19:20', nextHome: true }, dinner);
-  assert.match(claim, /자리를 뜬 뒤에 시킨 것/);
+  assert.match(claim, /Items ordered after I left/);
   assert.ok(claim.includes('하이볼') && claim.includes('디저트'), '떠난 뒤에 시킨 줄');
   assert.ok(!claim.includes('닭꼬치'), '떠나기 전에 시킨 줄은 내 몫이 맞다');
   assert.ok(!/\d{1,2}:\d{2}/.test(claim), '시각은 이의 내용에 남기지 않는다');
-  assert.ok(!claim.includes('집'), '도착한 곳도 남기지 않는다');
+  assert.ok(!claim.includes('집') && !/home|arrived/.test(claim), '도착한 곳도 남기지 않는다');
   assert.ok(claim.length <= 200);
 });
 
 test('주문 시각이 없는 지출은 결제 전에 자리를 떴다고만 쓴다', () => {
   const claim = timelineClaim({ leftAt: '19:05', nextAt: null, nextHome: false }, { ...dinner, items: [] });
-  assert.match(claim, /결제 전에 자리를 떴어요/);
+  assert.match(claim, /I left before payment/);
   assert.ok(!/\d{1,2}:\d{2}/.test(claim));
 });
 
 test('떠난 뒤 시킨 줄이 많으면 몇 개만 적고 나머지는 수로 줄인다', () => {
   const items = [{ id: 'first', name: '닭꼬치', time: '18:00' }, ...['맥주', '사와', '하이볼', '우롱차', '아이스크림'].map((name, i) => ({ id: `x${i}`, name, time: `19:${10 + i * 5}` }))];
   const claim = timelineClaim({ leftAt: '19:05', nextAt: null, nextHome: false }, { ...dinner, items });
-  assert.match(claim, /맥주·사와·하이볼 외 2개/);
+  assert.match(claim, /맥주, 사와, 하이볼 and 2 more/);
 });

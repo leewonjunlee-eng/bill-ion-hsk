@@ -79,8 +79,8 @@ test('한번 보인 뼈대는 0.3초가 지나기 전에는 거두지 않는다(
 
 test('뼈대는 화면 읽기에 불러오는 중이라고 알리고, 느릴 때의 안내와 다시 시도를 품는다', () => {
   for (const html of [roomSkeleton(), roomsSkeleton(), settingsSkeleton()]) {
-    assert.match(html, /<p class="sr-only" role="status">불러오는 중이에요<\/p>/);
-    assert.match(html, /class="sk-slow"[\s\S]*보통 10초 안에 끝나요[\s\S]*data-action="sk-retry">다시 시도<\/button>/);
+    assert.match(html, /<p class="sr-only" role="status">Loading<\/p>/);
+    assert.match(html, /class="sk-slow"[\s\S]*within 10 seconds[\s\S]*data-action="sk-retry">Try again<\/button>/);
   }
 });
 

@@ -6,7 +6,7 @@ let starting;
 export function initAuth() {
   return starting ??= (async () => {
     const response = await fetch(`${API_BASE}/api/config`);
-    if (!response.ok) throw new Error('로그인 설정을 불러오지 못했어요');
+    if (!response.ok) throw new Error('Could not load sign-in settings');
     options = (await response.json()).auth || options;
     if (!options.firebase) return options;
     const [app, auth] = await Promise.all([
@@ -26,12 +26,12 @@ export function initAuth() {
 }
 export const authOptions = () => options;
 // 체험 데모(public/demo/)는 Firebase 없이 '나'로 로그인한 것처럼 둔다. 토큰은 없고, 요청은 브라우저 안의 데모 서버가 받는다
-const DEMO_USER = Object.freeze({ uid: 'me', displayName: '나' });
+const DEMO_USER = Object.freeze({ uid: 'me', displayName: 'Me' });
 export const currentUser = () => instance?.currentUser || (options.demo ? DEMO_USER : null);
 export async function token() { await initAuth(); return instance?.currentUser?.getIdToken() || null; }
 export async function login() {
   await initAuth();
-  if (!instance) throw new Error('Google 로그인을 준비 중이에요. 지금은 데모를 이용할 수 있어요');
+  if (!instance) throw new Error('Google sign-in is not ready yet. You can use the demo for now');
   return sdk.signInWithPopup(instance, new sdk.GoogleAuthProvider());
 }
 // 로그아웃하면 첫 화면(데모)이 아니라 다시 로그인할 수 있는 '내 계정' 화면으로 간다

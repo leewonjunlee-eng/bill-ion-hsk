@@ -141,7 +141,7 @@ test('편할 때 보내기: 바로 알리지 않고, 다음 날 09:00(KST)까지
   const due = await dueFor(ctx, t);
   assert.equal(due.length, 1, '한 번만 알린다');
   assert.match(due[0].text, /받았다는 확인이 없어요/);
-  assert.equal(due[0].meta, '정해 둔 규칙: 편할 때 보내기');
+  assert.equal(due[0].meta, '정해 둔 규칙: Send whenever convenient');
   assert.equal(await asksToSend(ctx, t), true);
   assert.equal((await ctx.orch.approveTransfer(ROOM, t.id, 'cs')).status, 'opened');
   assert.equal((await ctx.orch.markSent(ROOM, t.id, 'cs')).status, 'sent');
@@ -190,8 +190,8 @@ test('규칙 변경 기록: 바뀐 칸만, 전후 값과 시각을 남긴다', a
   const v = await ctx.settings.get('yh');
   assert.deepEqual(v.rules.sendWhen, { payday: 25 }, '모르는 칸은 저장하지 않는다');
   assert.deepEqual(v.ruleHistory.map((h) => [h.field, h.text, h.at]), [
-    ['autoAccept', '자동 수락 한도: ₩1,000,000 → ₩30,000', '2026-11-10T03:00:00.000Z'],
-    ['sendWhen', '보낼 시기: 편할 때 보내기 → 매달 25일에 보내기', '2026-11-10T03:00:00.000Z'],
+    ['autoAccept', 'Auto-accept limit: ₩1,000,000 → ₩30,000', '2026-11-10T03:00:00.000Z'],
+    ['sendWhen', 'Send timing: Send whenever convenient → Send on day 25 of each month', '2026-11-10T03:00:00.000Z'],
   ]);
 });
 
@@ -213,23 +213,23 @@ test('규칙 적용 근거가 비서 기록에 남는다: 자동 수락, 묻기,
   assert.deepEqual(await ctx.metas('invoice_asked'), ['정해 둔 규칙: 자동 수락 한도 초과']);
   await ctx.orch.answerInvoice(ROOM, (await ctx.invoiceOf('ms')).id, 'ms', { decision: 'accept' });
   const scheduled = await ctx.metas('transfer_scheduled');
-  assert.ok(scheduled.includes('정해 둔 규칙: 매달 25일에 보내기'));
-  assert.ok(scheduled.includes('정해 둔 규칙: 편할 때 보내기'));
+  assert.ok(scheduled.includes('정해 둔 규칙: Send on day 25 of each month'));
+  assert.ok(scheduled.includes('정해 둔 규칙: Send whenever convenient'));
 });
 
 test('규칙 적용 근거: 편할 때 보내기, 이의 처리(근거 이의·중재 맡기기·묻기)', async () => {
   const manual = await setup();
   await manual.settings.updateRules('cs', { sendWhen: 'manual' });
   await manual.orch.sendInvoices(ROOM, 'me');
-  assert.ok((await manual.metas('transfer_scheduled')).includes('정해 둔 규칙: 편할 때 보내기'));
+  assert.ok((await manual.metas('transfer_scheduled')).includes('정해 둔 규칙: Send whenever convenient'));
 
   const med = await setup({ evidence: true });
   await med.settings.updateRules('ms', { onDispute: 'evidence' });
   await med.settings.updateRules('me', { onDispute: 'mediator' });
   await med.orch.sendInvoices(ROOM, 'me');
   const applied = await med.metas('rule_applied');
-  assert.ok(applied.includes('정해 둔 규칙: 근거가 있으면 이의 제기'));
-  assert.ok(applied.includes('정해 둔 규칙: 중재 비서에게 맡기기'));
+  assert.ok(applied.includes('정해 둔 규칙: Dispute when there is evidence'));
+  assert.ok(applied.includes('정해 둔 규칙: Leave it to the mediator agent'));
 
   const ask = await setup({ evidence: true });
   await ask.settings.updateRules('ms', { onDispute: 'evidence' });
@@ -357,7 +357,7 @@ test('계좌를 바꾸면 그 사람이 받을 모든 방의 대기 중 송금 �
   for (const id of [ROOM, 'demo-u']) {
     const t = pair(await list(id), 'ms', 'me');
     assert.match(t.link, /accountNo=123456789012/, id);
-    assert.equal(t.fallback.bank, 'KB국민은행');
+    assert.equal(t.fallback.bank, 'KB Kookmin Bank');
     assert.ok((await ctx.store.listEvents(id)).some((e) => e.kind === 'payout_set' && /바꿨어요/.test(e.text)));
   }
   // 이미 보냈다고 한 송금은 옛 계좌 그대로(새 계좌로 또 보내지 않게), 남이 받는 송금도 그대로
@@ -452,7 +452,7 @@ test('API: 새 사용자의 처음 설정, 규칙, 기억, 계좌', async () => 
     assert.equal((await req(`/api/rooms/${roomId}`, 'me')).json.myAgent.onboarded, true);
 
     assert.equal((await req(`/api/rooms/${roomId}/payout`, 'me', { bank: '토스뱅크', accountNo: '1000-1234-5678', holder: '나' })).status, 200);
-    assert.deepEqual((await req('/api/me/agent', 'me')).json.payout, { bank: '토스뱅크', holder: '나', last4: '5678' });
+    assert.deepEqual((await req('/api/me/agent', 'me')).json.payout, { bank: 'Toss Bank', holder: '나', last4: '5678' });
     assert.equal((await store.get('agents', 'me')).payout.accountNo, '1000-1234-5678', '저장은 전체 번호');
 
     // 방 응답에는 계좌번호가 없다. 설정 전체는 본인 신원으로만 읽는다
@@ -563,7 +563,7 @@ test('방 머리의 칩: 비서 설정을 마친 사람에게 로봇 표시, 설
   assert.match(ready, /^<button type="button" class="person me" data-action="open-agent"/);
   assert.ok(ready.includes('class="agent-mark"'), '설정을 마쳤으면 로봇 표시');
   assert.ok(!ready.includes('person-tag'), '할 일이 없으면 꼬리표가 없다');
-  assert.ok(ready.includes('₩50,000까지 자동 수락 · 매달 10일에 보내기'), '규칙 요약은 툴팁과 읽어 주기 글로 남는다');
+  assert.ok(ready.includes('Auto-accept up to ₩50,000 · Send on day 10 of each month'), '규칙 요약은 툴팁과 읽어 주기 글로 남는다');
 
   const before = meChipHtml(me, { onboarded: false, autoAccept: 0, sendWhen: 'now', hasPayout: false });
   assert.ok(before.includes('<span class="person-tag">설정 전</span>') && !before.includes('agent-mark'), '설정 전이면 로봇 대신 꼬리표');
@@ -584,7 +584,7 @@ test('normalizeSettings: 빈 문서와 옛 문서(notify 없음)를 기본값으
   const old = normalizeSettings({ uid: 'u', memory: ['m'], rules: { autoAccept: 5, sendWhen: { payday: 3 }, onDispute: 'evidence' } }, 'u');
   assert.deepEqual(old.rules, { autoAccept: 5, sendWhen: { payday: 3 }, onDispute: 'evidence', notify: 'actions' });
   assert.deepEqual(old.memory, ['m']);
-  assert.equal(ruleChangeText('notify', 'actions', 'all'), '알림: 확인할 일만 → 모든 진행 상황');
+  assert.equal(ruleChangeText('notify', 'actions', 'all'), 'Notifications: Action items only → All updates');
 });
 
 // ---------------------------------------------------------------- 로그인(#2)과 함께

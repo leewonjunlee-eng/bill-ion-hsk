@@ -12,10 +12,10 @@ export function payoutDraftFrom(saved, holder) {
 export function payoutFieldsHtml(p) {
   const options = BANKS.map((b) => `<option value="${esc(b.label)}"${!p.other && p.bank === b.label ? ' selected' : ''}>${esc(b.label)}</option>`).join('');
   return `<div class="list">
-      <label class="row field"><span class="grow">은행</span><select data-bank-pick>${options}<option value=""${p.other ? ' selected' : ''}>목록에 없어요</option></select></label>
-      ${p.other ? `<label class="row field"><span class="grow">은행 이름</span><input data-pf="bank" value="${esc(p.bank)}" maxlength="30" placeholder="예: 경남은행"></label>` : ''}
-      <label class="row field"><span class="grow">계좌번호</span><input data-pf="accountNo" value="${esc(p.accountNo)}" inputmode="numeric" maxlength="30" placeholder="${p.last4 ? `지금은 •••• ${esc(p.last4)}. 새 번호 전체 입력` : '숫자만 또는 - 포함'}"></label>
-      <label class="row field"><span class="grow">예금주</span><input data-pf="holder" value="${esc(p.holder)}" maxlength="30"></label>
+      <label class="row field"><span class="grow">Bank</span><select data-bank-pick>${options}<option value=""${p.other ? ' selected' : ''}>Not listed</option></select></label>
+      ${p.other ? `<label class="row field"><span class="grow">Bank name</span><input data-pf="bank" value="${esc(p.bank)}" maxlength="30" placeholder="e.g. Kyongnam Bank"></label>` : ''}
+      <label class="row field"><span class="grow">Account number</span><input data-pf="accountNo" value="${esc(p.accountNo)}" inputmode="numeric" maxlength="30" placeholder="${p.last4 ? `Now •••• ${esc(p.last4)}. Enter the full new number` : 'Digits, hyphens allowed'}"></label>
+      <label class="row field"><span class="grow">Account holder</span><input data-pf="holder" value="${esc(p.holder)}" maxlength="30"></label>
     </div>
-    ${p.other ? '<p class="group-note">목록에 없는 은행은 토스가 알아보지 못할 수 있어요. 그때는 보내는 사람에게 계좌번호를 복사해 보내도록 안내해요.</p>' : ''}`;
+    ${p.other ? '<p class="group-note">Toss may not recognize an unlisted bank. The sender is then asked to copy the account number.</p>' : ''}`;
 }

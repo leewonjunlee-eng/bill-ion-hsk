@@ -33,7 +33,7 @@ test('profileFormHtml: 설정 줄로 그린다 — 이름 칸은 label로 이어
   const html = profileFormHtml({ name: '준엽', color: '#5856D6' });
   assert.match(html, /^<form id="profile-form"/);
   assert.doesNotMatch(html, /id="profile"/);
-  assert.match(html, /<label class="set-name" for="profile-name">표시 이름<\/label>/);
+  assert.match(html, /<label class="set-name" for="profile-name">Display name<\/label>/);
   assert.match(html, /<input id="profile-name" name="name"[^>]*value="준엽"/);
-  assert.match(html, /<span class="set-name">프로필 색<\/span>/);
+  assert.match(html, /<span class="set-name">Profile color<\/span>/);
 });

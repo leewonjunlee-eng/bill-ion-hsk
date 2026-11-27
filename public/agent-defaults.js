@@ -8,7 +8,7 @@ import { BANKS } from './banks.js';
 import { settingRow, settingsSection } from './settings-layout.js';
 
 // 금액은 칸 오른쪽에 단위를 붙이고, 지금 금액이 무슨 뜻인지는 칸 바로 아래에서 고치는 대로 알린다
-const amountHtml = (d) => `<div class="set-amount"><input id="set-auto-accept" data-ag="autoAccept" value="${esc(d.autoAccept)}" inputmode="numeric" maxlength="9" placeholder="0" aria-describedby="agent-limit-note"><span aria-hidden="true">원</span></div>
+const amountHtml = (d) => `<div class="set-amount"><input id="set-auto-accept" data-ag="autoAccept" value="${esc(d.autoAccept)}" inputmode="numeric" maxlength="9" placeholder="0" aria-describedby="agent-limit-note"><span aria-hidden="true">KRW</span></div>
   <p class="group-note" id="agent-limit-note">${esc(limitNote(d))}</p>`;
 
 // 체험 데모에서만: 숫자를 직접 넣지 않아도 한 번 눌러 가짜 계좌와 5만 원 한도를 채운다(task 2).
@@ -20,8 +20,8 @@ export const sampleFill = (ui, holder) => ({
   payout: { ...ui.payout, bank: BANKS[0].label, other: false, accountNo: DEMO_SAMPLE.accountNo, holder: holder || ui.payout.holder },
   draft: { ...ui.draft, autoAccept: DEMO_SAMPLE.autoAccept },
 });
-const sampleHtml = () => `<div class="set-sample"><button type="button" class="btn sm secondary" data-action="agent-sample">샘플 계좌·한도로 채우기</button>
-      <p class="group-note">체험 데모라 가짜 계좌와 5만 원 한도를 채워요. 채운 뒤 ‘저장’을 눌러요.</p></div>`;
+const sampleHtml = () => `<div class="set-sample"><button type="button" class="btn sm secondary" data-action="agent-sample">Fill sample account and limit</button>
+      <p class="group-note">This demo fills a fake account and a ₩50,000 limit. Then press “Save”.</p></div>`;
 
 // ui: { draft: 규칙 초안(draftFromRules), payout: 계좌 초안(payoutDraftFrom), editPayout: 계좌 입력칸을 펼쳤는지 }. demo: 체험 데모면 샘플 채우기 버튼을 둔다
 export function defaultsHtml(view, ui, { demo = false } = {}) {
@@ -29,17 +29,17 @@ export function defaultsHtml(view, ui, { demo = false } = {}) {
   const d = ui.draft;
   const payout = ui.editPayout || !p
     ? payoutFieldsHtml(ui.payout)
-    : settingRow({ label: '지금 계좌', control: `<div class="set-value"><span class="grow"><span class="title">${esc(p.bank)} •••• ${esc(p.last4)}</span><span class="meta">${esc(p.holder)}</span></span>
-        <button type="button" class="btn sm plain" data-action="payout-edit">바꾸기</button></div>` });
-  return `<div class="set-group" id="agent"><h2 class="set-group-title">내 비서 기본 설정</h2>
-      <p class="set-intro">모든 방에 이 설정으로 들어가요. 방마다 다르게 하고 싶은 규칙은 그 방의 내 비서에서 ‘이 방에서만’을 골라요.</p>${demo ? sampleHtml() : ''}</div>
-    ${settingsSection({ id: 'payout', title: '받을 계좌', desc: '계좌번호는 나에게 돈을 보낼 사람에게만 보여요. 바꾸면 내가 받을 모든 방의 대기 중 송금에 들어가요.', body: payout })}
-    ${settingsSection({ id: 'rules', title: '비서 규칙', body: `
-      ${settingRow({ label: '자동 수락 한도', forId: 'set-auto-accept', desc: '이 금액까지는 비서가 나에게 묻지 않고 청구서를 받아요.', control: amountHtml(d) })}
-      ${settingRow({ label: '보낼 시기', desc: '정산이 끝난 뒤 내가 낼 돈을 언제 보낼지예요.', control: sendHtml(d) })}
-      ${settingRow({ label: '이의 처리', desc: '정산에 이의가 오가면 비서가 어떻게 할지예요.', control: disputeHtml(d) })}
+    : settingRow({ label: 'Current account', control: `<div class="set-value"><span class="grow"><span class="title">${esc(p.bank)} •••• ${esc(p.last4)}</span><span class="meta">${esc(p.holder)}</span></span>
+        <button type="button" class="btn sm plain" data-action="payout-edit">Change</button></div>` });
+  return `<div class="set-group" id="agent"><h2 class="set-group-title">My agent defaults</h2>
+      <p class="set-intro">These apply to every room. To change a rule for one room, choose “This room only” in that room’s agent settings.</p>${demo ? sampleHtml() : ''}</div>
+    ${settingsSection({ id: 'payout', title: 'Payout account', desc: 'Your account number is shown only to people who owe you. Changes apply to all pending transfers to you.', body: payout })}
+    ${settingsSection({ id: 'rules', title: 'Agent rules', body: `
+      ${settingRow({ label: 'Auto-accept limit', forId: 'set-auto-accept', desc: 'Up to this amount, your agent accepts invoices without asking.', control: amountHtml(d) })}
+      ${settingRow({ label: 'Send timing', desc: 'When to send what you owe after settlement.', control: sendHtml(d) })}
+      ${settingRow({ label: 'Disputes', desc: 'What your agent does when a settlement is disputed.', control: disputeHtml(d) })}
       ${historyHtml(view)}` })}
-    ${settingsSection({ id: 'notify', title: '알림', body: settingRow({ label: '알림 수준', desc: '비서가 언제 나를 부를지예요.', control: notifyHtml(d) }) })}`;
+    ${settingsSection({ id: 'notify', title: 'Notifications', body: settingRow({ label: 'Notification level', desc: 'When your agent should ping you.', control: notifyHtml(d) }) })}`;
 }
 
 // 저장할 것: 저장된 기본 설정과 달라진 규칙(같으면 null), 새 계좌번호를 적었을 때만 계좌(아니면 null)
